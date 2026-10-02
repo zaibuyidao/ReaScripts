@@ -1,4 +1,4 @@
-import { defaults, preferences, themePresets, themePalette, toDb, fromDb, dbText, filterTracks, filterFX, fxFormat, sortFX, isSettingsShortcut, CommandQueue } from './model.js';
+import { defaults, preferences, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, filterFX, fxFormat, sortFX, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
 
 const $ = id => document.getElementById(id);
@@ -8,7 +8,8 @@ let prefs = preferences(), locale = {}, english = {}, languages = [], session = 
 let state = {}, connected = false, dirty = new Set(), catalog = [], dialogContext, overviewRevision = 0, overviewKey = '', overviewData;
 let disposed = false, closing = false, cleanupPromise, unsubscribe, lifecycleStop, projectStop;
 let nativeTheme, gestureSequence = 0, fxDrag = null;
-let routePicker;
+let routePicker, modeSwitching;
+const isMaster = () => state.tracks?.mode === 'master';
 const routeExpansion = new Map(), routeScroll = new Map();
 const listLayouts = new Map(), listScroll = new Map();
 let listResizeHandle;
@@ -19,6 +20,7 @@ const report = error => { $('status').textContent = t(typeof error === 'string' 
 const context = () => ({session, selectionKey: state.tracks?.key || ''});
 const current = c => c.session === session && c.selectionKey === state.tracks?.key;
 const queue = new CommandQueue(message => api.host.send(message), context, error => {
+  modeSwitching = null; renderMode();
   rendered.clear(); Object.keys(renderers).forEach(id => dirty.add(id)); report(error);
 }, () => setTimeout(flushRender, 0));
 
@@ -27,6 +29,25 @@ function act(command, captured = context(), replaceKey = '') {
   $('status').textContent = '';
   queue.enqueue(Object.fromEntries(Object.entries(command).filter(([,value]) => value !== undefined)), replaceKey);
 }
+function renderMode() {
+  const master = isMaster(); document.body.dataset.mode = master ? 'master' : 'track';
+  for (const mode of ['track','master']) {
+    const control = $(`mode-${mode}`);
+    control.setAttribute('aria-pressed', mode === (master ? 'master' : 'track'));
+    control.disabled = !connected || !state.tracks || !!modeSwitching;
+  }
+  for (const id of ['parameters','items','appearance']) $(`panel-${id}`).hidden = master;
+  $('search').closest('.search-wrap').hidden = master;
+  $('inspector').inert = !!modeSwitching;
+}
+function switchMode(mode) {
+  if (!connected || modeSwitching || mode === (isMaster() ? 'master' : 'track')) return;
+  for (const finish of [...gestures.values()]) finish();
+  document.activeElement?.blur(); closePanMenu(); closeRecordMenu();
+  modeSwitching = mode; renderMode(); act({action:'mode',value:mode});
+}
+$('mode-track').onclick = () => switchMode('track');
+$('mode-master').onclick = () => switchMode('master');
 function savePreferences(next) {
   try { localStorage.setItem(storageKey, JSON.stringify(next)); return true; }
   catch { report('preferencesFailed'); return false; }
@@ -81,7 +102,7 @@ function fxIcon(control, pathData) {
   path.setAttribute('d',pathData); svg.append(path);
   control.setAttribute('aria-label',control.title); control.replaceChildren(svg); return control;
 }
-function row(label, control) { const n = el('label', 'row'); n.append(el('span', '', t(label)), control); return n; }
+function row(label, control) { const n = el('div', 'row'); n.append(el('span', '', t(label)), control); return n; }
 function hint(text) { return el('p', 'hint', t(text)); }
 function commitField(input, change) {
   let committed = input.value;
@@ -123,7 +144,7 @@ function toggle(label, value, change, mixed = false) {
 function checkbox(label, value, change, mixed = false) {
   const input = el('input'); input.type = 'checkbox'; input.checked = !!value; input.indeterminate = mixed;
   input.setAttribute('aria-label', t(label)); input.onchange = () => change(input.checked ? 1 : 0);
-  const node = el('label', 'check'); node.append(input, el('span', '', t(label))); return node;
+  const node = el('div', 'check'); node.append(input, el('span', '', t(label))); return node;
 }
 function liveRange(range, change, preview = () => {}) {
   let id, last, idle, keepAlive;
@@ -184,27 +205,35 @@ function field(label, value, change, mixed = false, multiline = false) {
   input.maxLength = multiline ? 32768 : 1024; input.value = value ?? ''; input.placeholder = mixed ? t('mixed') : '';
   input.setAttribute('aria-label', t(label)); commitField(input, change);
   if (!multiline) return row(label, input);
-  const labelNode = el('label'); labelNode.append(el('span', 'notes-label', t(label)), input); return labelNode;
+  const container = el('div'); container.append(el('span', 'notes-label', t(label)), input); return container;
 }
-function listResizer(viewport,key,selector,label) {
+function listResizer(target,key,selector,label,arrange) {
+  const viewports = Array.isArray(target) ? target : [target], viewport = viewports[0];
+  const currentHeight = () => Math.max(...viewports.map(node => node.getBoundingClientRect().height));
   const handle = el('div','list-resizer'); handle.tabIndex = 0;
   handle.setAttribute('role','separator'); handle.setAttribute('aria-orientation','horizontal');
   handle.setAttribute('aria-label',`${t(label)} · ${t('resizeList')}`); handle.title = t('resizeList');
   const measure = () => {
-    const card = viewport.querySelector(selector), height = card?.getBoundingClientRect().height;
-    if (!viewport.isConnected || !height) return null;
-    const details = card.querySelector('.route-details');
-    const minimum = Math.ceil(height - (details && !details.hidden ? details.getBoundingClientRect().height : 0));
-    const gap = parseFloat(getComputedStyle(card.parentElement).rowGap) || 0;
-    return {minimum,defaultHeight:minimum * 3 + gap * 2};
+    const sizes = viewports.map(node => {
+      const card = node.querySelector(selector), height = card?.getBoundingClientRect().height;
+      if (!node.isConnected || !height) return null;
+      const details = card.querySelector('.route-details');
+      const minimum = Math.ceil(height - (details && !details.hidden ? details.getBoundingClientRect().height : 0));
+      const gap = parseFloat(getComputedStyle(card.parentElement).rowGap) || 0;
+      return {minimum,defaultHeight:minimum * 3 + gap * 2};
+    }).filter(Boolean);
+    return sizes.length ? {minimum:Math.max(...sizes.map(size => size.minimum)),defaultHeight:Math.max(...sizes.map(size => size.defaultHeight))} : null;
   };
   const layout = () => {
     const sizes = measure(); if (!sizes) return;
     const height = Math.max(sizes.minimum,prefs.listHeights[key] || sizes.defaultHeight);
-    viewport.style.maxHeight = `${height}px`;
-    viewport.style.height = prefs.listHeights[key] ? `${height}px` : '';
+    for (const node of viewports) {
+      node.style.maxHeight = `${height}px`;
+      node.style.height = prefs.listHeights[key] ? `${height}px` : '';
+    }
+    arrange?.(height,sizes.minimum);
     handle.setAttribute('aria-valuemin',sizes.minimum); handle.setAttribute('aria-valuemax',4000);
-    handle.setAttribute('aria-valuenow',Math.round(viewport.getBoundingClientRect().height));
+    handle.setAttribute('aria-valuenow',Math.round(currentHeight()));
   };
   const resize = height => {
     const sizes = measure(); if (!sizes) return;
@@ -214,7 +243,7 @@ function listResizer(viewport,key,selector,label) {
   handle.onpointerdown = event => {
     if (event.button !== 0) return;
     event.preventDefault(); handle.setPointerCapture(event.pointerId); handle.focus({preventScroll:true});
-    drag = {y:event.clientY,height:viewport.getBoundingClientRect().height}; listResizeHandle = handle;
+    drag = {y:event.clientY,height:currentHeight()}; listResizeHandle = handle;
   };
   handle.onpointermove = event => { if (drag) resize(drag.height + event.clientY - drag.y); };
   const finish = () => {
@@ -224,11 +253,11 @@ function listResizer(viewport,key,selector,label) {
   handle.onpointerup = finish; handle.onpointercancel = finish; handle.onlostpointercapture = finish;
   handle.onkeydown = event => {
     if (!['ArrowUp','ArrowDown','Home'].includes(event.key)) return;
-    event.preventDefault(); resize(event.key === 'Home' ? 0 : viewport.getBoundingClientRect().height + (event.key === 'ArrowDown' ? 16 : -16)); savePreferences(prefs);
+    event.preventDefault(); resize(event.key === 'Home' ? 0 : currentHeight() + (event.key === 'ArrowDown' ? 16 : -16)); savePreferences(prefs);
   };
   handle.ondblclick = () => { prefs.listHeights[key] = 0; layout(); savePreferences(prefs); };
-  handle.hidden = !viewport.querySelector(selector);
-  listLayouts.set(key,{viewport,layout}); requestAnimationFrame(layout);
+  handle.hidden = !viewports.some(node => node.querySelector(selector));
+  listLayouts.set(key,{viewport,layout}); queueMicrotask(layout);
   return handle;
 }
 function layoutLists() {
@@ -245,11 +274,11 @@ function editable(id, render, force = false) {
   const inputs = {
     'track-header': [tr.count, tr.refs, tr.parent, tr.folder, fields(['name','color','icon'])],
     mixer: fields(['volume','pan','width','panMode','panModeEffective','panLeft','panRight','mute','solo','arm','phase','monitor','monitorItems','preservePDC']),
-    routing: [tr.count,state.routing,v.mainSend,state.index], fx: [tr.count,state.fx,state.parameters?.guid,prefs.fxCompact],
+    routing: [tr.count,state.routing,v.mainSend,v.channels,state.index,prefs.routingCompact], fx: [tr.count,state.fx,state.parameters?.guid,prefs.fxCompact,v.fxEnabled],
     'fx-parameters': state.parameters,
-    parameters: [fields(['panMode','automation','input','midiMap','recordMode','monitor','monitorItems','preservePDC','channels']),state.inputs],
+    parameters: [fields(['panMode','automation','input','midiMap','recordMode','recordOutput','recordLatency','monitor','monitorItems','preservePDC','channels']),state.inputs],
     items: state.items, metadata: state.metadata, appearance: fields(['color','icon','tcp','mcp']),
-    quick: [tr.count,tr.parent,fields(['mute','solo','arm'])],
+    quick: [tr.count,tr.parent,tr.masterVisible,fields(['mute','solo','arm'])],
   };
   const signature = JSON.stringify([session,tr.key,prefs.language,inputs[id]]);
   if (!force && rendered.get(id) === signature) { dirty.delete(id); return; }
@@ -265,7 +294,8 @@ document.addEventListener('focusout', () => setTimeout(flushRender, 0));
 const automationChoices = ['trimRead', 'read', 'touch', 'write', 'latch', 'latchPreview'].map((k, i) => [i, k]);
 const monitorChoices = [[0, 'off'], [1, 'monitorInput'], [2, 'tapeMonitor']];
 const panModeChoices = [[-1,'projectDefault'],[3,'panBalance'],[5,'panStereo'],[6,'panDual']];
-const recordChoices = ['recordInput', 'recordStereo', 'recordNone', 'recordStereoLatency', 'recordMIDI', 'recordMono', 'recordMonoLatency', 'recordMIDIOverdub', 'recordMIDIReplace'].map((k, i) => [i, k]);
+const recordChoices = ['recordInput','recordStereo','recordNone','recordStereoLatency','recordMIDI','recordMono','recordMonoLatency','recordMIDIOverdub','recordMIDIReplace','recordMIDITouch','recordMultichannel','recordMultichannelLatency','recordForceMono','recordForceStereo','recordForceMultichannel','recordForceMIDI','recordMIDILatch'].map((key,value) => [value,key]);
+const recordGroups = {recordMIDIGroup:[7,8,9,16],recordOutputGroup:[10,11,1,3,5,6,4],recordForceGroup:[12,13,14,15]};
 function setTrack(field, value, c, gesture) { act({action: 'setTrack', field, value, gesture}, c, `track:${field}:${gesture || ''}`); }
 function panModeSelect(v, m, c) {
   return select('panMode', v.panMode, panModeChoices, n => setTrack('panMode',n,c), m.panMode);
@@ -275,6 +305,11 @@ function renderHeader(force = false) {
   editable('track-header', () => {
     const tr = state.tracks, c = context(); if (!tr?.count) return [];
     const title = el('div', 'track-title');
+    if (isMaster()) {
+      title.append(el('h1', '', t('masterTrack')));
+      $('track-header').style.setProperty('--track-color', 'var(--accent)');
+      return [title];
+    }
     if (tr.count === 1 && tr.values.icon) {
       const icon = button('setIcon',() => chooseTrackIcon(c),'track-icon-button');
       icon.setAttribute('aria-label',t('setIcon')); icon.replaceChildren(trackIcon(tr.values.icon)); title.append(icon);
@@ -282,12 +317,12 @@ function renderHeader(force = false) {
     if (tr.count === 1) {
       const input = el('input'); input.type = 'text'; input.value = tr.values.name; input.maxLength = 1024; input.id = 'track-name'; input.setAttribute('aria-label', t('trackName'));
       commitField(input, value => act({action: 'rename', value}, c));
+      input.addEventListener('blur',() => { input.scrollLeft = 0; }); input.title = tr.values.name;
       title.append(el('span', 'track-number', String(tr.refs[0].number).padStart(2, '0')), input);
     } else title.append(el('h1', '', t('selectedTracks', {count: tr.count})));
     const color = el('input'); color.type = 'color'; color.value = tr.values.color || '#6e9992'; color.title = t(tr.mixed.color ? 'mixed' : 'trackColor'); color.setAttribute('aria-label', t('trackColor'));
     color.onchange = () => act({action: 'color', value: color.value}, c); title.append(color);
     const info = el('div', 'track-context');
-    info.append(el('span', '', t('selected')));
     if (tr.parent) info.append(literalButton(tr.parent.name, () => act({action: 'selectTrack', guid: tr.parent.guid}, c), 'subtle', t('parentTrack')));
     else if (tr.count === 1) info.append(el('span', '', t(tr.folder > 0 ? 'folderTrack' : 'rootTrack')));
     if (tr.count > 1) info.append(el('span', 'mixed-hint', t('multiHint')));
@@ -301,7 +336,7 @@ function renderMixer(force = false) {
   editable('mixer', () => {
     const {values: v = {}, mixed: m = {}} = state.tracks || {}, c = context();
     const controls = el('div', 'mix-buttons');
-    for (const key of ['mute', 'solo', 'arm', 'phase']) {
+    for (const key of isMaster() ? ['mute', 'solo', 'phase'] : ['mute', 'solo', 'arm', 'phase']) {
       const control = toggle(key, v[key], n => setTrack(key, n, c), m[key]);
       if (key === 'arm') {
         control.oncontextmenu = event => { event.preventDefault(); openRecordMenu(event,control,c,'monitor'); };
@@ -368,6 +403,16 @@ function closeRecordMenu(focus = false) {
 function recordMenuRows(kind, captured) {
   const {values:v,mixed:m} = state.tracks;
   const item = (label,field,value,checked) => ({label,checked,run:() => setTrack(field,value,captured)});
+  const recording = value => item(t(recordChoices[value][1]),'recordMode',value,!m.recordMode && v.recordMode === value);
+  if (kind === 'recordMode') return [recording(0),
+    ...Object.entries(recordGroups).map(([group,values]) => ({label:t(group),submenu:group,checked:!m.recordMode && values.includes(v.recordMode)})),recording(2)];
+  if (kind === 'recordMIDIGroup' || kind === 'recordForceGroup') return recordGroups[kind].map(recording);
+  if (kind === 'recordOutputGroup') return [
+    ...[10,1,5,4].map(value => ({...recording(value),checked:!m.recordMode && (v.recordMode === value || value !== 4 && v.recordMode === (value === 1 ? 3 : value + 1)),run:() => setTrack('recordMode',v.recordLatency && value !== 4 ? value === 1 ? 3 : value + 1 : value,captured)})),
+    {separator:true},
+    ...[[0,'recordOutputPostFader'],[2,'recordOutputPostFX'],[1,'recordOutputPreFX']].map(([value,label]) => item(t(label),'recordOutput',value,!m.recordOutput && v.recordOutput === value)),
+    {...item(t('recordLatency'),'recordLatency',v.recordLatency ? 0 : 1,m.recordLatency ? 'mixed' : !!v.recordLatency),checkbox:true,disabled:m.recordMode || ![1,3,5,6,10,11].includes(v.recordMode)}
+  ];
   if (kind === 'monitor') return [
     ...[[1,'monitorInput'],[2,'tapeMonitor']].map(([value,label]) => item(t(label),'monitor',v.monitor === value && !m.monitor ? 0 : value,m.monitor ? 'mixed' : v.monitor === value)),
     ...[['monitorItems','monitorItems'],['preservePDC','preservePDC']].map(([field,label]) => item(t(label),field,m[field] || !v[field] ? 1 : 0,m[field] ? 'mixed' : !!v[field]))
@@ -388,23 +433,33 @@ function trimRecordMenu(level) {
     pane.parent?.setAttribute('aria-expanded','false'); pane.node.remove();
   }
 }
+function recordMenuWidths(kind,captured) {
+  const widths = [], menu = $('record-menu');
+  const measure = (kind,level) => {
+    const node = el('div','record-menu-panel'); node.dataset.kind = kind; menu.append(node);
+    widths[level] = Math.max(widths[level] || 0,node.getBoundingClientRect().width); node.remove();
+    for (const choice of recordMenuRows(kind,captured)) if (choice.submenu) measure(choice.submenu,level + 1);
+  };
+  measure(kind,0);
+  const scale = Math.min(1,(document.documentElement.clientWidth - 8) / widths.reduce((sum,width) => sum + width,0));
+  return widths.map(width => Math.floor(width * scale));
+}
 function positionRecordMenu() {
-  const {kind,rect,x,y,panes} = recordMenuContext, width = document.documentElement.clientWidth;
+  const {rect,x,y,panes,widths} = recordMenuContext, width = document.documentElement.clientWidth;
+  const cascadeWidth = widths.reduce((sum,width) => sum + width,0) - widths.length + 1;
   for (const [level,pane] of panes.entries()) {
     const box = pane.node.getBoundingClientRect(), row = pane.parent?.getBoundingClientRect();
-    let left = x ?? rect.left, top = y ?? rect.bottom;
-    if (!level && kind === 'input') left = Math.min(left,width - box.width - Math.min(190,(innerWidth-24)/2) - 4);
+    let left = Math.min(x ?? rect.left,width - cascadeWidth - 4), top = y ?? rect.bottom;
     if (row) {
       const parent = panes[level-1].node.getBoundingClientRect();
       left = parent.right - 1; top = row.top;
-      if (left + box.width > width - 4) left = parent.left - box.width + 1;
     }
     pane.node.style.left = `${Math.max(4,Math.min(left,width - box.width - 4))}px`;
     pane.node.style.top = `${Math.max(4,Math.min(top,innerHeight - box.height - 4))}px`;
   }
 }
 function focusRecordPane(pane) {
-  (pane.node.querySelector('[aria-checked=true]') || pane.node.querySelector('button'))?.focus();
+  (pane.node.querySelector('[aria-checked=true]:not(:disabled)') || pane.node.querySelector('button:not(:disabled)'))?.focus();
 }
 function expandRecordMenu(kind,level,parent,focus = false) {
   if (!recordMenuContext) return;
@@ -419,17 +474,20 @@ function expandRecordMenu(kind,level,parent,focus = false) {
 function appendRecordMenu(kind,level,parent) {
   const {captured} = recordMenuContext, node = el('div','record-menu-panel');
   node.dataset.kind = kind; node.dataset.level = level; node.setAttribute('role','menu');
+  node.style.width = `${recordMenuContext.widths[level]}px`;
   node.setAttribute('aria-label',parent?.textContent || t(kind));
   const pane = {kind,node,parent}; recordMenuContext.panes.push(pane);
   node.onscroll = () => { if (recordMenuContext?.panes[level]?.node === node) trimRecordMenu(level); };
   for (const choice of recordMenuRows(kind,captured)) {
+    if (choice.separator) { node.append(el('hr')); continue; }
     const control = literalButton(choice.label,() => {
       clearTimeout(recordMenuHover);
       if (choice.submenu) expandRecordMenu(choice.submenu,level,control,true);
       else { closeRecordMenu(true); choice.run(); }
     });
+    control.disabled = !!choice.disabled;
     const caption = el('span','',choice.label); control.replaceChildren(caption);
-    control.setAttribute('role',kind === 'monitor' ? 'menuitemcheckbox' : choice.submenu ? 'menuitem' : 'menuitemradio');
+    control.setAttribute('role',kind === 'monitor' || choice.checkbox ? 'menuitemcheckbox' : choice.submenu ? 'menuitem' : 'menuitemradio');
     if (choice.checked !== undefined) control.setAttribute('aria-checked',choice.checked);
     if (choice.submenu) {
       control.setAttribute('aria-haspopup','menu'); control.setAttribute('aria-expanded','false');
@@ -452,7 +510,7 @@ function appendRecordMenu(kind,level,parent) {
 }
 function recordMenuSignature() {
   const {values,mixed} = state.tracks;
-  return JSON.stringify(['monitor','monitorItems','preservePDC','input','midiMap'].map(key => [values[key],mixed[key]]));
+  return JSON.stringify(['monitor','monitorItems','preservePDC','input','midiMap','recordMode','recordOutput','recordLatency'].map(key => [values[key],mixed[key]]));
 }
 function refreshRecordMenu(force = false) {
   if (!recordMenuContext) return;
@@ -479,8 +537,9 @@ function refreshRecordMenu(force = false) {
 function openRecordMenu(event,anchor,captured,kind) {
   closePanMenu(); closeRecordMenu();
   recordMenuContext = {anchor,captured,kind,panes:[],rect:anchor.getBoundingClientRect(),x:event?.clientX,y:event?.clientY,signature:recordMenuSignature()};
-  $('record-menu').replaceChildren(); const pane = appendRecordMenu(kind,0);
-  $('record-menu').hidden = false; positionRecordMenu(); focusRecordPane(pane);
+  $('record-menu').replaceChildren(); $('record-menu').hidden = false;
+  recordMenuContext.widths = recordMenuWidths(kind,captured);
+  const pane = appendRecordMenu(kind,0); positionRecordMenu(); focusRecordPane(pane);
 }
 function recordSelect(label,caption,captured,kind) {
   const control = literalButton(caption,() => openRecordMenu(null,control,captured,kind),'record-select');
@@ -499,7 +558,7 @@ $('record-menu').onkeydown = event => {
   const active = document.activeElement, pane = active.closest('.record-menu-panel');
   if (!pane || !recordMenuContext) return;
   clearTimeout(recordMenuHover);
-  const level = Number(pane.dataset.level), options = [...pane.querySelectorAll('button')], i = options.indexOf(active);
+  const level = Number(pane.dataset.level), options = [...pane.querySelectorAll('button:not(:disabled)')], i = options.indexOf(active);
   if (['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
     event.preventDefault(); trimRecordMenu(level); positionRecordMenu();
     options[event.key === 'Home' ? 0 : event.key === 'End' ? options.length-1 : (i+(event.key === 'ArrowDown' ? 1 : -1)+options.length)%options.length]?.focus();
@@ -514,6 +573,47 @@ document.addEventListener('pointerdown',event => { if (!$('record-menu').contain
 window.addEventListener('blur',() => closeRecordMenu());
 window.addEventListener('resize',() => closeRecordMenu());
 document.addEventListener('scroll',event => { if (!$('record-menu').contains(event.target)) closeRecordMenu(); },true);
+function routeKnob(volume, target, change, feedback) {
+  let start;
+  const knob = el('div','route-knob'); knob.tabIndex = 0; knob.value = routeKnobPosition(volume);
+  knob.setAttribute('role','slider'); knob.setAttribute('aria-label',t('volume')); knob.setAttribute('aria-orientation','vertical');
+  knob.setAttribute('aria-valuemin',-90); knob.setAttribute('aria-valuemax',12);
+  fxIcon(knob,'M7.5 19.794 A9 9 0 1 1 16.5 19.794'); knob.setAttribute('aria-label',t('volume'));
+  const path = knob.querySelector('path'); path.setAttribute('pathLength',100);
+  const preview = () => {
+    const value = routeKnobVolume(Number(knob.value)), db = toDb(value);
+    path.setAttribute('stroke-dasharray',`${Number(knob.value) * 100} 100`);
+    knob.setAttribute('aria-valuenow',Math.max(-90,db)); knob.setAttribute('aria-valuetext',`${dbText(db)} dB`);
+    knob.title = t('routeSendTooltip',{target,value:db === -Infinity ? '−∞' : db.toFixed(2)});
+    feedback?.(Number(knob.value),`${dbText(db)} dB`,!!start && knob._dragged);
+  };
+  liveRange(knob,(position,gesture) => change(routeKnobVolume(position),gesture),preview);
+  const capture = knob.onpointerdown;
+  knob.onpointerdown = event => {
+    knob._dragged = false;
+    if (event.button !== 0 || event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) return;
+    event.preventDefault(); capture(event); knob.focus({preventScroll:true});
+    start = {y:event.clientY,value:Number(knob.value)};
+  };
+  const set = value => { knob.value = Math.max(0,Math.min(1,value)); knob.dispatchEvent(new Event('input',{bubbles:true})); };
+  knob.onpointermove = event => {
+    if (!start) return;
+    if (Math.abs(event.clientY-start.y) > 1) knob._dragged = true;
+    set(start.value + (start.y - event.clientY) / 160);
+  };
+  for (const type of ['pointerup','pointercancel','lostpointercapture','blur']) knob.addEventListener(type,() => { start = null; preview(); });
+  knob.onkeydown = event => {
+    const delta = {ArrowUp:0.01,ArrowRight:0.01,ArrowDown:-0.01,ArrowLeft:-0.01,PageUp:0.1,PageDown:-0.1}[event.key];
+    if (delta === undefined && !['Home','End'].includes(event.key)) return;
+    event.preventDefault(); set(event.key === 'Home' ? 0 : event.key === 'End' ? 1 : Number(knob.value) + delta);
+    knob.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+  knob.ondblclick = event => {
+    if (event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) return;
+    event.preventDefault(); set(0.5); knob.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+  preview(); return knob;
+}
 function routeChannels(label, value, change, source = false) {
   const choices = Array.from({length: 64}, (_, i) => [i * 2, `${i * 2 + 1}/${i * 2 + 2}`, true]);
   if (source) choices.unshift([-1, 'none']);
@@ -524,8 +624,10 @@ function renderRouting(force = false) {
     const routing = state.routing, tr = state.tracks, c = context();
     $('routing-count').textContent = routing?.rows?.length || '0';
     if (tr?.count !== 1) return [hint('singleTrack')];
-    const columns = el('div', 'routing-columns');
-    for (const [category, label, addLabel] of [[0, 'sends', 'addSend'], [-1, 'receives', 'addReceive']]) {
+    const master = isMaster(), columns = el('div', `routing-columns${master ? ' hardware-outputs' : ''}`);
+    const lists = [], controls = el('div',`route-controls${master ? ' hardware-outputs' : ''}`);
+    const groups = master ? [[1,'hardwareOutputs','addHardwareOutput']] : [[0,'sends','addSend'],[-1,'receives','addReceive']];
+    for (const [category, label, addLabel] of groups) {
       const column = el('section', 'route-column');
       column.dataset.category = category;
       const picker = button(addLabel, () => {
@@ -533,21 +635,40 @@ function renderRouting(force = false) {
         $('route-search').value = ''; renderRouteCatalog(); $('route-dialog').showModal(); $('route-search').focus();
       }, 'route-add');
       picker.setAttribute('aria-haspopup', 'dialog');
-      column.append(picker);
+      picker.dataset.category = category; controls.append(picker);
       const rows = (routing?.rows || []).filter(row => row.category === category);
-      const list = el('div', 'route-list');
+      const list = el('div', `route-list${prefs.routingCompact ? ' route-compact' : ''}`);
       list.setAttribute('aria-label', t(label));
       list.onscroll = () => routeScroll.set(category, list.scrollTop);
-      if (!rows.length) list.append(hint('none'));
       for (const route of rows) {
         const update = (field, value, gesture) => act({action: 'route', category, index: route.index, routeKey: state.routing?.routeKey, field, value, gesture}, c, `route:${category}:${route.index}:${field}:${gesture || ''}`);
         const card = el('div', 'route-card'), head = el('div', 'route-head');
-        const peer = el('span', 'route-name', route.peer?.name || t('unavailable')); peer.title = peer.textContent;
+        const peer = el('span', 'route-name', route.name || route.peer?.name || t('unavailable')); peer.title = peer.textContent;
+        if (prefs.routingCompact) {
+          const name = literalButton('',() => {},'route-compact-name',t('routingCompactHint'));
+          name.append(el('span','track-number',String(route.index + 1).padStart(2,'0')),peer);
+          const caption = peer.textContent;
+          const target = route.peer ? t('routeTrackTarget',route.peer) : `${t('hardwareOutput')} "${caption}"`;
+          const knob = routeKnob(route.volume,target,(value,gesture) => update('volume',value,gesture),(position,text,active) => {
+            card.classList.toggle('route-editing',active);
+            card.style.setProperty('--route-level',position);
+            peer.textContent = active ? text : caption;
+          });
+          card.classList.toggle('route-muted',!!route.mute); name.setAttribute('aria-pressed',!!route.mute);
+          card.onclick = event => {
+            if (knob._dragged && knob.contains(event.target)) return;
+            if (knob.contains(event.target) && !event.altKey && !event.shiftKey && !event.ctrlKey && !event.metaKey) return;
+            const command = event.altKey ? {action:'routeDelete'} : event.shiftKey ? {action:'route',field:'mute',value:route.mute ? 0 : 1} : {action:'routeOpen'};
+            event.preventDefault(); event.stopPropagation();
+            act({...command,category,index:route.index,routeKey:state.routing?.routeKey},c);
+          };
+          card.append(name,knob); list.append(card); continue;
+        }
         const mute = toggle('mute', route.mute, n => update('mute', n)); mute.textContent = 'M'; mute.setAttribute('aria-label',t('mute'));
         const phase = fxIcon(toggle('routePhase',route.phase,n => update('phase',n)),'M19 5L5 19 M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0');
         const mono = fxIcon(toggle('routeMono',route.mono,n => update('mono',n)),'M3 5h4l5 7-5 7H3 M12 12h9 M17 8l4 4-4 4');
         phase.classList.add('route-phase'); mono.classList.add('route-mono');
-        const modes = [[0,'postFader'],[3,'postFX'],[1,'preFX'],[8,'preReceive']];
+        const modes = [[0,'postFader'],[3,'postFX'],[1,'preFX'],...(!master ? [[8,'preReceive']] : [])];
         const mode = route.mode === 2 ? 3 : route.mode, modeWrap = el('div','route-mode');
         const modeSelect = select('sendMode',mode,modes,n => update('mode',n)).querySelector('select');
         modeSelect.title = t(modes.find(row=>row[0]===mode)?.[1] || 'sendMode');
@@ -568,20 +689,38 @@ function renderRouting(force = false) {
         title.append(peer,remove); head.append(title, mute, phase, mono, modeWrap, expand);
         card.append(head, fader('volume', route.volume, false, (n,g) => update('volume',n,g)));
         details.append(fader('pan',route.pan,false,(n,g) => update('pan',n,g),'pan'));
-        details.append(routeChannels('sourceChannels',route.sourceChannels,n => update('sourceChannels',n),true), routeChannels('destinationChannels',route.destinationChannels,n => update('destinationChannels',n)));
+        if (master) {
+          const count = tr.values.channels;
+          const sources = [[-1,'none'],...Array.from({length:count - 1},(_,i) => [i,`${i + 1}/${i + 2}`,true]),...Array.from({length:count},(_,i) => [1024 + i,String(i + 1),true])];
+          details.append(select('sourceChannels',route.sourceChannels,sources,n => update('sourceChannels',n)),
+            select('hardwareOutput',route.destinationChannels,(routing.outputs || []).map(output => [output.value,output.label,true]),n => update('destinationChannels',n)));
+        } else details.append(routeChannels('sourceChannels',route.sourceChannels,n => update('sourceChannels',n),true), routeChannels('destinationChannels',route.destinationChannels,n => update('destinationChannels',n)));
         card.append(details); list.append(card);
       }
-      column.append(list,listResizer(list,label,'.route-card',label));
+      column.append(list); lists.push(list);
       queueMicrotask(() => { if (list.isConnected) list.scrollTop = routeScroll.get(category) || 0; });
       columns.append(column);
     }
-    return [checkbox('mainSend', tr.values.mainSend, n => setTrack('mainSend',n,c)), columns];
+    return [...(!master ? [checkbox('mainSend',tr.values.mainSend,n => setTrack('mainSend',n,c))] : []),
+      select('trackChannels',tr.values.channels,Array.from({length:64},(_,i) => [(i+1)*2,String((i+1)*2),true]),n => setTrack('channels',n,c)), columns, listResizer(lists,(master ? 'hardwareOutputs' : 'routing') + (prefs.routingCompact ? 'Compact' : ''),'.route-card',master ? 'hardwareOutputs' : 'routing'),controls];
   }, force);
 }
 function renderRouteCatalog() {
   const root = $('route-catalog'); root.replaceChildren();
   if (!routePicker) return;
   const {category, captured} = routePicker;
+  if (category === 1) {
+    const terms = $('route-search').value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+    const outputs = (state.routing?.outputs || []).filter(output => terms.every(term => output.label.toLocaleLowerCase().includes(term)));
+    if (!outputs.length) root.append(hint(state.routing?.outputs?.length ? 'noResults' : 'noHardwareOutputs'));
+    for (const output of outputs) {
+      const pick = literalButton(output.label, () => {
+        act({action:'routeAdd',category,output:output.value}, captured); $('route-dialog').close();
+      });
+      pick.dataset.output = output.value; root.append(pick);
+    }
+    return;
+  }
   const rows = filterTracks(state.index || [], $('route-search').value).filter(track => track.guid !== state.tracks?.refs?.[0]?.guid);
   if (!rows.length) root.append(hint('noResults'));
   for (const track of rows) {
@@ -616,6 +755,7 @@ function bindFXDrag(card, fx, c) {
   handle.onpointerdown = event => {
     dragged = false;
     if (event.button !== 0 || event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) return;
+    handle.setPointerCapture(event.pointerId);
     start = {x:event.clientX,y:event.clientY};
   };
   handle.onpointermove = event => {
@@ -643,8 +783,10 @@ function bindFXDrag(card, fx, c) {
   handle.onkeydown = event => {
     if (!event.altKey || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
     event.preventDefault();
-    const step = {ArrowLeft:-1,ArrowRight:1,ArrowUp:-2,ArrowDown:2}[event.key];
-    const target = state.fx?.rows[fx.index+step];
+    const column = Number(card.style.gridColumn), row = Number(card.style.gridRow);
+    const [dx,dy] = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];
+    const neighbor = [...card.parentElement.children].find(node => Number(node.style.gridColumn) === column + dx && Number(node.style.gridRow) === row + dy);
+    const target = state.fx?.rows.find(item => item.guid === neighbor?.dataset.guid);
     if (target) act({action:'fx',guid:fx.guid,operation:'move',target:target.guid},c);
   };
 }
@@ -693,8 +835,23 @@ function renderFX(force = false) {
     const add = button('addFX',() => {
       dialogContext = c; $('fx-search').value = ''; $('fx-name').value = ''; $('fx-dialog').showModal(); renderCatalog(); $('fx-search').focus(); act({action:'fxCatalog'},c);
     },'fx-add');
-    queueMicrotask(() => { if (viewport.isConnected) viewport.scrollTop = listScroll.get('fx') || 0; });
-    return [...(rows.length ? [viewport] : []),add,listResizer(viewport,prefs.fxCompact ? 'fxCompact' : 'fx','.fx-card','fx')];
+    const controls = el('div','fx-controls'); let enabled = !!state.tracks.values.fxEnabled;
+    const power = button(enabled ? 'fxEnabled' : 'fxDisabled',() => {
+      enabled = !enabled; power.textContent = power.title = t(enabled ? 'fxEnabled' : 'fxDisabled');
+      power.setAttribute('aria-pressed',enabled); rendered.delete('fx'); setTrack('fxEnabled',enabled ? 1 : 0,c);
+    },'fx-enable');
+    power.setAttribute('aria-pressed',enabled); controls.append(add,power);
+    queueMicrotask(() => queueMicrotask(() => { if (viewport.isConnected) viewport.scrollTop = listScroll.get('fx') || 0; }));
+    const arrange = (height,minimum) => {
+      const gap = parseFloat(getComputedStyle(grid).rowGap) || 0;
+      const count = Math.max(1,Math.floor((height + gap) / (minimum + gap)));
+      viewport.dataset.rows = count;
+      for (const [index,card] of [...grid.children].entries()) {
+        card.style.gridColumn = Math.floor(index % (count * 2) / count) + 1;
+        card.style.gridRow = Math.floor(index / (count * 2)) * count + index % count + 1;
+      }
+    };
+    return [...(rows.length ? [viewport,listResizer(viewport,prefs.fxCompact ? 'fxCompact' : 'fx','.fx-card','fx',arrange)] : []),controls];
   },force);
 }
 function renderFXParameters(force = false) {
@@ -730,7 +887,7 @@ function renderParameters(force = false) {
     return [panModeSelect(v,m,c),
       select('automation', v.automation, automationChoices, n => setTrack('automation', n, c), m.automation),
       recordSelect('input',inputCaption(v,m),c,'input'),
-      select('recordMode', v.recordMode, recordChoices, n => setTrack('recordMode', n, c), m.recordMode),
+      recordSelect('recordMode',m.recordMode ? t('mixed') : t(recordChoices.find(row => row[0] === v.recordMode)?.[1] || 'recordInput'),c,'recordMode'),
       recordSelect('monitor',m.monitor ? t('mixed') : t(monitorChoices.find(row=>row[0] === v.monitor)?.[1] || 'off'),c,'monitor'),
       numeric('channels', v.channels, {min: 2, max: 128, step: 2}, n => setTrack('channels', n, c), m.channels)];
   }, force);
@@ -803,27 +960,29 @@ function renderQuick(force = false) {
   editable('quick', () => {
     const c = context(), tr = state.tracks;
     if (!tr?.count) return [];
+    const master = toggle('masterTrack',tr.masterVisible,() => act({action:'quick',operation:'master'},c));
+    if (isMaster()) return [button('openChain', () => act({action:'quick',operation:'chain'},c)),master];
     const result = [];
     const rename = button('rename', () => { $('track-name')?.focus(); $('track-name')?.select(); }); rename.disabled = tr.count !== 1; result.push(rename);
     for (const [key, label] of [['duplicate','duplicateTrack'],['chain','openChain'],['parent','parentTrack'],['previous','previousTrack'],['next','nextTrack']]) {
       const b = button(label, () => act({action: 'quick', operation: key}, c));
       b.disabled = key !== 'duplicate' && tr.count !== 1 || key === 'parent' && !tr.parent; result.push(b);
     }
-    result.push(button('openMaster',() => act({action:'quick',operation:'master'},c)));
+    result.push(master);
     for (const key of ['spacerBefore','spacerAfter']) result.push(button(key,() => act({action:'quick',operation:key},c)));
     result.push(button('deleteTrack', () => confirmDelete(t('deleteTracksPrompt', {count: tr.count}), {action: 'quick', operation: 'delete'}, c), 'danger'));
     return result;
   }, force);
 }
 const renderers = {'track-header': renderHeader, mixer: renderMixer, routing: renderRouting, fx: renderFX, 'fx-parameters': renderFXParameters, parameters: renderParameters, items: renderItems, metadata: renderMetadata, appearance: renderAppearance, quick: renderQuick};
-function renderAll(force = false) { for (const render of Object.values(renderers)) render(force); renderSearch(); configureAudio(); }
+function renderAll(force = false) { renderMode(); for (const render of Object.values(renderers)) render(force); renderSearch(); configureAudio(); }
 function configureAudio() {
   if (!audio) return;
   const track = state.tracks?.count === 1 ? state.tracks.refs[0] : null;
-  const source = prefs.source === 'track' ? track ? `track:${track.guid}` : null : prefs.source;
-  $('analysis-notice').textContent = prefs.analysis ? '' : t('analysisDisabled');
-  audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source,
-    aggregate: prefs.source === 'track' && !!track && state.tracks.aggregate === true,
+  const master = isMaster(), source = master ? 'master' : prefs.source === 'track' ? track ? `track:${track.guid}` : null : prefs.source;
+  $('analysis-notice').textContent = !prefs.analysis ? t('analysisDisabled') : '';
+  audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source, master,
+    aggregate: !master && prefs.source === 'track' && !!track && state.tracks.aggregate === true,
     active: !disposed && !closing && connected && !!state.tracks?.count && prefs.analysis && $('panel-analysis').open && !document.hidden});
 }
 function renderSearch() {
@@ -896,7 +1055,7 @@ function receive(raw) {
   if (message.session !== session) {
     closePanMenu(); closeRecordMenu();
     routeExpansion.clear(); routeScroll.clear(); listScroll.clear();
-    session = message.session; state = {}; queue.clear(); dirty.clear();
+    session = message.session; state = {}; modeSwitching = null; queue.clear(); dirty.clear();
     overviewRevision++; overviewData = null;
     for (const id of ['confirm-dialog', 'fx-dialog', 'route-dialog']) { $(id).returnValue = 'cancel'; $(id).close(); }
   }
@@ -905,6 +1064,8 @@ function receive(raw) {
   connected = true; document.body.classList.add('connected'); $('connection').textContent = t('connected');
   if (message.part === 'theme') { nativeTheme = message.data; applyTheme(); }
   else if (message.part === 'tracks') {
+    if (modeSwitching === message.data.mode) modeSwitching = null;
+    renderMode();
     const changed = oldKey !== message.data.key;
     if (changed) {
       closePanMenu(); closeRecordMenu();
@@ -915,8 +1076,8 @@ function receive(raw) {
     $('empty').hidden = message.data.count > 0; $('inspector').hidden = !message.data.count;
     $('project-name').textContent = message.data.projectName || t('unsavedProject');
     if (changed) renderAll(true);
-    else { renderHeader(); renderMixer(); renderParameters(); renderAppearance(); renderQuick(); renderRouting(); configureAudio(); refreshRecordMenu(); }
-  } else if (message.part === 'routing') renderRouting();
+    else { renderHeader(); renderMixer(); renderParameters(); renderAppearance(); renderQuick(); renderRouting(); renderFX(); configureAudio(); refreshRecordMenu(); }
+  } else if (message.part === 'routing') { renderRouting(); if ($('route-dialog').open) renderRouteCatalog(); }
   else if (message.part === 'fx') { renderFX(); renderFXParameters(); }
   else if (message.part === 'parameters') { renderFXParameters(); renderFX(); }
   else if (message.part === 'items') renderItems(oldItemKey !== message.data.itemKey);
@@ -930,6 +1091,9 @@ function fillSettings(value) {
     const control = form.elements.namedItem(key); if (!control) continue;
     if (control.type === 'checkbox') control.checked = v; else control.value = v;
   }
+  $('analysis-setting-hint').textContent = t(isMaster() ? 'masterAnalysisHint' : 'preFXHint');
+  form.elements.source.disabled = isMaster();
+  if (isMaster()) form.elements.source.value = 'master';
   $('custom-colors').hidden = form.elements.theme.value !== 'custom';
 }
 function openSettings() {
@@ -956,7 +1120,7 @@ $('settings-form').onsubmit = async event => {
   event.preventDefault();
   const next = {...prefs};
   for (const control of event.currentTarget.elements) {
-    if (!control.name) continue;
+    if (!control.name || control.disabled) continue;
     next[control.name] = control.type === 'checkbox' ? control.checked : ['fftSize','streamRate','drawRate','floor'].includes(control.name) ? Number(control.value) : control.value;
   }
   const old = prefs;
@@ -971,12 +1135,12 @@ document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListene
   if (panel.dataset.panel === 'analysis') configureAudio();
 }));
 document.querySelectorAll('.analysis-card').forEach(card => card.addEventListener('toggle', configureAudio));
-for (const kind of ['meter','spectrum','waveform']) {
+for (const kind of ['meter','spectrum','waveform','livePeak']) {
   const card = $(`analysis-${kind}`), summary = card.querySelector('summary');
   const restart = button(kind, event => { event.preventDefault(); event.stopPropagation(); audio?.restart(); }, 'analysis-restart', 'restartAnalysis');
   restart.dataset.i18n = kind; restart.dataset.analysisKind = kind;
   summary.removeAttribute('data-i18n'); summary.replaceChildren(restart);
-  const graph = card.querySelector(kind === 'meter' ? '.readout' : 'canvas');
+  const graph = card.querySelector(kind === 'meter' || kind === 'livePeak' ? '.readout' : 'canvas');
   graph.tabIndex = 0; graph.setAttribute('role','button'); graph.dataset.analysisKind = kind;
   graph.onclick = () => audio?.restart();
   graph.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); audio?.restart(); } };

@@ -7,16 +7,18 @@ return function(r, json, send)
   local gesture, editing_message, gesture_time = nil, nil, 0
   local next_theme = 0
   local record_cache = {}
+  local mode = "track"
   local section = "ReaWebAPI.TrackAxis"
   local A, null = json.array, json.null
 
   local track_fields = {
+    fxEnabled = {"I_FXEN", 0, 1, true},
     volume = {"D_VOL", 0, 4}, pan = {"D_PAN", -1, 1}, width = {"D_WIDTH", -1, 1},
     panMode = {"I_PANMODE", -1, 6, true}, panLeft = {"D_DUALPANL", -1, 1}, panRight = {"D_DUALPANR", -1, 1},
     mute = {"B_MUTE", 0, 1, true}, solo = {"I_SOLO", 0, 2, true}, arm = {"I_RECARM", 0, 1, true},
     monitor = {"I_RECMON", 0, 2, true}, monitorItems = {"I_RECMONITEMS", 0, 1, true}, phase = {"B_PHASE", 0, 1, true},
     automation = {"I_AUTOMODE", 0, 5, true}, input = {"I_RECINPUT", -1, 16383, true},
-    recordMode = {"I_RECMODE", 0, 8, true}, mainSend = {"B_MAINSEND", 0, 1, true},
+    recordMode = {"I_RECMODE", 0, 16, true}, mainSend = {"B_MAINSEND", 0, 1, true},
     channels = {"I_NCHAN", 2, 128, true}, tcp = {"B_SHOWINTCP", 0, 1, true}, mcp = {"B_SHOWINMIXER", 0, 1, true},
   }
 
@@ -56,6 +58,10 @@ return function(r, json, send)
   end
 
   local function selection()
+    if mode == "master" then
+      local track = r.GetMasterTrack(project)
+      return {track}, "master:" .. guid(track), {[track] = true}
+    end
     local tracks, ids, set = {}, {}, {}
 
     for i = 0, r.CountSelectedTracks(project) - 1 do
@@ -68,6 +74,7 @@ return function(r, json, send)
 
   local function items_for(set)
     local items, ids = {}, {}
+    if mode == "master" then return items, "" end
 
     for i = 0, r.CountSelectedMediaItems(project) - 1 do
       local item = r.GetSelectedMediaItem(project, i)
@@ -154,6 +161,8 @@ return function(r, json, send)
 
     local recording = record_values(track)
     result.preservePDC, result.midiMap = recording.preservePDC, recording.midiMap
+    result.recordOutput = value(track,"I_RECMODE_FLAGS") & 3
+    result.recordLatency = result.recordMode == 3 or result.recordMode == 6 or result.recordMode == 11
     result.panModeEffective = result.panMode
 
     if result.panMode == -1 and r.GetTrackUIPan then
@@ -239,15 +248,41 @@ return function(r, json, send)
     end
   end
 
+  local function hardware_outputs()
+    local rows, count = A(), math.min(1024, r.GetNumAudioOutputs())
+
+    for i = 0, count - 2 do
+      rows[#rows + 1] = {value = i, label = (i + 1) .. ": " .. r.GetOutputChannelName(i) .. " / " .. r.GetOutputChannelName(i + 1)}
+    end
+
+    for i = 0, count - 1 do
+      rows[#rows + 1] = {value = 1024 + i, label = (i + 1) .. ": " .. r.GetOutputChannelName(i)}
+    end
+
+    return rows
+  end
+
+  local function valid_output(channel)
+    if not finite(channel) or channel % 1 ~= 0 then return false end
+
+    for _, output in ipairs(hardware_outputs()) do
+      if output.value == channel then return true end
+    end
+
+    return false
+  end
+
   local function routes(track)
     local rows = A()
 
-    for _, category in ipairs({0, -1}) do
+    for _, category in ipairs(mode == "master" and {1} or {0, -1}) do
       for i = 0, r.GetTrackNumSends(track, category) - 1 do
         local function get(field) return r.GetTrackSendInfo_Value(track, category, i, field) end
+        local output_name
+        if category == 1 then _, output_name = r.GetTrackSendName(track, i, "") end
         rows[#rows + 1] = {
-          index = i, category = category,
-          peer = track_ref(get(category == 0 and "P_DESTTRACK" or "P_SRCTRACK")),
+          index = i, category = category, name = output_name,
+          peer = category == 1 and null or track_ref(get(category == 0 and "P_DESTTRACK" or "P_SRCTRACK")),
           volume = get("D_VOL"), pan = get("D_PAN"), mute = get("B_MUTE"),
           phase = get("B_PHASE"), mono = get("B_MONO"),
           mode = get("I_SENDMODE"), sourceChannels = get("I_SRCCHAN"), destinationChannels = get("I_DSTCHAN"), midi = get("I_MIDIFLAGS"),
@@ -431,9 +466,29 @@ return function(r, json, send)
 
   local function command(m)
     check_project()
-    if m.session ~= session then fail("staleState") end
-    local tracks, key, set = selection()
+
+    if m.session ~= session then
+      fail("staleState")
+    end
+
     local action = m.action
+
+    if action == "mode" then
+      if m.value ~= "track" and m.value ~= "master" then
+        fail("invalidValue")
+      end
+
+      if mode ~= m.value then
+        end_gesture()
+        mode, previous, selected_fx = m.value, {}, nil
+        force, next_tick, next_detail = true, 0, 0
+      end
+
+      return
+    end
+
+    local tracks, key, set = selection()
+
     if action == "gestureEnd" then
       if gesture and gesture.id == m.gesture then end_gesture() end
 
@@ -445,6 +500,7 @@ return function(r, json, send)
     end
 
     if action == "selectTrack" then
+      if mode == "master" then fail("invalidValue") end
       local t = resolve_track(m.guid)
       if not t then fail("staleState") end
       r.SetOnlyTrackSelected(t)
@@ -456,11 +512,39 @@ return function(r, json, send)
     if key ~= m.selectionKey or #tracks == 0 then fail("staleState") end
     local track = #tracks == 1 and tracks[1] or nil
 
+    if mode == "master" then
+      if action == "setTrack" then
+        if not ({fxEnabled=true,volume=true,pan=true,width=true,panMode=true,panLeft=true,panRight=true,mute=true,solo=true,phase=true,channels=true,automation=true})[m.field] then fail("invalidValue") end
+      elseif action == "quick" then
+        if m.operation ~= "chain" and m.operation ~= "master" then fail("invalidValue") end
+      elseif not ({route=true,routeAdd=true,routeDelete=true,routeOpen=true,fx=true,fxAdd=true,fxSelect=true,fxCatalog=true,setMetadata=true})[action] then
+        fail("invalidValue")
+      end
+    end
+
     if action == "setTrack" then
       if m.field == "preservePDC" then
         if not bounded(m.value, {nil,0,1,true}) then fail("invalidValue") end
         undo("Preserve PDC", function() r.Main_OnCommand(m.value == 1 and 41921 or 41920,0) end)
         record_cache = {}
+
+        return
+      elseif m.field == "recordOutput" then
+        if not bounded(m.value,{nil,0,2,true}) then fail("invalidValue") end
+
+        undo("Record output mode",function()
+          for _,t in ipairs(tracks) do r.SetMediaTrackInfo_Value(t,"I_RECMODE_FLAGS",(value(t,"I_RECMODE_FLAGS") & ~3) | m.value) end
+        end)
+
+        return
+      elseif m.field == "recordLatency" then
+        if not bounded(m.value,{nil,0,1,true}) then fail("invalidValue") end
+        local modes = {[1]={1,3},[3]={1,3},[5]={5,6},[6]={5,6},[10]={10,11},[11]={10,11}}
+
+        for _,t in ipairs(tracks) do if not modes[value(t,"I_RECMODE")] then fail("invalidValue") end end
+        undo("Record output latency",function()
+          for _,t in ipairs(tracks) do r.SetMediaTrackInfo_Value(t,"I_RECMODE",modes[value(t,"I_RECMODE")][m.value + 1]) end
+        end)
 
         return
       elseif m.field == "midiMap" then
@@ -570,39 +654,83 @@ return function(r, json, send)
         phase = {"B_PHASE",0,1,true}, mono = {"B_MONO",0,1,true},
         mode = {"I_SENDMODE",0,8,true}, sourceChannels = {"I_SRCCHAN",-1,126,true}, destinationChannels = {"I_DSTCHAN",0,126,true}})[m.field]
 
+      if m.category == 1 and (m.field == "sourceChannels" or m.field == "destinationChannels") then
+        spec = {spec[1], m.field == "sourceChannels" and -1 or 0, 2047, true}
+      end
+
       if not row or not spec or not bounded(m.value, spec) then fail("invalidValue") end
+
+      if m.category == 1 then
+        if m.field == "mode" and m.value == 8 then fail("invalidValue") end
+        if m.field == "destinationChannels" and not valid_output(m.value) then fail("invalidValue") end
+        if m.field == "sourceChannels" and m.value ~= -1 and (m.value & 1023) + (m.value >= 1024 and 1 or 2) > 128 then fail("invalidValue") end
+      end
+
       if m.field == "mode" and not ({[0]=true,[1]=true,[3]=true,[8]=true})[m.value] then fail("invalidValue") end
-      if (m.field == "sourceChannels" or m.field == "destinationChannels") and m.value ~= -1 and m.value % 2 ~= 0 then fail("invalidValue") end
+      if m.category ~= 1 and (m.field == "sourceChannels" or m.field == "destinationChannels") and m.value ~= -1 and m.value % 2 ~= 0 then fail("invalidValue") end
 
       undo("Routing " .. m.field, function()
         if (m.field == "sourceChannels" or m.field == "destinationChannels") and m.value >= 0 then
-          local src = r.GetTrackSendInfo_Value(track, m.category, m.index, "P_SRCTRACK")
-          local dst = r.GetTrackSendInfo_Value(track, m.category, m.index, "P_DESTTRACK")
-          local endpoint = m.field == "sourceChannels" and src or dst
-          if value(endpoint, "I_NCHAN") < m.value + 2 then r.SetMediaTrackInfo_Value(endpoint, "I_NCHAN", m.value + 2) end
+          local endpoint, count
+
+          if m.category == 1 then
+            if m.field == "sourceChannels" then endpoint, count = track, (m.value & 1023) + (m.value >= 1024 and 1 or 2) end
+          else
+            endpoint = r.GetTrackSendInfo_Value(track, m.category, m.index, m.field == "sourceChannels" and "P_SRCTRACK" or "P_DESTTRACK")
+            count = m.value + 2
+          end
+
+          if endpoint and value(endpoint, "I_NCHAN") < count then r.SetMediaTrackInfo_Value(endpoint, "I_NCHAN", math.ceil(count / 2) * 2) end
         end
+
         r.SetTrackSendInfo_Value(track, m.category, m.index, spec[1], m.value)
       end)
 
       if gesture and gesture.id == m.gesture then
         gesture.routeKey = route_key(routes(track))
       end
-    elseif action == "routeDelete" then
-      if not track or (m.category ~= 0 and m.category ~= -1) then fail("invalidValue") end
+    elseif action == "routeDelete" or action == "routeOpen" then
+      if not track or (mode == "master" and m.category ~= 1 or mode ~= "master" and m.category ~= 0 and m.category ~= -1) then
+        fail("invalidValue")
+      end
+
       local rows = routes(track)
-      if m.routeKey ~= route_key(rows) then fail("staleState") end
+      if m.routeKey ~= route_key(rows) then
+        fail("staleState")
+      end
 
       local found = false
       for _, row in ipairs(rows) do
         if row.category == m.category and row.index == m.index then
           found = true
+
           break
         end
       end
 
-      if not found then fail("staleState") end
+      if not found then
+        fail("staleState")
+      end
+
+      if action == "routeOpen" then
+        r.Main_OnCommand(mode == "master" and 42235 or 40293,0)
+
+        return
+      end
+
       undo("Delete routing", function() if not r.RemoveTrackSend(track, m.category, m.index) then fail("saveFailed") end end)
     elseif action == "routeAdd" then
+      if mode == "master" then
+        if m.category ~= 1 or not valid_output(m.output) then fail("invalidValue") end
+        undo("Add hardware output", function()
+          local i = r.CreateTrackSend(track, nil)
+          if i < 0 then fail("saveFailed") end
+          if not r.SetTrackSendInfo_Value(track, 1, i, "I_DSTCHAN", m.output) then fail("saveFailed") end
+        end)
+
+        return
+      end
+
       local peer = resolve_track(m.peer)
 
       if not track or not peer or peer == track or (m.category ~= 0 and m.category ~= -1) then
@@ -763,7 +891,7 @@ return function(r, json, send)
       end)
     elseif action == "quick" then
       if m.operation == "master" then
-        r.SetMasterTrackVisibility((r.GetMasterTrackVisibility() | 1) & ~2)
+        r.SetMasterTrackVisibility(r.GetMasterTrackVisibility() ~ 1)
         r.TrackList_AdjustWindows(false)
       elseif m.operation == "delete" then
         if m.confirmed ~= true then
@@ -840,9 +968,9 @@ return function(r, json, send)
     local t = #tracks == 1 and tracks[1] or nil
     local _, project_path = r.EnumProjects(-1, "")
 
-    emit("tracks", {count = #tracks, key = key, refs = refs, values = vals, mixed = mixed,
+    emit("tracks", {mode = mode, masterVisible = (r.GetMasterTrackVisibility() & 1) ~= 0, count = #tracks, key = key, refs = refs, values = vals, mixed = mixed,
       parent = t and track_ref(r.GetParentTrack(t)) or null, folder = t and value(t, "I_FOLDERDEPTH") or null,
-      aggregate = t and aggregate_track(t) or false,
+      aggregate = mode == "track" and t and aggregate_track(t) or false,
       projectName = project_path:match("([^/\\]+)$") or "", selected = #tracks > 0,
       iconDirectory = r.GetResourcePath() .. "/Data/track_icons/"})
 
@@ -853,7 +981,7 @@ return function(r, json, send)
     if force or changed or selection_changed or now >= next_detail then
       if t then
         local rows = routes(t)
-        emit("routing", {key = key, rows = rows, routeKey = route_key(rows)})
+        emit("routing", {key = key, rows = rows, routeKey = route_key(rows), outputs = mode == "master" and hardware_outputs() or nil})
         emit("fx", {key = key, rows = fx_state(t)})
       else
         emit("routing", {key = key, rows = A(), routeKey = ""})

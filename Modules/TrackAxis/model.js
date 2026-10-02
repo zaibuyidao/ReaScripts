@@ -12,8 +12,8 @@ export const themePresets = Object.freeze({
 });
 
 export const defaults = Object.freeze({
-  version: 1, language: 'en', density: 'comfortable', fxCompact: false,
-  listHeights: {fx:0, fxCompact:0, sends:0, receives:0},
+  version: 1, language: 'en', density: 'comfortable', fxCompact: false, routingCompact: false,
+  listHeights: {fx:0, fxCompact:0, routing:0, routingCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true, livePeak: false,
   source: 'track', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'reaper', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
@@ -23,7 +23,7 @@ export const defaults = Object.freeze({
 export function preferences(raw = {}) {
   const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights} };
   if (!raw || raw.version !== 1) return p;
-  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'livePeak', 'fxCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'livePeak', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
   for (const key of Object.keys(p.listHeights)) if (Number.isFinite(raw.listHeights?.[key]) && raw.listHeights[key] >= 0 && raw.listHeights[key] <= 4000) p.listHeights[key] = raw.listHeights[key];
   for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: ['track', 'master', 'input'], fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
     if (choices.includes(raw[key])) p[key] = raw[key];
@@ -57,6 +57,11 @@ export function themePalette(prefs, theme) {
     scheme: light(background) ? 'light' : 'dark'};
 }
 export const toDb = value => !Number.isFinite(value) || value < 0 ? NaN : value > 0 ? 20 * Math.log10(value) : -Infinity;
+export const routeKnobPosition = volume => {
+  const db = Math.max(-90, Math.min(12, toDb(volume)));
+  return db <= 0 ? (db + 90) / 180 : 0.5 + db / 24;
+};
+export const routeKnobVolume = position => fromDb(position <= 0.5 ? position * 180 - 90 : (position - 0.5) * 24);
 export const fromDb = db => db <= -90 ? 0 : 10 ** (db / 20);
 export const dbText = value => value === -Infinity ? '−∞' : Number.isFinite(value) ? value.toFixed(1) : '—';
 export function filterTracks(rows, query) {

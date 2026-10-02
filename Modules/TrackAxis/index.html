@@ -11,12 +11,13 @@
 <body>
   <header class="toolbar">
     <div class="brand"><span>TRACK<b>AXIS</b></span></div>
+    <div id="view-modes" class="view-modes" role="group" data-title="viewMode"><button id="mode-track" type="button" aria-pressed="true" data-i18n="viewTrack" disabled>Track</button><button id="mode-master" type="button" aria-pressed="false" data-i18n="viewMaster" disabled>Master</button></div>
     <button id="settings-open" class="icon" data-title="settings" aria-label="Settings" aria-keyshortcuts="Control+, Control+Alt+S">⚙</button>
   </header>
   <div class="search-wrap"><input id="search" type="search" data-placeholder="searchPlaceholder" autocomplete="off"><div id="search-results" hidden></div></div>
   <div id="status" role="status" aria-live="polite"></div>
   <main>
-    <div id="empty" class="empty"><span class="empty-mark" aria-hidden="true">▥</span><h1 data-i18n="noTrack"></h1><p data-i18n="selectTrackHint"></p></div>
+    <div id="empty" class="empty"><h1 data-i18n="noTrack"></h1><p data-i18n="selectTrackHint"></p></div>
     <div id="inspector" hidden>
       <section id="track-header" class="track-header"></section>
       <section id="mixer" class="mixer" aria-label="Mix controls"></section>
@@ -24,7 +25,7 @@
       <details id="panel-routing" data-panel="routing"><summary><span data-i18n="routing"></span><span class="badge" id="routing-count"></span></summary><div class="panel-content" id="routing"></div></details>
       <details id="panel-analysis" data-panel="analysis"><summary data-i18n="analysis"></summary><div class="panel-content">
         <p id="analysis-notice" class="hint"></p>
-        <details class="analysis-card" id="analysis-livePeak" open><summary data-i18n="livePeak"></summary><p class="hint" data-i18n="livePeakHint"></p><p class="analysis-status"></p><div class="readout"></div></details>
+        <details class="analysis-card" id="analysis-livePeak" open><summary data-i18n="livePeak"></summary><p class="analysis-status"></p><div class="readout"></div></details>
         <details class="analysis-card" id="analysis-meter" open><summary data-i18n="meter"></summary><p class="analysis-status"></p><div class="readout"></div></details>
         <details class="analysis-card" id="analysis-spectrum" open><summary data-i18n="spectrum"></summary><p class="analysis-status"></p><canvas height="130" aria-label="Spectrum"></canvas><div class="axis"><span>20 Hz</span><span>1 kHz</span><span>20 kHz</span></div></details>
         <details class="analysis-card" id="analysis-waveform" open><summary data-i18n="waveform"></summary><p class="analysis-status"></p><canvas height="110" aria-label="Realtime waveform"></canvas></details>
@@ -44,26 +45,27 @@
       <div class="dialog-header"><div><p class="eyebrow">TRACKAXIS</p><h2 id="settings-title" data-i18n="settings"></h2></div><button type="button" class="icon" data-close="settings-dialog" data-title="cancel">×</button></div>
       <div class="dialog-body settings-body">
         <h3 data-i18n="displaySettings"></h3>
-        <label class="row"><span data-i18n="language"></span><select name="language" id="setting-language"></select></label>
-        <label class="row"><span data-i18n="density"></span><select name="density"><option value="comfortable" data-i18n="comfortable"></option><option value="compact" data-i18n="compact"></option></select></label>
-        <label class="row"><span data-i18n="theme"></span><select name="theme"><option value="reaper" data-i18n="themeReaper"></option><option value="custom" data-i18n="themeCustom"></option></select></label>
+        <div class="row"><span id="setting-label-language" data-i18n="language"></span><select aria-labelledby="setting-label-language" name="language" id="setting-language"></select></div>
+        <div class="row"><span id="setting-label-density" data-i18n="density"></span><select aria-labelledby="setting-label-density" name="density"><option value="comfortable" data-i18n="comfortable"></option><option value="compact" data-i18n="compact"></option></select></div>
+        <div class="row"><span id="setting-label-theme" data-i18n="theme"></span><select aria-labelledby="setting-label-theme" name="theme"><option value="reaper" data-i18n="themeReaper"></option><option value="custom" data-i18n="themeCustom"></option></select></div>
         <div id="custom-colors" class="custom-colors" hidden>
-          <label class="row"><span data-i18n="colorBackground"></span><input type="color" name="colorBackground"></label>
-          <label class="row"><span data-i18n="colorPanel"></span><input type="color" name="colorPanel"></label>
-          <label class="row"><span data-i18n="colorText"></span><input type="color" name="colorText"></label>
-          <label class="row"><span data-i18n="colorAccent"></span><input type="color" name="colorAccent"></label>
-          <label class="row"><span data-i18n="colorBorder"></span><input type="color" name="colorBorder"></label>
+          <div class="row"><span id="setting-label-colorBackground" data-i18n="colorBackground"></span><input aria-labelledby="setting-label-colorBackground" type="color" name="colorBackground"></div>
+          <div class="row"><span id="setting-label-colorPanel" data-i18n="colorPanel"></span><input aria-labelledby="setting-label-colorPanel" type="color" name="colorPanel"></div>
+          <div class="row"><span id="setting-label-colorText" data-i18n="colorText"></span><input aria-labelledby="setting-label-colorText" type="color" name="colorText"></div>
+          <div class="row"><span id="setting-label-colorAccent" data-i18n="colorAccent"></span><input aria-labelledby="setting-label-colorAccent" type="color" name="colorAccent"></div>
+          <div class="row"><span id="setting-label-colorBorder" data-i18n="colorBorder"></span><input aria-labelledby="setting-label-colorBorder" type="color" name="colorBorder"></div>
         </div>
-        <label class="check"><input type="checkbox" name="fxCompact"><span data-i18n="fxCompact"></span></label>
+        <div class="check"><input aria-labelledby="setting-label-fxCompact" type="checkbox" name="fxCompact"><span id="setting-label-fxCompact" data-i18n="fxCompact"></span></div>
+        <div class="check"><input aria-labelledby="setting-label-routingCompact" type="checkbox" name="routingCompact"><span id="setting-label-routingCompact" data-i18n="routingCompact"></span></div>
         <h3 data-i18n="analysisSettings"></h3>
-        <label class="check"><input type="checkbox" name="analysis"><span data-i18n="enableAnalysis"></span></label>
-        <label class="row"><span data-i18n="analysisSource"></span><select name="source"><option value="track" data-i18n="sourceTrack"></option><option value="master" data-i18n="sourceMaster"></option><option value="input" data-i18n="sourceInput"></option></select></label>
-        <p class="hint" data-i18n="preFXHint"></p>
-        <div class="setting-checks"><label class="check"><input type="checkbox" name="meter"><span data-i18n="meter"></span></label><label class="check"><input type="checkbox" name="spectrum"><span data-i18n="spectrum"></span></label><label class="check"><input type="checkbox" name="waveform"><span data-i18n="waveform"></span></label><label class="check"><input type="checkbox" name="livePeak"><span data-i18n="livePeak"></span></label></div>
-        <label class="row"><span data-i18n="fftSize"></span><select name="fftSize"><option>512</option><option>1024</option><option>2048</option><option>4096</option><option>8192</option></select></label>
-        <label class="row"><span data-i18n="streamRate"></span><select name="streamRate"><option value="10">10 Hz</option><option value="20">20 Hz</option><option value="30">30 Hz</option><option value="60">60 Hz</option></select></label>
-        <label class="row"><span data-i18n="drawRate"></span><select name="drawRate"><option value="15">15 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
-        <label class="row"><span data-i18n="spectrumFloor"></span><select name="floor"><option value="-60">−60 dBFS</option><option value="-90">−90 dBFS</option><option value="-120">−120 dBFS</option></select></label>
+        <div class="check"><input aria-labelledby="setting-label-analysis" type="checkbox" name="analysis"><span id="setting-label-analysis" data-i18n="enableAnalysis"></span></div>
+        <div class="row"><span id="setting-label-source" data-i18n="analysisSource"></span><select aria-labelledby="setting-label-source" name="source"><option value="track" data-i18n="sourceTrack"></option><option value="master" data-i18n="sourceMaster"></option><option value="input" data-i18n="sourceInput"></option></select></div>
+        <p id="analysis-setting-hint" class="hint" data-i18n="preFXHint"></p>
+        <div class="setting-checks"><div class="check"><input aria-labelledby="setting-label-meter" type="checkbox" name="meter"><span id="setting-label-meter" data-i18n="meter"></span></div><div class="check"><input aria-labelledby="setting-label-spectrum" type="checkbox" name="spectrum"><span id="setting-label-spectrum" data-i18n="spectrum"></span></div><div class="check"><input aria-labelledby="setting-label-waveform" type="checkbox" name="waveform"><span id="setting-label-waveform" data-i18n="waveform"></span></div><div class="check"><input aria-labelledby="setting-label-livePeak" type="checkbox" name="livePeak"><span id="setting-label-livePeak" data-i18n="livePeak"></span></div></div>
+        <div class="row"><span id="setting-label-fftSize" data-i18n="fftSize"></span><select aria-labelledby="setting-label-fftSize" name="fftSize"><option>512</option><option>1024</option><option>2048</option><option>4096</option><option>8192</option></select></div>
+        <div class="row"><span id="setting-label-streamRate" data-i18n="streamRate"></span><select aria-labelledby="setting-label-streamRate" name="streamRate"><option value="10">10 Hz</option><option value="20">20 Hz</option><option value="30">30 Hz</option><option value="60">60 Hz</option></select></div>
+        <div class="row"><span id="setting-label-drawRate" data-i18n="drawRate"></span><select aria-labelledby="setting-label-drawRate" name="drawRate"><option value="15">15 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option></select></div>
+        <div class="row"><span id="setting-label-floor" data-i18n="spectrumFloor"></span><select aria-labelledby="setting-label-floor" name="floor"><option value="-60">−60 dBFS</option><option value="-90">−90 dBFS</option><option value="-120">−120 dBFS</option></select></div>
         <p class="hint" data-i18n="settingsHint"></p>
         <h3 data-i18n="shortcuts"></h3><div class="row"><span data-i18n="openSettings"></span><span><kbd>Ctrl+,</kbd> / <kbd>Ctrl+Alt+S</kbd></span></div>
       </div>
