@@ -823,6 +823,7 @@ function configureAudio() {
   const source = prefs.source === 'track' ? track ? `track:${track.guid}` : null : prefs.source;
   $('analysis-notice').textContent = prefs.analysis ? '' : t('analysisDisabled');
   audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source,
+    aggregate: prefs.source === 'track' && !!track && state.tracks.aggregate === true,
     active: !disposed && !closing && connected && !!state.tracks?.count && prefs.analysis && $('panel-analysis').open && !document.hidden});
 }
 function renderSearch() {

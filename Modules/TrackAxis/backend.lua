@@ -43,6 +43,18 @@ return function(r, json, send)
     return {guid = guid(track), name = name(track), number = value(track, "IP_TRACKNUMBER")}
   end
 
+  local function aggregate_track(track)
+    if value(track, "I_FOLDERDEPTH") > 0 then return true end
+
+    for i = 0, r.GetTrackNumSends(track, -1) - 1 do
+      if r.GetTrackSendInfo_Value(track, -1, i, "I_SRCCHAN") >= 0 then
+        return true
+      end
+    end
+
+    return false
+  end
+
   local function selection()
     local tracks, ids, set = {}, {}, {}
 
@@ -830,6 +842,7 @@ return function(r, json, send)
 
     emit("tracks", {count = #tracks, key = key, refs = refs, values = vals, mixed = mixed,
       parent = t and track_ref(r.GetParentTrack(t)) or null, folder = t and value(t, "I_FOLDERDEPTH") or null,
+      aggregate = t and aggregate_track(t) or false,
       projectName = project_path:match("([^/\\]+)$") or "", selected = #tracks > 0,
       iconDirectory = r.GetResourcePath() .. "/Data/track_icons/"})
 

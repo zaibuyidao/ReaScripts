@@ -38,19 +38,27 @@ export class AudioAnalysis {
   enabled(kind) {
     return !this.closed && this.config?.active && this.config[kind] && this.root.querySelector(`#analysis-${kind}`).open;
   }
+  needsPeak() {
+    return !!this.config?.track && (this.enabled('livePeak') || this.config.aggregate && this.enabled('meter'));
+  }
+  resetPeak() {
+    this.peak = null; this.peakError = null; this.peakHandle = null; this.peakRevision = -1; this.lastPeak = 0;
+  }
   configure(config) {
     const before = this.config;
+    config = {...config, aggregate: config.aggregate === true && (config.source === 'selected-track' || config.source?.startsWith('track:'))};
     this.config = config;
     for (const kind of ['meter', 'spectrum', 'waveform', 'livePeak']) this.root.querySelector(`#analysis-${kind}`).hidden = !config[kind];
-    const changed = !before || ['source', 'session', 'trackKey', 'fftSize', 'streamRate'].some(key => config[key] !== before[key]);
-    if (changed) { this.revision++; this.peak = null; this.peakHandle = null; this.peakRevision = -1; }
+    const changed = !before || ['source', 'aggregate', 'session', 'trackKey', 'fftSize', 'streamRate'].some(key => config[key] !== before[key]);
+    if (changed) { this.revision++; this.resetPeak(); }
     for (const kind of ['meter', 'spectrum', 'waveform']) {
       const entry = this.entries.get(kind);
       if (entry && (changed || !this.enabled(kind))) this.detach(kind, entry);
       if (this.enabled(kind) && !this.entries.has(kind)) this.open(kind);
       if (!this.enabled(kind)) this.clear(kind);
     }
-    if (!this.enabled('livePeak')) { this.peak = null; this.clear('livePeak'); }
+    if (!this.needsPeak()) { this.peak = null; this.peakError = null; }
+    if (!this.enabled('livePeak')) this.clear('livePeak');
     if (this.enabled('livePeak') && !config.track) this.status('livePeak', this.t('singleTrack'));
     if (!this.frame && config.active) this.frame = requestAnimationFrame(this.draw);
     if (!config.active && this.frame) { cancelAnimationFrame(this.frame); this.frame = 0; }
@@ -81,7 +89,9 @@ export class AudioAnalysis {
       try {
         if (!this.api?.audio?.openStream) throw Error(this.t('streamUnavailable'));
         if (!config.source) throw Error(this.t('singleTrack'));
-        const stream = await this.api.audio.openStream(kind, {source: config.source, fftSize: config.fftSize, updateRate: config.streamRate});
+        const options = {source: config.source, fftSize: config.fftSize, updateRate: config.streamRate};
+        if (config.aggregate) options.aggregate = true;
+        const stream = await this.api.audio.openStream(kind, options);
         if (entry.cancelled || this.closed) { await stream.close(); return; }
         entry.stream = stream;
         const stopped = error => {
@@ -95,7 +105,7 @@ export class AudioAnalysis {
     this.pending.add(opening);
   }
   async readPeak() {
-    if (this.peakBusy || !this.config.track || !this.enabled('livePeak')) return;
+    if (this.peakBusy || !this.needsPeak()) return;
     const revision = this.revision, config = this.config;
     this.peakBusy = true;
     try {
@@ -107,11 +117,15 @@ export class AudioAnalysis {
         this.peakHandle = handle; this.peakRevision = revision;
       }
       const result = await this.api.audio.getTrackMeter(this.peakHandle);
-      if (revision === this.revision && this.enabled('livePeak')) {
-        this.peak = result; this.status('livePeak', '');
+      if (revision === this.revision && this.needsPeak()) {
+        this.peak = result; this.peakError = null;
+        if (this.enabled('livePeak')) this.status('livePeak', '');
       }
     } catch (error) {
-      if (revision === this.revision) { this.peak = null; this.clear('livePeak'); this.status('livePeak', error.message); }
+      if (revision === this.revision && this.needsPeak()) {
+        this.resetPeak(); this.peakError = error.message || this.t('meterUnavailable');
+        if (this.enabled('livePeak')) { this.clear('livePeak'); this.status('livePeak', this.peakError); }
+      }
     } finally { this.peakBusy = false; }
   }
   draw(now) {
@@ -128,7 +142,8 @@ export class AudioAnalysis {
         if (!(data instanceof Float32Array) || !info.channels) continue;
         if (kind === 'meter') {
           if (data.length < info.channels * 2 + 4) { this.clear(kind); this.status(kind, this.t('analysisUnavailable')); continue; }
-          this.meter(kind, info.channels, data);
+          this.meter(kind, info.channels, data, false, this.config.aggregate ? this.peak?.peak || [] : undefined);
+          if (this.config.aggregate && this.peakError) this.status(kind, this.peakError);
         }
         if (kind === 'spectrum') this.spectrum(info, data);
         if (kind === 'waveform') {
@@ -140,14 +155,12 @@ export class AudioAnalysis {
           waveform(this.root.querySelector('#analysis-waveform canvas'), channels);
         }
       }
-      if (this.enabled('livePeak')) {
-        if (now - (this.lastPeak || 0) >= 1000 / Math.min(30, this.config.streamRate)) { this.lastPeak = now; this.readPeak(); }
-        if (this.peak) this.meter('livePeak', this.peak.channels, this.peak.peak, true);
-      }
+      if (this.needsPeak() && now - (this.lastPeak || 0) >= 1000 / Math.min(30, this.config.streamRate)) { this.lastPeak = now; this.readPeak(); }
+      if (this.enabled('livePeak') && this.peak) this.meter('livePeak', this.peak.channels, this.peak.peak, true);
     }
     this.frame = requestAnimationFrame(this.draw);
   }
-  meter(kind, channels, data, peakOnly = false) {
+  meter(kind, channels, data, peakOnly = false, peaks = data) {
     const root = this.root.querySelector(`#analysis-${kind} .readout`);
     const signature = `${channels}:${peakOnly}`;
     if (root.dataset.layout !== signature || !root.children.length) {
@@ -170,7 +183,7 @@ export class AudioAnalysis {
       root.style.minHeight = '';
     }
     root.querySelectorAll('.meter-channel').forEach((row, c) => {
-      const db = toDb(data[c]);
+      const db = toDb(peaks[c]);
       row.querySelector('.meter-bar span').style.width = `${Number.isNaN(db) ? 0 : Math.max(0, Math.min(100, (db + 60) / 60 * 100))}%`;
       row.querySelector('output').textContent = `${dbText(db)} dBFS`;
       if (!peakOnly) row.nextElementSibling.textContent = `Peak ${dbText(db)} dBFS  ·  RMS ${dbText(toDb(data[channels + c]))} dBFS`;
@@ -198,7 +211,7 @@ export class AudioAnalysis {
   }
   restart() {
     for (const [kind, entry] of this.entries) this.detach(kind, entry);
-    this.peakRevision = -1; this.configure(this.config);
+    this.revision++; this.resetPeak(); this.configure(this.config);
   }
   async close() {
     this.closed = true; this.revision++; cancelAnimationFrame(this.frame); this.frame = 0;
