@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.1
+@version 0.3.8.2
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -36,4 +36,4 @@
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Fix audio analysis failures stopping the shared native worker and leaving subsequent streams waiting indefinitely on Windows, macOS and Linux.
+  Recover from isolated invalid track PCM blocks during loop playback and source changes without disconnecting shared analyses.
