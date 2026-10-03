@@ -75,14 +75,29 @@ export class AudioAnalysis {
   }
   detach(kind, entry) {
     entry.cancelled = true;
+    clearTimeout(entry.retry);
     if (this.entries.get(kind) === entry) this.entries.delete(kind);
     if (entry.stream) {
       const closing = entry.stream.close().catch(() => {}).finally(() => this.pending.delete(closing));
       this.pending.add(closing);
     }
   }
-  open(kind) {
-    const entry = {cancelled: false, stream: null};
+  failed(kind, entry, error) {
+    if (entry.cancelled || entry.failed) return;
+    entry.failed = true;
+    this.clear(kind);
+    const delays = [250, 1000, 3000];
+    if (['TRANSPORT_ERROR', 'TIMEOUT'].includes(error?.code) && entry.attempt < delays.length) {
+      this.status(kind, this.t('connecting'));
+      entry.retry = setTimeout(() => {
+        if (entry.cancelled || !this.enabled(kind)) return;
+        this.detach(kind, entry);
+        this.open(kind, entry.attempt + 1);
+      }, delays[entry.attempt]);
+    } else this.status(kind, error?.message || this.t('analysisUnavailable'));
+  }
+  open(kind, attempt = 0) {
+    const entry = {cancelled: false, stream: null, attempt};
     this.entries.set(kind, entry);
     this.clear(kind); this.status(kind, this.t('connecting'));
     const config = this.config;
@@ -97,11 +112,11 @@ export class AudioAnalysis {
         entry.stream = stream;
         const stopped = error => {
           if (entry.cancelled) return;
-          this.clear(kind); this.status(kind, `${this.t('analysisUnavailable')} · ${error?.code || ''}`);
+          this.failed(kind, entry, {code: error?.code, message: `${this.t('analysisUnavailable')} · ${error?.code || ''}`});
         };
         this.status(kind, this.t('waitingAudio'));
         stream.on('error', stopped); stream.on('close', stopped);
-      } catch (error) { if (!entry.cancelled) this.status(kind, error.message || this.t('analysisUnavailable')); }
+      } catch (error) { this.failed(kind, entry, error); }
     })().finally(() => this.pending.delete(opening));
     this.pending.add(opening);
   }
