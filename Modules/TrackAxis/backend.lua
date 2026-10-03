@@ -159,6 +159,8 @@ return function(r, json, send)
       result[k] = value(track, field[1])
     end
 
+    if mode == "master" then result.mono = r.GetToggleCommandState(40917) == 1 and 1 or 0 end
+
     local recording = record_values(track)
     result.preservePDC, result.midiMap = recording.preservePDC, recording.midiMap
     result.recordOutput = value(track,"I_RECMODE_FLAGS") & 3
@@ -537,16 +539,22 @@ return function(r, json, send)
 
     if mode == "master" then
       if action == "setTrack" then
-        if not ({fxEnabled=true,volume=true,pan=true,width=true,panMode=true,panLeft=true,panRight=true,mute=true,solo=true,phase=true,channels=true,automation=true})[m.field] then fail("invalidValue") end
+        if not ({fxEnabled=true,volume=true,pan=true,width=true,panMode=true,panLeft=true,panRight=true,mute=true,solo=true,phase=true,mono=true,channels=true,automation=true})[m.field] then fail("invalidValue") end
       elseif action == "quick" then
-        if m.operation ~= "chain" and m.operation ~= "master" then fail("invalidValue") end
+        if m.operation ~= "chain" and m.operation ~= "master" and m.operation ~= "envelopes" then fail("invalidValue") end
       elseif not ({route=true,routeAdd=true,routeDelete=true,routeOpen=true,fx=true,fxAdd=true,fxSelect=true,fxCatalog=true,setMetadata=true})[action] then
         fail("invalidValue")
       end
     end
 
     if action == "setTrack" then
-      if m.field == "preservePDC" then
+      if m.field == "mono" then
+        if mode ~= "master" or not bounded(m.value,{nil,0,1,true}) then fail("invalidValue") end
+        local current = r.GetToggleCommandState(40917) == 1 and 1 or 0
+        if current ~= m.value then undo("Master mono",function() r.Main_OnCommand(40917,0) end) end
+
+        return
+      elseif m.field == "preservePDC" then
         if not bounded(m.value, {nil,0,1,true}) then fail("invalidValue") end
         undo("Preserve PDC", function() r.Main_OnCommand(m.value == 1 and 41921 or 41920,0) end)
         record_cache = {}
@@ -926,8 +934,27 @@ return function(r, json, send)
         undo("Duplicate tracks", function() r.Main_OnCommand(40062, 0) end)
       elseif m.operation == "spacerBefore" or m.operation == "spacerAfter" then
         undo("Track spacers", function()
-          r.Main_OnCommand(({spacerBefore=42665,spacerAfter=42666})[m.operation],0)
+          r.Main_OnCommand(({spacerBefore=42665,spacerAfter=42666})[m.operation], 0)
         end)
+      elseif m.operation == "envelopes" and track then
+        local selected = {}
+        for i = 0, r.CountSelectedTracks2(project, true) - 1 do
+          selected[#selected+1] = r.GetSelectedTrack2(project, i, true)
+        end
+        r.PreventUIRefresh(1)
+
+        local ok, err = pcall(function()
+          r.SetOnlyTrackSelected(track)
+          r.Main_OnCommand(40292, 0)
+        end)
+
+        r.SetTrackSelected(track, false)
+        for _, t in ipairs(selected) do
+          r.SetTrackSelected(t, true)
+        end
+
+        r.PreventUIRefresh(-1)
+        if not ok then error(err, 0) end
       elseif m.operation == "chain" and track then
         r.TrackFX_Show(track, 0, 1)
       elseif track and (m.operation == "parent" or m.operation == "next" or m.operation == "previous") then
@@ -1018,6 +1045,7 @@ return function(r, json, send)
       for _, item in ipairs(items) do
         if not r.GetActiveTake(item) then
           takes_available = false
+
           break
         end
       end
@@ -1041,6 +1069,7 @@ return function(r, json, send)
       for i = 0, r.CountTracks(project) - 1 do
         local tr = r.GetTrack(project, i)
         local meta = metadata(tr)
+
         list[#list + 1] = {guid = guid(tr), name = name(tr), number = i + 1, tags = meta and meta.tags or "", color = color(tr)}
       end
 

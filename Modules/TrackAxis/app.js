@@ -278,7 +278,7 @@ function editable(id, render, force = false) {
   const fields = keys => keys.map(k => [v[k], !!m[k]]);
   const inputs = {
     'track-header': [tr.count, tr.refs, tr.parent, tr.folder, fields(['name','color','icon'])],
-    mixer: fields(['volume','pan','width','panMode','panModeEffective','panLeft','panRight','mute','solo','arm','phase','monitor','monitorItems','preservePDC']),
+    mixer: fields(['volume','pan','width','panMode','panModeEffective','panLeft','panRight','mute','solo','arm','phase','mono','monitor','monitorItems','preservePDC']),
     routing: [tr.count,state.routing,v.mainSend,v.channels,state.index,prefs.routingCompact], fx: [tr.count,state.fx,state.parameters?.guid,prefs.fxCompact,v.fxEnabled],
     'fx-parameters': state.parameters,
     parameters: [fields(['panMode','automation','input','midiMap','recordMode','recordOutput','recordLatency','monitor','monitorItems','preservePDC']),state.inputs],
@@ -311,7 +311,7 @@ function renderHeader(force = false) {
     const tr = state.tracks, c = context(); if (!tr?.count) return [];
     const title = el('div', 'track-title');
     if (isMaster()) {
-      title.append(el('h1', '', t('masterTrack')));
+      title.append(el('h1', '', 'MASTER'));
       $('track-header').style.setProperty('--track-color', 'var(--accent)');
       return [title];
     }
@@ -341,8 +341,15 @@ function renderMixer(force = false) {
   editable('mixer', () => {
     const {values: v = {}, mixed: m = {}} = state.tracks || {}, c = context();
     const controls = el('div', 'mix-buttons');
-    for (const key of isMaster() ? ['mute', 'solo', 'phase'] : ['mute', 'solo', 'arm', 'phase']) {
-      const control = toggle(key, v[key], n => setTrack(key, n, c), m[key]);
+    for (const key of isMaster() ? ['mute','solo','envelopes','phase','mono'] : ['mute','solo','arm','envelopes','phase']) {
+      if (key === 'envelopes') {
+        const control = button(key,() => act({action:'quick',operation:key},c));
+        control.disabled = state.tracks?.count !== 1; controls.append(control); continue;
+      }
+      const control = toggle(key === 'mono' ? v.mono ? 'mono' : 'stereo' : key, v[key], n => {
+        if (key === 'mono') control.textContent = control.title = t(n ? 'mono' : 'stereo');
+        setTrack(key,n,c);
+      },m[key]);
       if (key === 'arm') {
         control.oncontextmenu = event => { event.preventDefault(); openRecordMenu(event,control,c,'monitor'); };
         control.onkeydown = event => {
