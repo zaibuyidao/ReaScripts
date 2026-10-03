@@ -8,11 +8,14 @@
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
 </head>
-<body>
+<body class="empty-selection">
   <header class="toolbar">
     <div class="brand"><span>TRACK<b>AXIS</b></span></div>
-    <div id="view-modes" class="view-modes" role="group" data-title="viewMode"><button id="mode-track" type="button" aria-pressed="true" data-i18n="viewTrack" disabled>Track</button><button id="mode-master" type="button" aria-pressed="false" data-i18n="viewMaster" disabled>Master</button></div>
-    <button id="settings-open" class="icon" data-title="settings" aria-label="Settings" aria-keyshortcuts="Control+, Control+Alt+S">⚙</button>
+    <div id="view-modes" class="view-modes" role="group" aria-label="TrackAxis">
+      <button id="mode-track" type="button" aria-pressed="true" disabled><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M7 4h10M7 10h10M7 16h10M3 4h.01M3 10h.01M3 16h.01"/></svg><span data-i18n="viewTrack">Track</span></button>
+      <button id="mode-master" type="button" aria-pressed="false" disabled><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3v5m0 4v5M15 3v2m0 4v8"/><rect x="2.5" y="8" width="5" height="4" rx="1"/><rect x="12.5" y="5" width="5" height="4" rx="1"/></svg><span data-i18n="viewMaster">Master</span></button>
+      <button id="settings-open" type="button" data-title="settings" aria-haspopup="dialog" aria-controls="settings-dialog" aria-keyshortcuts="Control+, Control+Alt+S"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 2h4l.5 2 1.5.9 2-.6 2 3.4-1.5 1.4v1.8l1.5 1.4-2 3.4-2-.6-1.5.9-.5 2H8l-.5-2-1.5-.9-2 .6-2-3.4 1.5-1.4V9.1L2 7.7l2-3.4 2 .6L7.5 4Z"/><circle cx="10" cy="10" r="2.7"/></svg><span data-i18n="settings">Settings</span></button>
+    </div>
   </header>
   <div class="search-wrap">
     <div class="search-field"><input id="search" type="search" role="combobox" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false" data-placeholder="searchPlaceholder" autocomplete="off"><button id="search-history-toggle" type="button" aria-haspopup="listbox" aria-controls="search-results" aria-expanded="false" data-title="searchHistory"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg></button></div>

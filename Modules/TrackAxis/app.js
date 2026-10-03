@@ -32,6 +32,7 @@ function act(command, captured = context(), replaceKey = '') {
 }
 function renderMode() {
   const master = isMaster(); document.body.dataset.mode = master ? 'master' : 'track';
+  document.body.classList.toggle('empty-selection',!state.tracks?.count);
   for (const mode of ['track','master']) {
     const control = $(`mode-${mode}`);
     control.setAttribute('aria-pressed', mode === (master ? 'master' : 'track'));
@@ -651,7 +652,7 @@ function renderRouting(force = false) {
         const update = (field, value, gesture) => act({action: 'route', category, index: route.index, routeKey: state.routing?.routeKey, field, value, gesture}, c, `route:${category}:${route.index}:${field}:${gesture || ''}`);
         const card = el('div', 'route-card'), head = el('div', 'route-head');
         const routeName = route.name || route.peer?.name || t('unavailable');
-        const peer = el('span','route-name',(route.peer?.number ?? route.index + 1) + ': ' + routeName); peer.title = peer.textContent;
+        const peer = el('span','route-name',(route.peer?.number ?? (category === 1 ? (route.destinationChannels & 1023) + 1 : route.index + 1)) + ': ' + routeName); peer.title = peer.textContent;
         if (prefs.routingCompact) {
           const name = literalButton('',() => {},'route-compact-name',t('routingCompactHint'));
           name.append(peer);
@@ -958,8 +959,8 @@ function renderAppearance(force = false) {
     const remove = button('removeIcon',() => act({action:'setIcon',path:''},c)); remove.disabled = !v.icon && !m.icon; icon.append(remove);
     const visibility = el('div','track-visibility');
     visibility.append(checkbox('tcp', v.tcp, n => setTrack('tcp', n, c), m.tcp), checkbox('mcp', v.mcp, n => setTrack('mcp', n, c), m.mcp));
-    return [row(m.color ? 'mixedColor' : 'trackColor', color), button('defaultColor', () => act({action: 'color', value: ''}, c)),row('trackIcon',icon),
-      visibility];
+    return [row('trackIcon',icon), row(m.color ? 'mixedColor' : 'trackColor',color),
+      button('defaultColor',() => act({action:'color',value:''},c)), visibility];
   }, force);
 }
 function renderQuick(force = false) {
@@ -974,8 +975,8 @@ function renderQuick(force = false) {
       const b = button(label, () => act({action: 'quick', operation: key}, c));
       b.disabled = key !== 'duplicate' && tr.count !== 1 || key === 'parent' && !tr.parent; result.push(b);
     }
-    result.push(master);
     for (const key of ['spacerBefore','spacerAfter']) result.push(button(key,() => act({action:'quick',operation:key},c)));
+    result.push(master);
     result.push(button('deleteTrack', () => confirmDelete(t('deleteTracksPrompt', {count: tr.count}), {action: 'quick', operation: 'delete'}, c), 'danger'));
     return result;
   }, force);

@@ -248,15 +248,29 @@ return function(r, json, send)
     end
   end
 
+  local function hardware_output_name(channel)
+    local index, mono = channel & 1023, (channel & 1024) ~= 0
+    if index + (mono and 1 or 2) > r.GetNumAudioOutputs() then return nil end
+    local first = r.GetOutputChannelName(index)
+    if not first or first == "" then return nil end
+    if mono then return first end
+    local second = r.GetOutputChannelName(index + 1)
+    if not second or second == "" then return nil end
+
+    return first .. " / " .. second
+  end
+
   local function hardware_outputs()
     local rows, count = A(), math.min(1024, r.GetNumAudioOutputs())
 
     for i = 0, count - 2 do
-      rows[#rows + 1] = {value = i, label = (i + 1) .. ": " .. r.GetOutputChannelName(i) .. " / " .. r.GetOutputChannelName(i + 1)}
+      local name = hardware_output_name(i)
+      if name then rows[#rows + 1] = {value = i, label = (i + 1) .. ": " .. name} end
     end
 
     for i = 0, count - 1 do
-      rows[#rows + 1] = {value = 1024 + i, label = (i + 1) .. ": " .. r.GetOutputChannelName(i)}
+      local name = hardware_output_name(1024 + i)
+      if name then rows[#rows + 1] = {value = 1024 + i, label = (i + 1) .. ": " .. name} end
     end
 
     return rows
@@ -278,14 +292,23 @@ return function(r, json, send)
     for _, category in ipairs(mode == "master" and {1} or {0, -1}) do
       for i = 0, r.GetTrackNumSends(track, category) - 1 do
         local function get(field) return r.GetTrackSendInfo_Value(track, category, i, field) end
+        local destination = get("I_DSTCHAN")
         local output_name
-        if category == 1 then _, output_name = r.GetTrackSendName(track, i, "") end
+
+        if category == 1 then
+          output_name = hardware_output_name(destination)
+
+          if not output_name then
+            local _, fallback = r.GetTrackSendName(track, i, "")
+            output_name = fallback
+          end
+        end
         rows[#rows + 1] = {
           index = i, category = category, name = output_name,
           peer = category == 1 and null or track_ref(get(category == 0 and "P_DESTTRACK" or "P_SRCTRACK")),
           volume = get("D_VOL"), pan = get("D_PAN"), mute = get("B_MUTE"),
           phase = get("B_PHASE"), mono = get("B_MONO"),
-          mode = get("I_SENDMODE"), sourceChannels = get("I_SRCCHAN"), destinationChannels = get("I_DSTCHAN"), midi = get("I_MIDIFLAGS"),
+          mode = get("I_SENDMODE"), sourceChannels = get("I_SRCCHAN"), destinationChannels = destination, midi = get("I_MIDIFLAGS"),
         }
       end
     end
