@@ -12,8 +12,8 @@ export const themePresets = Object.freeze({
 });
 
 export const defaults = Object.freeze({
-  version: 1, language: 'en', density: 'comfortable', fxCompact: false, routingCompact: false,
-  listHeights: {fx:0, fxCompact:0, routing:0, routingCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
+  version: 1, language: 'en', density: 'comfortable', fxCompact: false, routingCompact: false, searchHistoryLimit: 20,
+  listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true, livePeak: false,
   source: 'track', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'reaper', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
@@ -28,6 +28,7 @@ export function preferences(raw = {}) {
   for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: ['track', 'master', 'input'], fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
     if (choices.includes(raw[key])) p[key] = raw[key];
   }
+  if (Number.isInteger(raw.searchHistoryLimit) && raw.searchHistoryLimit >= 0 && raw.searchHistoryLimit <= 100) p.searchHistoryLimit = raw.searchHistoryLimit;
   if (typeof raw.language === 'string' && /^[a-zA-Z-]{2,16}$/.test(raw.language)) p.language = raw.language;
   if (['reaper', ...Object.keys(themePresets), 'custom'].includes(raw.theme)) p.theme = raw.theme;
   for (const key of ['colorBackground','colorPanel','colorText','colorAccent','colorBorder']) if (/^#[\da-f]{6}$/i.test(raw[key] || '')) p[key] = raw[key];
@@ -45,9 +46,11 @@ export function themePalette(prefs, theme) {
   const panel = get('col_main_bg', preset?.panel ?? prefs.colorPanel), control = get('col_buttonbg', get('buttonface', native?.col_main_bg ? panel : mix(panel, text, 0.06)));
   const controlText = get('buttontext', text);
   const accent = get('genlist_selbg', preset?.accent ?? prefs.colorAccent), activeText = get('genlist_selfg', light(accent) ? '#101010' : '#ffffff');
+  const line = get('col_main_3dsh',preset?.line ?? prefs.colorBorder);
   return {background, text, panel, control, accent, 'control-text': controlText,
+    'route-receive': mix(panel,light(panel) ? '#52647b' : '#a3b8d4',0.12),
     field: get('col_main_editbk', mix(background, text, 0.035)),
-    line: get('col_main_3dsh', preset?.line ?? prefs.colorBorder),
+    line, focus: mix(line,accent,0.45),
     toolbar: get('col_main_bg2', panel), 'toolbar-text': get('col_main_text2', text),
     muted: native?.col_main_text ? text : mix(text, background, preset ? 0.28 : 0.4),
     hover: mix(control, controlText, 0.09), active: accent, 'active-text': activeText,
@@ -64,6 +67,18 @@ export const routeKnobPosition = volume => {
 export const routeKnobVolume = position => fromDb(position <= 0.5 ? position * 180 - 90 : (position - 0.5) * 24);
 export const fromDb = db => db <= -90 ? 0 : 10 ** (db / 20);
 export const dbText = value => value === -Infinity ? '−∞' : Number.isFinite(value) ? value.toFixed(1) : '—';
+export function recentSearches(entries, limit, query = '') {
+  if (!Number.isInteger(limit) || limit <= 0) return [];
+  const seen = new Set(), result = [];
+  for (const entry of [query, ...(Array.isArray(entries) ? entries : [])]) {
+    if (typeof entry !== 'string') continue;
+    const value = entry.trim(), key = value.toLocaleLowerCase();
+    if (!value || seen.has(key)) continue;
+    seen.add(key); result.push(value);
+    if (result.length >= Math.min(limit,100)) break;
+  }
+  return result;
+}
 export function filterTracks(rows, query) {
   const terms = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return rows.filter(row => terms.every(term => `${row.number} ${row.name} ${row.tags}`.toLocaleLowerCase().includes(term)));

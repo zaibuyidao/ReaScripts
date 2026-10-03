@@ -1,9 +1,10 @@
-import { defaults, preferences, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, filterFX, fxFormat, sortFX, isSettingsShortcut, CommandQueue } from './model.js';
+import { defaults, preferences, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
 
 const $ = id => document.getElementById(id);
 const el = (tag, className = '', text = '') => { const n = document.createElement(tag); n.className = className; n.textContent = text; return n; };
-const storageKey = 'trackaxis.preferences.v1';
+const storageKey = 'trackaxis.preferences.v1', searchHistoryKey = 'trackaxis.searchHistory.v1';
+let searchHistory = [], searchView = null;
 let prefs = preferences(), locale = {}, english = {}, languages = [], session = null, api, audio;
 let state = {}, connected = false, dirty = new Set(), catalog = [], dialogContext, overviewRevision = 0, overviewKey = '', overviewData;
 let disposed = false, closing = false, cleanupPromise, unsubscribe, lifecycleStop, projectStop;
@@ -43,7 +44,7 @@ function renderMode() {
 function switchMode(mode) {
   if (!connected || modeSwitching || mode === (isMaster() ? 'master' : 'track')) return;
   for (const finish of [...gestures.values()]) finish();
-  document.activeElement?.blur(); closePanMenu(); closeRecordMenu();
+  document.activeElement?.blur(); closePanMenu(); closeRecordMenu(); closeSearch(true);
   modeSwitching = mode; renderMode(); act({action:'mode',value:mode});
 }
 $('mode-track').onclick = () => switchMode('track');
@@ -207,30 +208,33 @@ function field(label, value, change, mixed = false, multiline = false) {
   if (!multiline) return row(label, input);
   const container = el('div'); container.append(el('span', 'notes-label', t(label)), input); return container;
 }
-function listResizer(target,key,selector,label,arrange) {
-  const viewports = Array.isArray(target) ? target : [target], viewport = viewports[0];
-  const currentHeight = () => Math.max(...viewports.map(node => node.getBoundingClientRect().height));
+function arrangeColumns(grid,height,minimum,columns = 2) {
+  const gap = parseFloat(getComputedStyle(grid).rowGap) || 0;
+  const count = Math.max(1,Math.floor((height + gap) / (minimum + gap)));
+  for (const [index,card] of [...grid.children].entries()) {
+    card.style.gridColumn = Math.floor(index % (count * columns) / count) + 1;
+    card.style.gridRow = Math.floor(index / (count * columns)) * count + index % count + 1;
+  }
+  return count;
+}
+function listResizer(viewport,key,selector,label,arrange) {
+  const currentHeight = () => viewport.getBoundingClientRect().height;
   const handle = el('div','list-resizer'); handle.tabIndex = 0;
   handle.setAttribute('role','separator'); handle.setAttribute('aria-orientation','horizontal');
   handle.setAttribute('aria-label',`${t(label)} · ${t('resizeList')}`); handle.title = t('resizeList');
   const measure = () => {
-    const sizes = viewports.map(node => {
-      const card = node.querySelector(selector), height = card?.getBoundingClientRect().height;
-      if (!node.isConnected || !height) return null;
-      const details = card.querySelector('.route-details');
-      const minimum = Math.ceil(height - (details && !details.hidden ? details.getBoundingClientRect().height : 0));
-      const gap = parseFloat(getComputedStyle(card.parentElement).rowGap) || 0;
-      return {minimum,defaultHeight:minimum * 3 + gap * 2};
-    }).filter(Boolean);
-    return sizes.length ? {minimum:Math.max(...sizes.map(size => size.minimum)),defaultHeight:Math.max(...sizes.map(size => size.defaultHeight))} : null;
+    const card = viewport.querySelector(selector), height = card?.getBoundingClientRect().height;
+    if (!viewport.isConnected || !height) return null;
+    const details = card.querySelector('.route-details');
+    const minimum = Math.ceil(height - (details && !details.hidden ? details.getBoundingClientRect().height : 0));
+    const gap = parseFloat(getComputedStyle(card.parentElement).rowGap) || 0;
+    return {minimum,defaultHeight:minimum * 3 + gap * 2};
   };
   const layout = () => {
     const sizes = measure(); if (!sizes) return;
     const height = Math.max(sizes.minimum,prefs.listHeights[key] || sizes.defaultHeight);
-    for (const node of viewports) {
-      node.style.maxHeight = `${height}px`;
-      node.style.height = prefs.listHeights[key] ? `${height}px` : '';
-    }
+    viewport.style.maxHeight = height + 'px';
+    viewport.style.height = prefs.listHeights[key] ? height + 'px' : '';
     arrange?.(height,sizes.minimum);
     handle.setAttribute('aria-valuemin',sizes.minimum); handle.setAttribute('aria-valuemax',4000);
     handle.setAttribute('aria-valuenow',Math.round(currentHeight()));
@@ -256,7 +260,7 @@ function listResizer(target,key,selector,label,arrange) {
     event.preventDefault(); resize(event.key === 'Home' ? 0 : currentHeight() + (event.key === 'ArrowDown' ? 16 : -16)); savePreferences(prefs);
   };
   handle.ondblclick = () => { prefs.listHeights[key] = 0; layout(); savePreferences(prefs); };
-  handle.hidden = !viewports.some(node => node.querySelector(selector));
+  handle.hidden = !viewport.querySelector(selector);
   listLayouts.set(key,{viewport,layout}); queueMicrotask(layout);
   return handle;
 }
@@ -276,7 +280,7 @@ function editable(id, render, force = false) {
     mixer: fields(['volume','pan','width','panMode','panModeEffective','panLeft','panRight','mute','solo','arm','phase','monitor','monitorItems','preservePDC']),
     routing: [tr.count,state.routing,v.mainSend,v.channels,state.index,prefs.routingCompact], fx: [tr.count,state.fx,state.parameters?.guid,prefs.fxCompact,v.fxEnabled],
     'fx-parameters': state.parameters,
-    parameters: [fields(['panMode','automation','input','midiMap','recordMode','recordOutput','recordLatency','monitor','monitorItems','preservePDC','channels']),state.inputs],
+    parameters: [fields(['panMode','automation','input','midiMap','recordMode','recordOutput','recordLatency','monitor','monitorItems','preservePDC']),state.inputs],
     items: state.items, metadata: state.metadata, appearance: fields(['color','icon','tcp','mcp']),
     quick: [tr.count,tr.parent,tr.masterVisible,fields(['mute','solo','arm'])],
   };
@@ -357,7 +361,9 @@ function renderMixer(force = false) {
         if (event.key === 'ContextMenu' || event.shiftKey && event.key === 'F10') { event.preventDefault(); openPanMenu(null, control, c); }
       };
     }
-    return [fader('volume', v.volume, m.volume, (n,g) => setTrack('volume', n, c,g)), ...pan, controls];
+    const faders = el('div','mixer-faders');
+    faders.append(fader('volume',v.volume,m.volume,(n,g) => setTrack('volume',n,c,g)),...pan);
+    return [faders,controls];
   }, force);
 }
 let panMenuAnchor;
@@ -378,7 +384,7 @@ function openPanMenu(event, anchor, captured) {
     menu.append(option);
   }
   menu.hidden = false;
-  const rect = anchor.getBoundingClientRect();
+  const rect = (anchor.querySelector('input,select') || anchor).getBoundingClientRect();
   menu.style.left = `${Math.max(4, Math.min(event?.clientX ?? rect.left, innerWidth - menu.offsetWidth - 4))}px`;
   menu.style.top = `${Math.max(4, Math.min(event?.clientY ?? rect.bottom, innerHeight - menu.offsetHeight - 4))}px`;
   (menu.querySelector('[aria-checked=true]') || menu.firstElementChild).focus();
@@ -625,7 +631,7 @@ function renderRouting(force = false) {
     $('routing-count').textContent = routing?.rows?.length || '0';
     if (tr?.count !== 1) return [hint('singleTrack')];
     const master = isMaster(), columns = el('div', `routing-columns${master ? ' hardware-outputs' : ''}`);
-    const lists = [], controls = el('div',`route-controls${master ? ' hardware-outputs' : ''}`);
+    const controls = el('div',`route-controls${master ? ' hardware-outputs' : ''}`);
     const groups = master ? [[1,'hardwareOutputs','addHardwareOutput']] : [[0,'sends','addSend'],[-1,'receives','addReceive']];
     for (const [category, label, addLabel] of groups) {
       const column = el('section', 'route-column');
@@ -637,18 +643,20 @@ function renderRouting(force = false) {
       picker.setAttribute('aria-haspopup', 'dialog');
       picker.dataset.category = category; controls.append(picker);
       const rows = (routing?.rows || []).filter(row => row.category === category);
+      column.hidden = !rows.length;
       const list = el('div', `route-list${prefs.routingCompact ? ' route-compact' : ''}`);
       list.setAttribute('aria-label', t(label));
       list.onscroll = () => routeScroll.set(category, list.scrollTop);
       for (const route of rows) {
         const update = (field, value, gesture) => act({action: 'route', category, index: route.index, routeKey: state.routing?.routeKey, field, value, gesture}, c, `route:${category}:${route.index}:${field}:${gesture || ''}`);
         const card = el('div', 'route-card'), head = el('div', 'route-head');
-        const peer = el('span', 'route-name', route.name || route.peer?.name || t('unavailable')); peer.title = peer.textContent;
+        const routeName = route.name || route.peer?.name || t('unavailable');
+        const peer = el('span','route-name',(route.peer?.number ?? route.index + 1) + ': ' + routeName); peer.title = peer.textContent;
         if (prefs.routingCompact) {
           const name = literalButton('',() => {},'route-compact-name',t('routingCompactHint'));
-          name.append(el('span','track-number',String(route.index + 1).padStart(2,'0')),peer);
+          name.append(peer);
           const caption = peer.textContent;
-          const target = route.peer ? t('routeTrackTarget',route.peer) : `${t('hardwareOutput')} "${caption}"`;
+          const target = route.peer ? t('routeTrackTarget',route.peer) : `${t('hardwareOutput')} "${routeName}"`;
           const knob = routeKnob(route.volume,target,(value,gesture) => update('volume',value,gesture),(position,text,active) => {
             card.classList.toggle('route-editing',active);
             card.style.setProperty('--route-level',position);
@@ -681,7 +689,7 @@ function renderRouting(force = false) {
           routeExpansion.set(category, open ? identity : null);
           for (const node of list.querySelectorAll('.route-details')) node.hidden = true;
           for (const node of list.querySelectorAll('.route-expand')) node.setAttribute('aria-expanded', 'false');
-          details.hidden = !open; expand.setAttribute('aria-expanded', open);
+          details.hidden = !open; expand.setAttribute('aria-expanded', open); layoutLists();
         }, 'route-expand', t('routeDetails'));
         expand.setAttribute('aria-label', t('routeDetails')); expand.setAttribute('aria-expanded', !details.hidden); expand.setAttribute('aria-controls', details.id);
         const title = el('div','route-title');
@@ -697,12 +705,17 @@ function renderRouting(force = false) {
         } else details.append(routeChannels('sourceChannels',route.sourceChannels,n => update('sourceChannels',n),true), routeChannels('destinationChannels',route.destinationChannels,n => update('destinationChannels',n)));
         card.append(details); list.append(card);
       }
-      column.append(list); lists.push(list);
+      const arrange = (height,minimum) => { list.dataset.rows = arrangeColumns(list,height,minimum,master ? 1 : 2); };
+      column.append(list,listResizer(list,label + (prefs.routingCompact ? 'Compact' : ''),'.route-card',label,arrange));
       queueMicrotask(() => { if (list.isConnected) list.scrollTop = routeScroll.get(category) || 0; });
       columns.append(column);
     }
-    return [...(!master ? [checkbox('mainSend',tr.values.mainSend,n => setTrack('mainSend',n,c))] : []),
-      select('trackChannels',tr.values.channels,Array.from({length:64},(_,i) => [(i+1)*2,String((i+1)*2),true]),n => setTrack('channels',n,c)), columns, listResizer(lists,(master ? 'hardwareOutputs' : 'routing') + (prefs.routingCompact ? 'Compact' : ''),'.route-card',master ? 'hardwareOutputs' : 'routing'),controls];
+    const channels = select('trackChannels',tr.values.channels,Array.from({length:64},(_,i) => [(i+1)*2,String((i+1)*2),true]),n => setTrack('channels',n,c));
+    if (master) return [columns,controls,channels];
+    const options = el('div','route-options'), mainSend = checkbox('mainSend',tr.values.mainSend,n => setTrack('mainSend',n,c));
+    mainSend.querySelector('span').title = t('mainSend');
+    options.append(mainSend,channels);
+    return [columns,controls,options];
   }, force);
 }
 function renderRouteCatalog() {
@@ -802,8 +815,8 @@ function renderFX(force = false) {
       const card = el('div',`fx-card${state.parameters?.guid === fx.guid ? ' selected' : ''}`);
       const head = el(prefs.fxCompact ? 'button' : 'div','fx-head'); head.title = t('dragFX'); head.tabIndex = 0;
       head.setAttribute('aria-label', `${fx.index+1} · ${fx.name} · ${t('dragFX')}`);
-      const pick = el('span','fx-name',fx.name.replace(/^(VST3?|AU|JS|CLAP):\s*/,'')); pick.title = fx.name;
-      head.append(el('span','track-number',String(fx.index+1).padStart(2,'0')),pick);
+      const pick = el('span','fx-name',String(fx.index+1).padStart(2,'0') + ' ' + fx.name.replace(/^(VST3?|AU|JS|CLAP):\s*/,'')); pick.title = fx.name;
+      head.append(pick);
       if (prefs.fxCompact) {
         head.type = 'button'; head.title = `${fx.name}\n${t('fxCompactHint')}`;
         head.setAttribute('aria-label',`${fx.index+1} · ${fx.name}`);
@@ -843,13 +856,7 @@ function renderFX(force = false) {
     power.setAttribute('aria-pressed',enabled); controls.append(add,power);
     queueMicrotask(() => queueMicrotask(() => { if (viewport.isConnected) viewport.scrollTop = listScroll.get('fx') || 0; }));
     const arrange = (height,minimum) => {
-      const gap = parseFloat(getComputedStyle(grid).rowGap) || 0;
-      const count = Math.max(1,Math.floor((height + gap) / (minimum + gap)));
-      viewport.dataset.rows = count;
-      for (const [index,card] of [...grid.children].entries()) {
-        card.style.gridColumn = Math.floor(index % (count * 2) / count) + 1;
-        card.style.gridRow = Math.floor(index / (count * 2)) * count + index % count + 1;
-      }
+      viewport.dataset.rows = arrangeColumns(grid,height,minimum);
     };
     return [...(rows.length ? [viewport,listResizer(viewport,prefs.fxCompact ? 'fxCompact' : 'fx','.fx-card','fx',arrange)] : []),controls];
   },force);
@@ -888,8 +895,7 @@ function renderParameters(force = false) {
       select('automation', v.automation, automationChoices, n => setTrack('automation', n, c), m.automation),
       recordSelect('input',inputCaption(v,m),c,'input'),
       recordSelect('recordMode',m.recordMode ? t('mixed') : t(recordChoices.find(row => row[0] === v.recordMode)?.[1] || 'recordInput'),c,'recordMode'),
-      recordSelect('monitor',m.monitor ? t('mixed') : t(monitorChoices.find(row=>row[0] === v.monitor)?.[1] || 'off'),c,'monitor'),
-      numeric('channels', v.channels, {min: 2, max: 128, step: 2}, n => setTrack('channels', n, c), m.channels)];
+      recordSelect('monitor',m.monitor ? t('mixed') : t(monitorChoices.find(row=>row[0] === v.monitor)?.[1] || 'off'),c,'monitor')];
   }, force);
 }
 function renderItems(force = false) {
@@ -985,19 +991,84 @@ function configureAudio() {
     aggregate: !master && prefs.source === 'track' && !!track && state.tracks.aggregate === true,
     active: !disposed && !closing && connected && !!state.tracks?.count && prefs.analysis && $('panel-analysis').open && !document.hidden});
 }
-function renderSearch() {
-  const root = $('search-results'), query = $('search').value.trim(); root.hidden = !query;
-  root.replaceChildren(); if (!query) return;
-  const matches = filterTracks(state.index || [], query);
-  if (!matches.length) root.append(hint('noResults'));
-  for (const track of matches.slice(0, 100)) {
-    const b = el('button', 'search-result'); b.type = 'button';
-    const swatch = el('span', 'swatch'); swatch.style.background = track.color || '#6e9992';
-    b.append(swatch, el('span', 'track-number', String(track.number)), el('span', 'track-name', track.name));
-    const c = context(); b.onclick = () => { act({action: 'selectTrack', guid: track.guid}, c); $('search').value = ''; renderSearch(); }; root.append(b);
-  }
-  if (matches.length > 100) root.append(hint(t('moreResults', {count: matches.length - 100})));
+function rememberSearch(query = $('search').value) {
+  const next = recentSearches(searchHistory,prefs.searchHistoryLimit,query);
+  if (JSON.stringify(next) === JSON.stringify(searchHistory)) return;
+  searchHistory = next;
+  try { localStorage.setItem(searchHistoryKey,JSON.stringify(next)); }
+  catch { report('searchHistoryFailed'); }
 }
+function closeSearch(remember = false) {
+  if (remember) rememberSearch();
+  searchView = null; renderSearch();
+}
+function selectSearchResult(index) {
+  const rows = [...$('search-results').querySelectorAll('[role=option]')];
+  if (!rows.length) return;
+  const selected = rows[(index + rows.length) % rows.length];
+  rows.forEach(node => node.setAttribute('aria-selected',node === selected));
+  $('search').setAttribute('aria-activedescendant',selected.id);
+  selected.scrollIntoView({block:'nearest'});
+}
+function renderSearch() {
+  const root = $('search-results'), input = $('search'), query = input.value.trim();
+  const history = searchView === 'history', open = !isMaster() && (history || searchView === 'results' && !!query);
+  root.hidden = !open; root.replaceChildren();
+  input.setAttribute('aria-expanded',open); input.removeAttribute('aria-activedescendant');
+  $('search-history-toggle').setAttribute('aria-expanded',open && history);
+  $('search-history-toggle').disabled = prefs.searchHistoryLimit === 0;
+  root.setAttribute('aria-label',t(history ? 'searchHistory' : 'searchPlaceholder'));
+  if (!open) return;
+  const option = () => {
+    const b = el('button','search-result'); b.type = 'button'; b.tabIndex = -1;
+    b.id = 'search-option-' + root.querySelectorAll('[role=option]').length;
+    b.setAttribute('role','option'); b.setAttribute('aria-selected','false');
+    root.append(b); return b;
+  };
+  if (history) {
+    if (!searchHistory.length) root.append(hint('searchHistoryEmpty'));
+    for (const query of searchHistory) {
+      const b = option(); b.append(el('span','track-name',query)); b.title = query;
+      b.onclick = () => { input.value = query; rememberSearch(query); searchView = 'results'; renderSearch(); input.focus(); };
+    }
+    return;
+  }
+  const matches = filterTracks(state.index || [],query);
+  if (!matches.length) root.append(hint('noResults'));
+  for (const track of matches.slice(0,100)) {
+    const b = option(), swatch = el('span','swatch'); swatch.style.background = track.color || '#6e9992';
+    b.append(swatch,el('span','track-number',String(track.number)),el('span','track-name',track.name));
+    const c = context();
+    b.onclick = () => { rememberSearch(query); act({action:'selectTrack',guid:track.guid},c); input.value = ''; closeSearch(); input.focus(); };
+  }
+  if (matches.length > 100) root.append(hint(t('moreResults',{count:matches.length - 100})));
+}
+const searchWrap = $('search').closest('.search-wrap');
+$('search-history-toggle').onclick = () => {
+  const open = searchView !== 'history' || $('search-results').hidden;
+  $('search').focus(); searchView = open ? 'history' : null; renderSearch();
+};
+$('search').onfocus = () => {
+  if (!searchView && $('search').value.trim()) { searchView = 'results'; renderSearch(); }
+};
+searchWrap.addEventListener('keydown',event => {
+  if (event.isComposing || event.target === $('search-history-toggle')) return;
+  if (['ArrowDown','ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    if ($('search-results').hidden) { searchView = $('search').value.trim() ? 'results' : prefs.searchHistoryLimit ? 'history' : null; renderSearch(); }
+    const rows = [...$('search-results').querySelectorAll('[role=option]')];
+    const index = rows.findIndex(node => node.getAttribute('aria-selected') === 'true');
+    selectSearchResult(index < 0 ? event.key === 'ArrowDown' ? 0 : rows.length - 1 : index + (event.key === 'ArrowDown' ? 1 : -1));
+    $('search').focus();
+  } else if (event.key === 'Enter' && event.target === $('search')) {
+    event.preventDefault();
+    const selected = $('search-results').querySelector('[aria-selected=true]');
+    if (selected) selected.click();
+    else { rememberSearch(); searchView = $('search').value.trim() ? 'results' : null; renderSearch(); }
+  }
+});
+searchWrap.addEventListener('focusout',event => { if (!searchWrap.contains(event.relatedTarget)) closeSearch(true); });
+document.addEventListener('pointerdown',event => { if (!searchWrap.contains(event.target)) closeSearch(true); },true);
 let catalogMatches = [], catalogShown = 0, catalogActive = -1, appendCatalog;
 function selectCatalog(index,scroll = true) {
   if (!catalogMatches.length) return;
@@ -1098,7 +1169,7 @@ function fillSettings(value) {
 }
 function openSettings() {
   if ($('settings-dialog').open || document.querySelector('dialog[open]')) return;
-  closePanMenu(); closeRecordMenu();
+  closePanMenu(); closeRecordMenu(); closeSearch(true);
   fillSettings(prefs); $('settings-dialog').showModal();
 }
 function applyPreferences() {
@@ -1111,7 +1182,7 @@ function applyPreferences() {
 $('settings-open').onclick = openSettings;
 document.addEventListener('keydown', event => {
   if (isSettingsShortcut(event)) { event.preventDefault(); event.stopPropagation(); openSettings(); }
-  if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { $('search').value = ''; renderSearch(); }
+  if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { $('search').value = ''; closeSearch(); }
 }, true);
 document.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => $(b.dataset.close).close(); });
 $('settings-reset').onclick = () => fillSettings(defaults);
@@ -1121,13 +1192,13 @@ $('settings-form').onsubmit = async event => {
   const next = {...prefs};
   for (const control of event.currentTarget.elements) {
     if (!control.name || control.disabled) continue;
-    next[control.name] = control.type === 'checkbox' ? control.checked : ['fftSize','streamRate','drawRate','floor'].includes(control.name) ? Number(control.value) : control.value;
+    next[control.name] = control.type === 'checkbox' ? control.checked : ['fftSize','streamRate','drawRate','floor','searchHistoryLimit'].includes(control.name) ? Number(control.value) : control.value;
   }
   const old = prefs;
   try {
     prefs = preferences(next); await language(prefs.language);
     if (!savePreferences(prefs)) { prefs = old; await language(old.language); return; }
-    $('settings-dialog').close(); applyPreferences(); audio?.restart();
+    rememberSearch(''); $('settings-dialog').close(); applyPreferences(); audio?.restart();
   } catch (error) { prefs = old; report(error); }
 };
 document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListener('toggle', () => {
@@ -1146,7 +1217,7 @@ for (const kind of ['meter','spectrum','waveform','livePeak']) {
   graph.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); audio?.restart(); } };
 }
 document.addEventListener('visibilitychange', configureAudio);
-$('search').oninput = renderSearch;
+$('search').oninput = () => { searchView = $('search').value.trim() ? 'results' : null; renderSearch(); };
 $('fx-search').oninput = renderCatalog;
 $('fx-add-form').onsubmit = event => { event.preventDefault(); const name = $('fx-name').value.trim(); if (name) { act({action: 'fxAdd', name}, dialogContext); $('fx-dialog').close(); } };
 async function loadOverview() {
@@ -1167,7 +1238,7 @@ overviewSize.observe($('overview-canvas'));
 function cleanup() {
   if (cleanupPromise) return cleanupPromise;
   closing = true; overviewRevision++;
-  overviewSize.disconnect(); closePanMenu(); closeRecordMenu();
+  overviewSize.disconnect(); closePanMenu(); closeRecordMenu(); closeSearch(true);
   for (const finish of [...gestures.values()]) finish();
   if (document.activeElement?.matches('input,textarea,select')) document.activeElement.blur();
   cleanupPromise = (async () => {
@@ -1185,6 +1256,7 @@ window.addEventListener('pagehide', () => { cleanup().catch(() => {}); });
     languages = await (await fetch('./locales/languages.json')).json();
     english = await (await fetch('./locales/en.json')).json();
     try { prefs = preferences(JSON.parse(localStorage.getItem(storageKey))); } catch { prefs = preferences(); }
+    try { searchHistory = recentSearches(JSON.parse(localStorage.getItem(searchHistoryKey)),prefs.searchHistoryLimit); } catch { searchHistory = []; }
     for (const lang of languages) { const option = el('option', '', lang.name); option.value = lang.code; $('setting-language').append(option); }
     const themes = $('settings-form').elements.theme;
     for (const id of Object.keys(themePresets)) {

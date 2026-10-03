@@ -14,7 +14,10 @@
     <div id="view-modes" class="view-modes" role="group" data-title="viewMode"><button id="mode-track" type="button" aria-pressed="true" data-i18n="viewTrack" disabled>Track</button><button id="mode-master" type="button" aria-pressed="false" data-i18n="viewMaster" disabled>Master</button></div>
     <button id="settings-open" class="icon" data-title="settings" aria-label="Settings" aria-keyshortcuts="Control+, Control+Alt+S">⚙</button>
   </header>
-  <div class="search-wrap"><input id="search" type="search" data-placeholder="searchPlaceholder" autocomplete="off"><div id="search-results" hidden></div></div>
+  <div class="search-wrap">
+    <div class="search-field"><input id="search" type="search" role="combobox" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false" data-placeholder="searchPlaceholder" autocomplete="off"><button id="search-history-toggle" type="button" aria-haspopup="listbox" aria-controls="search-results" aria-expanded="false" data-title="searchHistory"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg></button></div>
+    <div id="search-results" role="listbox" hidden></div>
+  </div>
   <div id="status" role="status" aria-live="polite"></div>
   <main>
     <div id="empty" class="empty"><h1 data-i18n="noTrack"></h1><p data-i18n="selectTrackHint"></p></div>
@@ -55,8 +58,12 @@
           <div class="row"><span id="setting-label-colorAccent" data-i18n="colorAccent"></span><input aria-labelledby="setting-label-colorAccent" type="color" name="colorAccent"></div>
           <div class="row"><span id="setting-label-colorBorder" data-i18n="colorBorder"></span><input aria-labelledby="setting-label-colorBorder" type="color" name="colorBorder"></div>
         </div>
-        <div class="check"><input aria-labelledby="setting-label-fxCompact" type="checkbox" name="fxCompact"><span id="setting-label-fxCompact" data-i18n="fxCompact"></span></div>
-        <div class="check"><input aria-labelledby="setting-label-routingCompact" type="checkbox" name="routingCompact"><span id="setting-label-routingCompact" data-i18n="routingCompact"></span></div>
+        <div class="row"><span id="setting-label-searchHistoryLimit" data-i18n="searchHistoryLimit"></span><input aria-labelledby="setting-label-searchHistoryLimit" aria-describedby="search-history-hint" type="number" name="searchHistoryLimit" min="0" max="100" step="1" required></div>
+        <p id="search-history-hint" class="hint" data-i18n="searchHistoryHint"></p>
+        <div class="compact-settings">
+          <div class="check"><input aria-labelledby="setting-label-fxCompact" type="checkbox" name="fxCompact"><span id="setting-label-fxCompact" data-i18n="fxCompact"></span></div>
+          <div class="check"><input aria-labelledby="setting-label-routingCompact" type="checkbox" name="routingCompact"><span id="setting-label-routingCompact" data-i18n="routingCompact"></span></div>
+        </div>
         <h3 data-i18n="analysisSettings"></h3>
         <div class="check"><input aria-labelledby="setting-label-analysis" type="checkbox" name="analysis"><span id="setting-label-analysis" data-i18n="enableAnalysis"></span></div>
         <div class="row"><span id="setting-label-source" data-i18n="analysisSource"></span><select aria-labelledby="setting-label-source" name="source"><option value="track" data-i18n="sourceTrack"></option><option value="master" data-i18n="sourceMaster"></option><option value="input" data-i18n="sourceInput"></option></select></div>
