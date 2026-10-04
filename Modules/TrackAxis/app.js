@@ -1,4 +1,4 @@
-import { defaults, preferences, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, isSettingsShortcut, CommandQueue } from './model.js';
+import { defaults, preferences, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
 
 const $ = id => document.getElementById(id);
@@ -991,11 +991,15 @@ function renderQuick(force = false) {
 const renderers = {'track-header': renderHeader, mixer: renderMixer, routing: renderRouting, fx: renderFX, 'fx-parameters': renderFXParameters, parameters: renderParameters, items: renderItems, metadata: renderMetadata, appearance: renderAppearance, quick: renderQuick};
 function renderAll(force = false) { renderMode(); for (const render of Object.values(renderers)) render(force); renderSearch(); configureAudio(); }
 function configureAudio() {
+  for (const [id, key] of [['meter-toggle-rms', 'meterShowRms'], ['meter-toggle-lufs', 'meterShowLufs']]) {
+    $(id).setAttribute('aria-pressed', prefs[key]);
+  }
   if (!audio) return;
   const track = state.tracks?.count === 1 ? state.tracks.refs[0] : null;
   const master = isMaster(), source = master ? 'master' : prefs.source === 'track' ? track ? `track:${track.guid}` : null : prefs.source;
   $('analysis-notice').textContent = !prefs.analysis ? t('analysisDisabled') : '';
   audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source, master,
+    meterOutputs: source === 'master' ? hardwareOutputChannels(state.hardwareRouting?.rows) : null,
     aggregate: !master && prefs.source === 'track' && !!track && state.tracks.aggregate === true,
     active: !disposed && !closing && connected && !!state.tracks?.count && prefs.analysis && $('panel-analysis').open && !document.hidden});
 }
@@ -1156,7 +1160,8 @@ function receive(raw) {
     $('project-name').textContent = message.data.projectName || t('unsavedProject');
     if (changed) renderAll(true);
     else { renderHeader(); renderMixer(); renderParameters(); renderAppearance(); renderQuick(); renderRouting(); renderFX(); configureAudio(); refreshRecordMenu(); }
-  } else if (message.part === 'routing') { renderRouting(); if ($('route-dialog').open) renderRouteCatalog(); }
+  } else if (message.part === 'routing') { renderRouting(); configureAudio(); if ($('route-dialog').open) renderRouteCatalog(); }
+  else if (message.part === 'hardwareRouting') configureAudio();
   else if (message.part === 'fx') { renderFX(); renderFXParameters(); }
   else if (message.part === 'parameters') { renderFXParameters(); renderFX(); }
   else if (message.part === 'items') renderItems(oldItemKey !== message.data.itemKey);
@@ -1170,9 +1175,9 @@ function fillSettings(value) {
     const control = form.elements.namedItem(key); if (!control) continue;
     if (control.type === 'checkbox') control.checked = v; else control.value = v;
   }
-  $('analysis-setting-hint').textContent = t(isMaster() ? 'masterAnalysisHint' : 'preFXHint');
   form.elements.source.disabled = isMaster();
   if (isMaster()) form.elements.source.value = 'master';
+  updateAnalysisHint();
   $('custom-colors').hidden = form.elements.theme.value !== 'custom';
 }
 function openSettings() {
@@ -1182,6 +1187,7 @@ function openSettings() {
 }
 function applyPreferences() {
   applyTheme();
+  applyMeterHeight();
   document.body.dataset.density = prefs.density;
   if (prefs.fxCompact && state.parameters?.guid) act({action:'fxSelect',guid:state.parameters.guid,visible:false});
   document.querySelectorAll('[data-panel]').forEach(panel => { panel.open = prefs.panels[panel.dataset.panel]; });
@@ -1194,6 +1200,11 @@ document.addEventListener('keydown', event => {
 }, true);
 document.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => $(b.dataset.close).close(); });
 $('settings-reset').onclick = () => fillSettings(defaults);
+function updateAnalysisHint() {
+  const source = $('settings-form').elements.source.value;
+  $('analysis-setting-hint').textContent = t(source === 'master' ? 'masterHint' : source === 'input' ? 'inputHint' : 'preFXHint');
+}
+$('settings-form').elements.source.onchange = updateAnalysisHint;
 $('settings-form').elements.theme.onchange = () => { $('custom-colors').hidden = $('settings-form').elements.theme.value !== 'custom'; };
 $('settings-form').onsubmit = async event => {
   event.preventDefault();
@@ -1214,15 +1225,52 @@ document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListene
   if (panel.dataset.panel === 'analysis') configureAudio();
 }));
 document.querySelectorAll('.analysis-card').forEach(card => card.addEventListener('toggle', configureAudio));
-for (const kind of ['meter','spectrum','waveform','livePeak']) {
-  const card = $(`analysis-${kind}`), summary = card.querySelector('summary');
-  const restart = button(kind, event => { event.preventDefault(); event.stopPropagation(); audio?.restart(); }, 'analysis-restart', 'restartAnalysis');
-  restart.dataset.i18n = kind; restart.dataset.analysisKind = kind;
-  summary.removeAttribute('data-i18n'); summary.replaceChildren(restart);
-  const graph = card.querySelector(kind === 'meter' || kind === 'livePeak' ? '.readout' : 'canvas');
-  graph.tabIndex = 0; graph.setAttribute('role','button'); graph.dataset.analysisKind = kind;
-  graph.onclick = () => audio?.restart();
-  graph.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); audio?.restart(); } };
+$('meter-reset').onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.resetMeter(); };
+function applyMeterHeight() {
+  $('analysis-meter').style.setProperty('--meter-height', `${prefs.meterHeight}px`);
+  const handle = $('meter-resizer');
+  handle.setAttribute('aria-valuemin', meterHeightRange.min);
+  handle.setAttribute('aria-valuemax', meterHeightRange.max);
+  handle.setAttribute('aria-valuenow', prefs.meterHeight);
+}
+{
+  const handle = $('meter-resizer');
+  let drag;
+  const resize = height => {
+    prefs.meterHeight = Math.max(meterHeightRange.min, Math.min(meterHeightRange.max, Math.round(height)));
+    applyMeterHeight();
+  };
+  handle.onpointerdown = event => {
+    if (event.button !== 0 || drag) return;
+    event.preventDefault(); handle.setPointerCapture(event.pointerId); handle.focus({preventScroll:true});
+    drag = {pointer:event.pointerId, y:event.clientY, height:prefs.meterHeight};
+    handle.classList.add('resizing');
+  };
+  handle.onpointermove = event => {
+    if (drag?.pointer === event.pointerId) resize(drag.height + event.clientY - drag.y);
+  };
+  const finish = event => {
+    if (drag?.pointer !== event.pointerId) return;
+    drag = null; handle.classList.remove('resizing'); savePreferences(prefs);
+  };
+  handle.onpointerup = finish; handle.onpointercancel = finish; handle.onlostpointercapture = finish;
+  handle.onkeydown = event => {
+    if (!['ArrowUp','ArrowDown','Home','End'].includes(event.key)) return;
+    event.preventDefault();
+    resize(event.key === 'Home' ? meterHeightRange.min : event.key === 'End' ? meterHeightRange.max : prefs.meterHeight + (event.key === 'ArrowDown' ? 16 : -16));
+    savePreferences(prefs);
+  };
+  handle.ondblclick = () => { resize(defaults.meterHeight); savePreferences(prefs); };
+}
+for (const [id, key] of [['meter-toggle-rms', 'meterShowRms'], ['meter-toggle-lufs', 'meterShowLufs']]) {
+  $(id).onclick = event => {
+    event.preventDefault(); event.stopPropagation();
+    const next = {...prefs, [key]: !prefs[key]};
+    if (savePreferences(next)) { prefs = next; configureAudio(); }
+  };
+}
+for (const kind of ['spectrum','waveform']) {
+  $(`${kind}-restart`).onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.restart(kind); };
 }
 document.addEventListener('visibilitychange', configureAudio);
 $('search').oninput = () => { searchView = $('search').value.trim() ? 'results' : null; renderSearch(); };

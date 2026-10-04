@@ -1,6 +1,6 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.1.6
+-- @version 0.1.7
 -- @changelog
 --   Initial release.
 -- @links
@@ -14,6 +14,7 @@
 --   [nomain] backend.lua
 --   [nomain] index.html
 --   [nomain] json.lua
+--   [nomain] meter.js
 --   [nomain] model.js
 --   [nomain] style.css
 --   [nomain] locales/*.json

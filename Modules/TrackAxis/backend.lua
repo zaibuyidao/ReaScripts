@@ -288,10 +288,10 @@ return function(r, json, send)
     return false
   end
 
-  local function routes(track)
+  local function routes(track, categories)
     local rows = A()
 
-    for _, category in ipairs(mode == "master" and {1} or {0, -1}) do
+    for _, category in ipairs(categories or (mode == "master" and {1} or {0, -1})) do
       for i = 0, r.GetTrackNumSends(track, category) - 1 do
         local function get(field) return r.GetTrackSendInfo_Value(track, category, i, field) end
         local destination = get("I_DSTCHAN")
@@ -1029,8 +1029,10 @@ return function(r, json, send)
     M.last_selection = key
 
     if force or changed or selection_changed or now >= next_detail then
+      local hardware_rows = routes(r.GetMasterTrack(project), {1})
+      emit("hardwareRouting", {rows = hardware_rows})
       if t then
-        local rows = routes(t)
+        local rows = mode == "master" and hardware_rows or routes(t)
         emit("routing", {key = key, rows = rows, routeKey = route_key(rows), outputs = mode == "master" and hardware_outputs() or nil})
         emit("fx", {key = key, rows = fx_state(t)})
       else

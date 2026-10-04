@@ -11,10 +11,13 @@ export const themePresets = Object.freeze({
   midnight: {background:'#111b2a',panel:'#19283c',text:'#d8e5f5',accent:'#91b8ed',line:'#334963'},
 });
 
+export const meterHeightRange = Object.freeze({min:120, max:720});
 export const defaults = Object.freeze({
   version: 1, language: 'en', density: 'comfortable', fxCompact: false, routingCompact: false, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
-  analysis: true, meter: true, spectrum: true, waveform: true, livePeak: false,
+  analysis: true, meter: true, spectrum: true, waveform: true,
+  meterShowRms: false, meterShowLufs: true, meterHeight: 210,
+  forceMono: false, integratedMode: 'playback-only', resetOnPlaybackStart: true,
   source: 'track', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'reaper', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
   panels: { routing: true, fx: true, parameters: false, items: true, analysis: true, metadata: true, appearance: false, quick: true },
@@ -23,7 +26,10 @@ export const defaults = Object.freeze({
 export function preferences(raw = {}) {
   const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights} };
   if (!raw || raw.version !== 1) return p;
-  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'livePeak', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  if (raw.livePeak === true) p.meter = true;
+  if (['playback-only', 'continuous'].includes(raw.integratedMode)) p.integratedMode = raw.integratedMode;
+  if (Number.isFinite(raw.meterHeight) && raw.meterHeight >= meterHeightRange.min && raw.meterHeight <= meterHeightRange.max) p.meterHeight = Math.round(raw.meterHeight);
   for (const key of Object.keys(p.listHeights)) if (Number.isFinite(raw.listHeights?.[key]) && raw.listHeights[key] >= 0 && raw.listHeights[key] <= 4000) p.listHeights[key] = raw.listHeights[key];
   for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: ['track', 'master', 'input'], fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
     if (choices.includes(raw[key])) p[key] = raw[key];
@@ -104,6 +110,19 @@ export function channelMapping(source, destination) {
   const count = encodedCount === 0 ? 2 : encodedCount === 1 ? 1 : encodedCount * 2;
   return {source: (source & 1023) + 1, destination: (destination & 1023) + 1,
     count, destinationCount: destination & 1024 ? 1 : count};
+}
+export function hardwareOutputChannels(rows = []) {
+  const channels = new Set();
+  for (const route of rows) {
+    if (route.category !== 1 || !Number.isInteger(route.sourceChannels) || route.sourceChannels < 0 ||
+        !Number.isInteger(route.destinationChannels) || route.destinationChannels < 0) continue;
+    const mapping = channelMapping(route.sourceChannels, route.destinationChannels);
+    // Mono sources can feed a stereo hardware pair; I_DSTCHAN selects mono.
+    const count = route.destinationChannels & 1024 ? 1 : Math.max(2, mapping.count);
+    const start = mapping.destination - 1;
+    for (let channel = start; channel < Math.min(32, start + count); channel++) channels.add(channel);
+  }
+  return [...channels].sort((a, b) => a - b);
 }
 export function isSettingsShortcut(event) {
   return event.ctrlKey && !event.metaKey && !event.shiftKey && !event.repeat &&
