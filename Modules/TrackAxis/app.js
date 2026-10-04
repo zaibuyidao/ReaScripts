@@ -1307,6 +1307,12 @@ function cleanup() {
 }
 window.addEventListener('pagehide', () => { cleanup().catch(() => {}); });
 
+fetch('./app.json').then(response => response.json()).then(({version}) => {
+  if (typeof version !== 'string' || !version.trim()) return;
+  $('app-version').textContent = `v${version.trim()}`;
+  $('app-version').hidden = false;
+}).catch(() => {});
+
 (async () => {
   try {
     languages = await (await fetch('./locales/languages.json')).json();

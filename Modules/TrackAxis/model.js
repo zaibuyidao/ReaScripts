@@ -13,7 +13,7 @@ export const themePresets = Object.freeze({
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
 export const defaults = Object.freeze({
-  version: 1, language: 'en', density: 'comfortable', fxCompact: false, routingCompact: false, searchHistoryLimit: 20,
+  version: 1, language: 'en', density: 'comfortable', fxCompact: true, routingCompact: true, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true,
   meterShowRms: false, meterShowLufs: true, meterHeight: 210,
