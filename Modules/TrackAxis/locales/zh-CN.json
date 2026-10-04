@@ -215,7 +215,7 @@
   "themeAnime": "樱花粉彩",
   "themeForest": "森野绿意",
   "themeMono": "极简黑白",
-  "themeMidnight": "深夜靛蓝",
+  "themeMidnight": "深夜玄黑",
   "themeCustom": "自定义配色",
   "colorBackground": "背景",
   "colorPanel": "面板",
@@ -300,6 +300,6 @@
   "meterAutoReset": "播放开始时复位表头",
   "meterMono": "Mono 标定（−3 dB）",
   "meterMonoHint": "全局 RMS、LUFS 及 LRA 上下界减去 3 dB，不混合或减少声道。",
-  "meterToggleRms": "显示 / 隐藏 RMS",
-  "meterToggleLufs": "显示 / 隐藏 LUFS 和 LRA"
+  "meterToggleRms": "显示 / 隐藏 RMS。右键选择 RMS-M / RMS-I。",
+  "meterToggleLufs": "显示 / 隐藏 LUFS 和 LRA。右键选择 LUFS-M / LUFS-S / LUFS-I / LRA。"
 }

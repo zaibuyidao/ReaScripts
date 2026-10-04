@@ -215,7 +215,7 @@
   "themeAnime": "櫻花粉彩",
   "themeForest": "森野綠意",
   "themeMono": "極簡黑白",
-  "themeMidnight": "深夜靛藍",
+  "themeMidnight": "深夜玄黑",
   "themeCustom": "自訂配色",
   "colorBackground": "背景",
   "colorPanel": "面板",
@@ -300,6 +300,6 @@
   "meterAutoReset": "播放開始時重設錶頭",
   "meterMono": "Mono 校準（−3 dB）",
   "meterMonoHint": "全域 RMS、LUFS 及 LRA 上下界減去 3 dB，不混合或減少聲道。",
-  "meterToggleRms": "顯示 / 隱藏 RMS",
-  "meterToggleLufs": "顯示 / 隱藏 LUFS 與 LRA"
+  "meterToggleRms": "顯示 / 隱藏 RMS。右鍵選擇 RMS-M / RMS-I。",
+  "meterToggleLufs": "顯示 / 隱藏 LUFS 與 LRA。右鍵選擇 LUFS-M / LUFS-S / LUFS-I / LRA。"
 }

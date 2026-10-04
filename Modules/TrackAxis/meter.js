@@ -79,7 +79,7 @@ export class NativeMeterView {
     const rms = config.meterShowRms === true, lufs = config.meterShowLufs !== false;
     const outputs = config.source === 'master' && Array.isArray(config.meterOutputs) ? new Set(config.meterOutputs) : null;
     let visible = 0;
-    for (const item of this.analysisStrips) item.strip.hidden = !(item.family === 'rms' ? rms : lufs);
+    for (const item of this.analysisStrips) item.strip.hidden = !(item.family === 'rms' ? rms : lufs) || config.meterMetrics?.[item.key] === false;
     this.strips.forEach((item, channel) => {
       item.strip.hidden = outputs !== null && !outputs.has(channel);
       item.rms.hidden = !rms;
@@ -87,7 +87,7 @@ export class NativeMeterView {
     });
     this.source.textContent = `${this.sourceLabel} · ${visible} CH${config.forceMono ? ' · MONO' : ''}`;
     this.root.querySelector('.meter-legend-rms').hidden = !rms;
-    this.lanes.style.setProperty('--channels', Math.max(1, visible + (rms ? 2 : 0) + (lufs ? 4 : 0)));
+    this.lanes.style.setProperty('--channels', Math.max(1, visible + this.analysisStrips.filter(item => !item.strip.hidden).length));
   }
   update(values) {
     this.clock.textContent = time(values.processedSeconds);

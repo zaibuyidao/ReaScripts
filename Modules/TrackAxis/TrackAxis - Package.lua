@@ -1,6 +1,6 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.1.9
+-- @version 0.2.0
 -- @changelog
 --   Initial release.
 -- @links

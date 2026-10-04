@@ -215,7 +215,7 @@
   "themeAnime": "벚꽃 파스텔",
   "themeForest": "숲의 초록",
   "themeMono": "미니멀 흑백",
-  "themeMidnight": "한밤의 인디고",
+  "themeMidnight": "한밤의 블랙",
   "themeCustom": "사용자 지정 색상",
   "colorBackground": "배경",
   "colorPanel": "패널",
@@ -300,6 +300,6 @@
   "meterAutoReset": "재생 시작 시 미터 초기화",
   "meterMono": "Mono 보정(−3 dB)",
   "meterMonoHint": "전체 RMS, LUFS, LRA 상하한에서 3 dB를 뺍니다. 채널을 믹스하거나 줄이지 않습니다.",
-  "meterToggleRms": "RMS 표시 / 숨기기",
-  "meterToggleLufs": "LUFS 및 LRA 표시 / 숨기기"
+  "meterToggleRms": "RMS 표시 / 숨기기. 오른쪽 클릭으로 RMS-M / RMS-I 선택.",
+  "meterToggleLufs": "LUFS 및 LRA 표시 / 숨기기. 오른쪽 클릭으로 LUFS-M / LUFS-S / LUFS-I / LRA 선택."
 }

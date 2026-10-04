@@ -215,7 +215,7 @@
   "themeAnime": "桜色パステル",
   "themeForest": "森のグリーン",
   "themeMono": "ミニマルモノクロ",
-  "themeMidnight": "ミッドナイトインディゴ",
+  "themeMidnight": "ミッドナイトブラック",
   "themeCustom": "カスタム配色",
   "colorBackground": "背景",
   "colorPanel": "パネル",
@@ -300,6 +300,6 @@
   "meterAutoReset": "再生開始時にリセット",
   "meterMono": "Mono 校正（−3 dB）",
   "meterMonoHint": "全体の RMS、LUFS、LRA 上下限を 3 dB 下げます。チャンネルのミックスや削減は行いません。",
-  "meterToggleRms": "RMS を表示 / 非表示",
-  "meterToggleLufs": "LUFS と LRA を表示 / 非表示"
+  "meterToggleRms": "RMS を表示 / 非表示。右クリックで RMS-M / RMS-I を選択。",
+  "meterToggleLufs": "LUFS と LRA を表示 / 非表示。右クリックで LUFS-M / LUFS-S / LUFS-I / LRA を選択。"
 }

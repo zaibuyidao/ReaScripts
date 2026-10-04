@@ -8,7 +8,7 @@ export const themePresets = Object.freeze({
   anime: {background:'#211e35',panel:'#2d2846',text:'#f3eafa',accent:'#eda6d4',line:'#554b70'},
   forest: {background:'#18251f',panel:'#223129',text:'#e0eade',accent:'#a9c780',line:'#3e5747'},
   mono: {background:'#ececec',panel:'#fafafa',text:'#292929',accent:'#4b4b4b',line:'#bdbdbd'},
-  midnight: {background:'#111b2a',panel:'#19283c',text:'#d8e5f5',accent:'#91b8ed',line:'#334963'},
+  midnight: {background:'#221f22',panel:'#221f22',text:'#eeeeee',accent:'#78dce6',line:'#19181a',control:'#2b2b2b',field:'#19181a'},
 });
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
@@ -17,14 +17,15 @@ export const defaults = Object.freeze({
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true,
   meterShowRms: false, meterShowLufs: true, meterHeight: 210,
+  meterMetrics: {rmsMomentary:true, rmsIntegrated:true, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
   forceMono: false, integratedMode: 'playback-only', resetOnPlaybackStart: true,
   source: 'track', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
-  theme: 'reaper', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
+  theme: 'midnight', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
   panels: { routing: true, fx: true, parameters: false, items: true, analysis: true, metadata: true, appearance: false, quick: true },
 });
 
 export function preferences(raw = {}) {
-  const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights} };
+  const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights}, meterMetrics: {...defaults.meterMetrics} };
   if (!raw || raw.version !== 1) return p;
   for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
   if (raw.livePeak === true) p.meter = true;
@@ -39,6 +40,7 @@ export function preferences(raw = {}) {
   if (['reaper', ...Object.keys(themePresets), 'custom'].includes(raw.theme)) p.theme = raw.theme;
   for (const key of ['colorBackground','colorPanel','colorText','colorAccent','colorBorder']) if (/^#[\da-f]{6}$/i.test(raw[key] || '')) p[key] = raw[key];
   for (const key of Object.keys(p.panels)) if (typeof raw.panels?.[key] === 'boolean') p.panels[key] = raw.panels[key];
+  for (const key of Object.keys(p.meterMetrics)) if (typeof raw.meterMetrics?.[key] === 'boolean') p.meterMetrics[key] = raw.meterMetrics[key];
   return p;
 }
 export function themePalette(prefs, theme) {
@@ -49,13 +51,13 @@ export function themePalette(prefs, theme) {
   const light = color => rgb(color).reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0) > 150;
   const get = (key, fallback) => /^#[\da-f]{6}$/i.test(native?.[key] || '') ? native[key] : fallback;
   const background = get('col_main_bg', preset?.background ?? prefs.colorBackground), text = get('col_main_text', preset?.text ?? prefs.colorText);
-  const panel = get('col_main_bg', preset?.panel ?? prefs.colorPanel), control = get('col_buttonbg', get('buttonface', native?.col_main_bg ? panel : mix(panel, text, 0.06)));
+  const panel = get('col_main_bg', preset?.panel ?? prefs.colorPanel), control = get('col_buttonbg', get('buttonface', native?.col_main_bg ? panel : (preset?.control ?? mix(panel, text, 0.06))));
   const controlText = get('buttontext', text);
   const accent = get('genlist_selbg', preset?.accent ?? prefs.colorAccent), activeText = get('genlist_selfg', light(accent) ? '#101010' : '#ffffff');
   const line = get('col_main_3dsh',preset?.line ?? prefs.colorBorder);
   return {background, text, panel, control, accent, 'control-text': controlText,
     'route-receive': mix(panel,light(panel) ? '#52647b' : '#a3b8d4',0.12),
-    field: get('col_main_editbk', mix(background, text, 0.035)),
+    field: get('col_main_editbk', preset?.field ?? mix(background, text, 0.035)),
     line, focus: mix(line,accent,0.45),
     toolbar: get('col_main_bg2', panel), 'toolbar-text': get('col_main_text2', text),
     muted: native?.col_main_text ? text : mix(text, background, preset ? 0.28 : 0.4),

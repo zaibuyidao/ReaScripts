@@ -215,7 +215,7 @@
   "themeAnime": "Sakura Pastel",
   "themeForest": "Woodland Green",
   "themeMono": "Minimal Monochrome",
-  "themeMidnight": "Midnight Indigo",
+  "themeMidnight": "Midnight Black",
   "themeCustom": "Custom colors",
   "colorBackground": "Background",
   "colorPanel": "Panels",
@@ -300,6 +300,6 @@
   "meterAutoReset": "Reset meter on playback start",
   "meterMono": "Mono calibration (−3 dB)",
   "meterMonoHint": "Applies −3 dB to global RMS/LUFS and LRA bounds. Does not mix or remove channels.",
-  "meterToggleRms": "Show / hide RMS",
-  "meterToggleLufs": "Show / hide LUFS and LRA"
+  "meterToggleRms": "Show / hide RMS. Right-click to choose RMS-M / RMS-I.",
+  "meterToggleLufs": "Show / hide LUFS and LRA. Right-click to choose LUFS-M / LUFS-S / LUFS-I / LRA."
 }

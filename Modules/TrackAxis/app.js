@@ -45,7 +45,7 @@ function renderMode() {
 function switchMode(mode) {
   if (!connected || modeSwitching || mode === (isMaster() ? 'master' : 'track')) return;
   for (const finish of [...gestures.values()]) finish();
-  document.activeElement?.blur(); closePanMenu(); closeRecordMenu(); closeSearch(true);
+  document.activeElement?.blur(); closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
   modeSwitching = mode; renderMode(); act({action:'mode',value:mode});
 }
 $('mode-track').onclick = () => switchMode('track');
@@ -1182,7 +1182,7 @@ function fillSettings(value) {
 }
 function openSettings() {
   if ($('settings-dialog').open || document.querySelector('dialog[open]')) return;
-  closePanMenu(); closeRecordMenu(); closeSearch(true);
+  closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
   fillSettings(prefs); $('settings-dialog').showModal();
 }
 function applyPreferences() {
@@ -1265,10 +1265,66 @@ function applyMeterHeight() {
 for (const [id, key] of [['meter-toggle-rms', 'meterShowRms'], ['meter-toggle-lufs', 'meterShowLufs']]) {
   $(id).onclick = event => {
     event.preventDefault(); event.stopPropagation();
+    closeMeterMenu();
     const next = {...prefs, [key]: !prefs[key]};
     if (savePreferences(next)) { prefs = next; configureAudio(); }
   };
 }
+const meterChoices = {
+  rms: [['rmsMomentary','RMS-M'], ['rmsIntegrated','RMS-I']],
+  lufs: [['lufsMomentary','LUFS-M'], ['lufsShortTerm','LUFS-S'], ['lufsIntegrated','LUFS-I'], ['loudnessRange','LRA']],
+};
+let meterMenuAnchor;
+function closeMeterMenu(restoreFocus = false) {
+  $('meter-menu').hidden = true;
+  meterMenuAnchor?.setAttribute('aria-expanded', 'false');
+  if (restoreFocus && meterMenuAnchor?.isConnected) meterMenuAnchor.focus();
+  meterMenuAnchor = null;
+}
+function openMeterMenu(family, event) {
+  event.preventDefault(); event.stopPropagation();
+  closePanMenu(); closeRecordMenu(); closeMeterMenu();
+  const menu = $('meter-menu'), anchor = $(`meter-toggle-${family}`);
+  meterMenuAnchor = anchor; menu.replaceChildren();
+  menu.setAttribute('aria-label', family.toUpperCase());
+  for (const [key, label] of meterChoices[family]) {
+    const option = el('button', '', label); option.type = 'button'; option.title = t(key);
+    option.dataset.metric = key; option.setAttribute('role', 'menuitemcheckbox');
+    option.setAttribute('aria-checked', prefs.meterMetrics[key]);
+    option.onclick = () => {
+      const next = {...prefs, meterMetrics: {...prefs.meterMetrics, [key]: !prefs.meterMetrics[key]}};
+      if (savePreferences(next)) {
+        prefs = next; option.setAttribute('aria-checked', prefs.meterMetrics[key]); configureAudio();
+      }
+    };
+    menu.append(option);
+  }
+  menu.hidden = false; anchor.setAttribute('aria-expanded', 'true');
+  const rect = anchor.getBoundingClientRect();
+  const pointer = event.type === 'contextmenu' && (event.clientX || event.clientY);
+  menu.style.left = `${Math.max(4, Math.min(pointer ? event.clientX : rect.left, innerWidth - menu.offsetWidth - 4))}px`;
+  menu.style.top = `${Math.max(4, Math.min(pointer ? event.clientY : rect.bottom, innerHeight - menu.offsetHeight - 4))}px`;
+  menu.firstElementChild.focus({preventScroll:true});
+}
+for (const family of Object.keys(meterChoices)) {
+  const anchor = $(`meter-toggle-${family}`);
+  anchor.oncontextmenu = event => openMeterMenu(family, event);
+  anchor.onkeydown = event => {
+    if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey || event.key === 'ArrowDown') openMeterMenu(family, event);
+  };
+}
+$('meter-menu').oncontextmenu = event => event.preventDefault();
+$('meter-menu').onkeydown = event => {
+  const options = [...$('meter-menu').children], index = options.indexOf(document.activeElement);
+  if (['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
+    event.preventDefault();
+    options[event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
+  } else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); event.stopPropagation(); closeMeterMenu(true); }
+};
+document.addEventListener('pointerdown', event => { if (!$('meter-menu').contains(event.target)) closeMeterMenu(); }, true);
+document.addEventListener('scroll', event => { if (!$('meter-menu').contains(event.target)) closeMeterMenu(); }, true);
+window.addEventListener('blur', () => closeMeterMenu());
+window.addEventListener('resize', () => closeMeterMenu());
 for (const kind of ['spectrum','waveform']) {
   $(`${kind}-restart`).onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.restart(kind); };
 }
@@ -1294,7 +1350,7 @@ overviewSize.observe($('overview-canvas'));
 function cleanup() {
   if (cleanupPromise) return cleanupPromise;
   closing = true; overviewRevision++;
-  overviewSize.disconnect(); closePanMenu(); closeRecordMenu(); closeSearch(true);
+  overviewSize.disconnect(); closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
   for (const finish of [...gestures.values()]) finish();
   if (document.activeElement?.matches('input,textarea,select')) document.activeElement.blur();
   cleanupPromise = (async () => {
