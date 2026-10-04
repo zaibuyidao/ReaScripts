@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.2
+@version 0.3.8.5
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -12,6 +12,7 @@
   [linux-aarch64 extension] reawebapi-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-aarch64
   [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
+  [script nomain] web/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.json
   [script nomain] web/external-client/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/README.md
   [script nomain] web/external-client/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/app.js
   [script nomain] web/external-client/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/index.html
@@ -20,20 +21,23 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
   [script nomain] web/lua-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.js
+  [script nomain] web/lua-backend/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.json
   [script nomain] web/lua-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/index.html
   [script main] web/lua-backend/reawebapi-lua-backend.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/reawebapi-lua-backend.lua
   [script nomain] web/lua-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/style.css
   [script main] web/native-service/Coexist.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/Coexist.lua
   [script nomain] web/native-service/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/README.md
   [script nomain] web/native-service/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.js
+  [script nomain] web/native-service/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.json
   [script nomain] web/native-service/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/index.html
   [script main] web/native-service/reawebapi-native-service.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/reawebapi-native-service.lua
   [script nomain] web/native-service/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/style.css
   [script nomain] web/native-stream/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/README.md
   [script nomain] web/native-stream/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.js
+  [script nomain] web/native-stream/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.json
   [script nomain] web/native-stream/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/index.html
   [script main] web/native-stream/reawebapi-native-stream.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/reawebapi-native-stream.lua
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Recover from isolated invalid track PCM blocks during loop playback and source changes without disconnecting shared analyses.
+  Fix Master/Input Meter streams closing when the hardware callback omits its channel count and the device is not stereo.

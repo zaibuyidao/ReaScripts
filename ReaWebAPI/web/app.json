@@ -1,0 +1,6 @@
+{
+  "id": "reawebapi-demo",
+  "name": "ReaWebAPI Demo",
+  "version": "1.0.0",
+  "entry": "index.html"
+}

@@ -1,6 +1,6 @@
 'use strict';
 const el = id => document.getElementById(id), canvas = el('view'), ctx = canvas.getContext('2d');
-let current = null, watching = null, queued = false;
+let current = null, watching = null, queued = false, builtinMeter = false;
 const frameCanvas = document.createElement('canvas');
 const show = value => JSON.stringify(value, (_, item) => typeof item === 'bigint' ? String(item) : item, 2);
 const report = error => { el('status').textContent = `${error.code || 'ERROR'}: ${error.message}`; };
@@ -23,9 +23,15 @@ function draw() {
     el('info').textContent = `Device ${view.getUint32(0, true) & 65535}: ` + Array.from(packet.bytes.subarray(16), byte => byte.toString(16).padStart(2, '0')).join(' ');
     while (current.read()) {}
   } else if (info.kind === 'meter') {
+    if (!builtinMeter) { el('info').textContent = show({ source: info.source, values: Array.from(data) }); return; }
     ctx.fillStyle = '#71d5b0';
-    for (let channel = 0; channel < info.channels; ++channel) ctx.fillRect(20, 30 + channel * 60, Math.min(1, data[channel]) * 820, 32);
-    el('info').textContent = show({ peak: Array.from(data.slice(0, info.channels)), rms: Array.from(data.slice(info.channels, info.channels * 2)), lufs: Array.from(data.slice(info.channels * 2, info.channels * 2 + 3), value => Number.isFinite(value) ? value.toFixed(1) : '−∞') });
+    for (let channel = 0; channel < info.channels; ++channel) ctx.fillRect(20, 20 + channel * (280 / info.channels), Math.min(1, data[channel]) * 820, Math.min(32, 240 / info.channels));
+    const values = reaper.audio.decodeMeter(data, info.channels);
+    for (const [key, value] of Object.entries(values)) {
+      if (value instanceof Float32Array) values[key] = Array.from(value);
+      else if (typeof value === 'number') values[key] = Number.isFinite(value) ? Number(value.toFixed(3)) : '−∞';
+    }
+    el('info').textContent = show(values);
   } else if (data instanceof Float32Array) {
     const stride = info.kind === 'waveform' ? info.channels * 2 : info.channels || 1;
     ctx.strokeStyle = '#71d5b0'; ctx.beginPath();
@@ -37,17 +43,20 @@ function draw() {
     ctx.stroke(); if (info.kind === 'audio') while (current.read()) {}
   } else el('info').textContent = `${packet.bytes.length} bytes`;
 }
-async function detach() { if (current) await current.close(); current = null; el('close').disabled = true; }
+async function detach() { if (current) await current.close(); current = null; el('close').disabled = el('reset').disabled = true; }
 el('open').onclick = action(async () => {
   await detach();
   const kind = el('kind').value;
+  builtinMeter = kind === 'meter';
   const aggregate = el('source').value === 'aggregate-track';
-  current = kind === 'named stream' ? await reaper.stream.open(el('name').value) : kind === 'midi' ? await reaper.system.openMIDIInput(Number(el('midi').value)) : await reaper.audio.openStream(kind, { source: aggregate ? 'selected-track' : el('source').value, aggregate, fftSize: 2048, updateRate: 30 });
+  current = kind === 'named stream' ? await reaper.stream.open(el('name').value) : kind === 'midi' ? await reaper.system.openMIDIInput(Number(el('midi').value)) : await reaper.audio.openStream(kind, { source: aggregate ? 'selected-track' : el('source').value, aggregate, fftSize: 2048, updateRate: 30, ...(kind === 'meter' ? { forceMono: el('mono').checked, integratedMode: el('integrated').value } : {}) });
   el('info').textContent = show(current.info); el('close').disabled = false;
+  el('reset').disabled = kind !== 'meter';
   current.on('data', () => { if (!queued) { queued = true; requestAnimationFrame(draw); } });
-  current.on('error', report); current.on('close', error => { el('status').textContent = error.code; el('close').disabled = true; });
+  current.on('error', report); current.on('close', error => { el('status').textContent = error.code; el('close').disabled = el('reset').disabled = true; });
 });
 el('close').onclick = action(detach);
+el('reset').onclick = action(async () => { if (current) await reaper.audio.resetMeter(current.info.name); });
 el('devices').onclick = action(async () => { el('events').textContent = show({ devices: await reaper.system.getDevices(), displays: await reaper.system.getDisplays() }); });
 el('watch').onclick = action(async () => {
   const path = await reaper.dialog.selectFolder({ title: 'Watch folder' }); if (!path) return;

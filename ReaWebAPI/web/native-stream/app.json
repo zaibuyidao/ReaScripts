@@ -1,0 +1,6 @@
+{
+  "id": "reawebapi-native-stream",
+  "name": "Native Stream",
+  "version": "1.0.0",
+  "entry": "index.html"
+}

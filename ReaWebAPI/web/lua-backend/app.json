@@ -1,0 +1,6 @@
+{
+  "id": "reawebapi-lua-backend",
+  "name": "Lua Backend",
+  "version": "1.0.0",
+  "entry": "index.html"
+}
