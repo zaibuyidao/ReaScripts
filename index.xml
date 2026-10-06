@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1f65afb1afae87280ddbe82ff20607f3dd0d3f87">
+<index version="1" name="zaibuyidao Scripts" commit="45a8e1b4c5a07bc13d123fa717391ceffc57237d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9729,6 +9729,10 @@ Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears imme
       <version name="1.0.23" author="zaibuyidao" time="2026-05-30T13:46:23Z">
         <changelog><![CDATA[Fixed the independent drawing logic of the Preview and Compare windows to prevent repeated white flashing when docking the window to the center area.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4f1c2fd67eba17caf5561af3dc2b5fa97caab59e/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.24" author="zaibuyidao" time="2026-10-06T12:21:04Z">
+        <changelog><![CDATA[Fixed presets not saving and restoring the renaming target.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/45a8e1b4c5a07bc13d123fa717391ceffc57237d/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
