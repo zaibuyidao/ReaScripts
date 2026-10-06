@@ -833,10 +833,17 @@ function renderFX(force = false) {
           if (event.altKey) command('delete',{confirmed:true});
           else if (event.shiftKey) command('enabled',{value:!fx.enabled});
           else if (event.ctrlKey || event.metaKey) command('offline',{value:!fx.offline});
-          else command('open');
+          else command('toggleWindow');
         };
         card.append(head); bindFXDrag(card,fx,c); grid.append(card); continue;
       }
+      head.setAttribute('role','button');
+      head.title = `${t('toggleFX')} · ${t('dragFX')}`;
+      head.setAttribute('aria-label',`${fx.index+1} · ${fx.name} · ${head.title}`);
+      head.onclick = () => command('toggleWindow');
+      head.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); command('toggleWindow'); }
+      });
       const actions = el('div','fx-actions');
       const enabled = fxIcon(toggle('enabled',fx.enabled,n => command('enabled',{value:!!n})),'M12 3v9 M6.3 5.8a8 8 0 1 0 11.4 0');
       const offline = fxIcon(toggle('offline',fx.offline,n => command('offline',{value:!!n})),'M8 3v4 M16 3v4 M6 7h12v5a6 6 0 0 1-6 6v3 M6 10v2a6 6 0 0 0 3 5.2 M3 3l18 18');
@@ -847,7 +854,7 @@ function renderFX(force = false) {
       });
       parameters.className = 'fx-parameters-toggle'; parameters.title = `${t('fxParameters')} · ${fx.name}`;
       parameters.setAttribute('aria-expanded',expanded); parameters.setAttribute('aria-controls','fx-parameter-panel');
-      const open = fxIcon(button('open',() => command('open'),'fx-open'),'M10 4H4v16h16v-6 M14 4h6v6 M20 4l-9 9');
+      const open = fxIcon(button('toggleFX',() => command('toggleWindow'),'fx-open'),'M10 4H4v16h16v-6 M14 4h6v6 M20 4l-9 9');
       fxIcon(parameters,'M3 6h4 M11 6h10 M3 18h10 M17 18h4 M11 6a2 2 0 1 0-4 0 2 2 0 1 0 4 0 M17 18a2 2 0 1 0-4 0 2 2 0 1 0 4 0');
       const remove = fxIcon(button('delete',() => confirmDelete(t('deleteFXPrompt',{name:fx.name}),{action:'fx',guid:fx.guid,operation:'delete'},c),'danger'),'M4 6h16 M9 6V3h6v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7');
       actions.append(enabled,offline,open,parameters,remove);
@@ -1217,7 +1224,7 @@ $('settings-form').onsubmit = async event => {
   try {
     prefs = preferences(next); await language(prefs.language);
     if (!savePreferences(prefs)) { prefs = old; await language(old.language); return; }
-    rememberSearch(''); $('settings-dialog').close(); applyPreferences(); audio?.restart();
+    rememberSearch(''); $('settings-dialog').close(); applyPreferences();
   } catch (error) { prefs = old; report(error); }
 };
 document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListener('toggle', () => {
@@ -1228,6 +1235,7 @@ document.querySelectorAll('.analysis-card').forEach(card => card.addEventListene
 $('meter-reset').onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.resetMeter(); };
 function applyMeterHeight() {
   $('analysis-meter').style.setProperty('--meter-height', `${prefs.meterHeight}px`);
+  $('analysis-meter').classList.toggle('meter-compact', prefs.meterCompact);
   const handle = $('meter-resizer');
   handle.setAttribute('aria-valuemin', meterHeightRange.min);
   handle.setAttribute('aria-valuemax', meterHeightRange.max);

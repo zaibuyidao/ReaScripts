@@ -1,11 +1,13 @@
 import { toDb, dbText } from './model.js';
 
-const floor = -60, ceiling = 6;
+const floor = -80, ceiling = 6;
+// Limit presentation only; native integration, history and clip counters stay intact.
+export const meterDbText = value => Number.isFinite(value) && value < floor ? '<−80' : dbText(value);
 const position = db => Number.isFinite(db) ? Math.max(0, Math.min(100, (db - floor) / (ceiling - floor) * 100)) : 0;
 const node = (tag, className, text = '') => {
   const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
 };
-const level = amplitude => dbText(toDb(amplitude));
+const level = amplitude => meterDbText(toDb(amplitude));
 const time = seconds => {
   if (!Number.isFinite(seconds)) return '—';
   const total = Math.max(0, Math.floor(seconds)), hours = Math.floor(total / 3600);
@@ -30,14 +32,14 @@ export class NativeMeterView {
     caption.append(source, legend); meta.append(caption, this.clock); root.append(meta);
     const bank = node('div', 'meter-bank'), scale = node('div', 'meter-scale');
     scale.setAttribute('aria-hidden', 'true');
-    for (const db of [6, 0, -6, -12, -24, -36, -48, -60]) {
+    for (const db of [6, 0, -6, -12, -24, -36, -48, -60, -80]) {
       const tick = node('span', db === 0 ? 'meter-zero' : '', db > 0 ? `+${db}` : String(db));
       tick.style.bottom = `${position(db)}%`; scale.append(tick);
     }
     const viewport = node('div', 'meter-viewport'); viewport.tabIndex = 0; viewport.setAttribute('aria-label', t('meterChannels'));
     const lanes = this.lanes = node('div', 'meter-lanes');
     for (let channel = 0; channel < channels; channel++) {
-      const strip = node('div', 'meter-strip'); strip.dataset.channel = channel;
+      const strip = node('div', 'meter-strip meter-history'); strip.dataset.channel = channel;
       const top = this.header('MAX', ''); top.root.title = t('maxSamplePeak');
       const rail = node('div', 'meter-rail');
       const peak = node('span', 'meter-fill meter-sample'), rms = node('span', 'meter-fill meter-rms');
@@ -54,7 +56,7 @@ export class NativeMeterView {
       ['loudnessRange', 'LRA', 'LU'],
     ]) {
       const range = key === 'loudnessRange', family = group === 'RMS' ? 'rms' : 'lufs';
-      const strip = node('div', `meter-strip meter-analysis-strip meter-family-${family}${range ? ' meter-lra' : ''}`);
+      const strip = node('div', `meter-strip meter-analysis-strip meter-family-${family}${range ? ' meter-lra' : ''}${history ? ' meter-history' : ''}`);
       const top = this.header(range ? 'RANGE' : history ? 'MAX' : 'INT', range ? 'LU' : family === 'rms' ? 'dBFS' : 'LUFS');
       strip.dataset.metric = key; strip.title = t(key);
       const rail = node('div', 'meter-rail');
@@ -76,6 +78,7 @@ export class NativeMeterView {
     return {root, value, detail, label};
   }
   setVisibility(config) {
+    this.root.classList.toggle('meter-compact', config.meterCompact === true);
     const rms = config.meterShowRms === true, lufs = config.meterShowLufs !== false;
     const outputs = config.source === 'master' && Array.isArray(config.meterOutputs) ? new Set(config.meterOutputs) : null;
     let visible = 0;
@@ -93,21 +96,22 @@ export class NativeMeterView {
     this.clock.textContent = time(values.processedSeconds);
     this.strips.forEach((strip, c) => {
       const sample = toDb(values.samplePeak[c]), rms = toDb(values.channelRms[c]), tp = toDb(values.truePeak[c]);
-      strip.peak.style.height = `${position(sample)}%`; strip.rms.style.height = `${position(rms)}%`;
-      strip.truePeak.style.bottom = `${position(tp)}%`; strip.truePeak.hidden = !Number.isFinite(tp);
+      strip.peak.style.setProperty('--meter-level', `${position(sample)}%`); strip.rms.style.setProperty('--meter-level', `${position(rms)}%`);
+      strip.truePeak.style.setProperty('--meter-offset', `${position(tp)}%`); strip.truePeak.hidden = !Number.isFinite(tp);
       const max = toDb(values.channelMaxSamplePeak[c]);
-      strip.max.style.bottom = `${position(max)}%`; strip.max.hidden = !Number.isFinite(max);
-      strip.top.value.textContent = dbText(max);
+      strip.max.style.setProperty('--meter-offset', `${position(max)}%`); strip.max.hidden = !Number.isFinite(max);
+      strip.top.value.textContent = meterDbText(max);
       const trueClipped = values.truePeakClipCount[c] > 0n || values.channelMaxTruePeak[c] > 1;
       const clipped = values.sampleClipCount[c] > 0n || max > 0 || trueClipped;
+      strip.strip.classList.toggle('meter-clipped', clipped);
       strip.top.value.classList.toggle('meter-over', clipped);
       strip.top.detail.textContent = `TP ${level(values.channelMaxTruePeak[c])}`;
       strip.top.detail.classList.toggle('meter-over', trueClipped);
       strip.top.detail.title = `${this.t('maxTruePeak')} · ${level(values.channelMaxTruePeak[c])}`;
-      strip.out.textContent = dbText(sample);
+      strip.out.textContent = meterDbText(sample);
       strip.out.classList.toggle('meter-over', sample > 0);
       const counts = `Clip ${values.sampleClipCount[c]} · TP clip ${values.truePeakClipCount[c]}`;
-      strip.strip.title = `CH ${c + 1} · Peak ${dbText(sample)} dBFS · TP ${dbText(tp)} dBTP · RMS ${dbText(rms)} dBFS\nMax ${dbText(max)} dBFS · TP max ${level(values.channelMaxTruePeak[c])} dBTP\n${counts}`;
+      strip.strip.title = `CH ${c + 1} · Peak ${meterDbText(sample)} dBFS · TP ${meterDbText(tp)} dBTP · RMS ${meterDbText(rms)} dBFS\nMax ${meterDbText(max)} dBFS · TP max ${level(values.channelMaxTruePeak[c])} dBTP\n${counts}`;
     });
     for (const strip of this.analysisStrips) {
       // RMS and loudness arrive in dBFS/LUFS already. Preserve native window and
@@ -117,17 +121,18 @@ export class NativeMeterView {
         // LRA is a span in LU, positioned between its native LUFS bounds.
         // It must not be plotted as an absolute dBFS level from zero.
         const low = position(values.loudnessRangeLow), high = position(values.loudnessRangeHigh);
-        strip.fill.style.bottom = `${low}%`; strip.fill.style.height = `${Math.max(0, high - low)}%`;
+        strip.fill.style.setProperty('--meter-offset', `${low}%`); strip.fill.style.setProperty('--meter-level', `${Math.max(0, high - low)}%`);
         strip.fill.hidden = high <= low;
-        strip.strip.title = `${this.t(strip.key)} · ${dbText(value)} LU · ${dbText(values.loudnessRangeLow)} / ${dbText(values.loudnessRangeHigh)} LUFS`;
+        strip.strip.title = `${this.t(strip.key)} · ${dbText(value)} LU · ${meterDbText(values.loudnessRangeLow)} / ${meterDbText(values.loudnessRangeHigh)} LUFS`;
       } else {
-        strip.fill.style.height = `${position(value)}%`;
-        strip.strip.title = `${this.t(strip.key)} · ${dbText(value)}`;
+        strip.fill.style.setProperty('--meter-level', `${position(value)}%`);
+        strip.strip.title = `${this.t(strip.key)} · ${meterDbText(value)}`;
       }
-      strip.top.value.textContent = dbText(strip.history ? max : value);
-      strip.top.root.title = `${strip.top.label} · ${strip.strip.title}${strip.history ? ` · ${dbText(max)}` : ''}`;
-      strip.out.textContent = dbText(value);
-      strip.max.hidden = !Number.isFinite(max); strip.max.style.bottom = `${position(max)}%`;
+      const format = strip.range ? dbText : meterDbText;
+      strip.top.value.textContent = format(strip.history ? max : value);
+      strip.top.root.title = `${strip.top.label} · ${strip.strip.title}${strip.history ? ` · ${meterDbText(max)}` : ''}`;
+      strip.out.textContent = format(value);
+      strip.max.hidden = !Number.isFinite(max); strip.max.style.setProperty('--meter-offset', `${position(max)}%`);
     }
   }
 }

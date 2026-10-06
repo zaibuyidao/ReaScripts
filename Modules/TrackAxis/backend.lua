@@ -888,6 +888,14 @@ return function(r, json, send)
 
       if not i then fail("staleState") end
       if m.operation == "open" then r.TrackFX_Show(track, i, 3) return end
+      if m.operation == "toggleWindow" then
+        if r.TrackFX_GetOpen(track, i) then
+          -- The same FX can be visible in both its floating window and the chain.
+          r.TrackFX_Show(track, i, 2)
+          if r.TrackFX_GetOpen(track, i) then r.TrackFX_SetOpen(track, i, false) end
+        else r.TrackFX_Show(track, i, 3) end
+        return
+      end
       if m.operation == "delete" and m.confirmed ~= true then
         fail("confirmationRequired")
       end

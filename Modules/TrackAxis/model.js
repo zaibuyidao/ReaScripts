@@ -16,10 +16,10 @@ export const defaults = Object.freeze({
   version: 1, language: 'en', density: 'comfortable', fxCompact: true, routingCompact: true, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true,
-  meterShowRms: false, meterShowLufs: true, meterHeight: 210,
+  meterShowRms: false, meterShowLufs: true, meterCompact: false, meterHeight: 210,
   meterMetrics: {rmsMomentary:true, rmsIntegrated:true, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
   forceMono: false, integratedMode: 'playback-only', resetOnPlaybackStart: true,
-  source: 'track', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
+  source: 'master', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'midnight', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
   panels: { routing: true, fx: true, parameters: false, items: true, analysis: true, metadata: true, appearance: false, quick: true },
 });
@@ -27,7 +27,7 @@ export const defaults = Object.freeze({
 export function preferences(raw = {}) {
   const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights}, meterMetrics: {...defaults.meterMetrics} };
   if (!raw || raw.version !== 1) return p;
-  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'meterCompact', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
   if (raw.livePeak === true) p.meter = true;
   if (['playback-only', 'continuous'].includes(raw.integratedMode)) p.integratedMode = raw.integratedMode;
   if (Number.isFinite(raw.meterHeight) && raw.meterHeight >= meterHeightRange.min && raw.meterHeight <= meterHeightRange.max) p.meterHeight = Math.round(raw.meterHeight);
