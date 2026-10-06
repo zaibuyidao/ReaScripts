@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.277
+-- @version 1.0.278
 -- @changelog
---   Fixed layout shifts caused by changing row height when search keyword tags appear or are closed.
+--   Fixed image format errors and attachment limit errors when loading database covers.
+--   Improved cover caching and retry handling for more stable browsing of large databases.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

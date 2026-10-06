@@ -11233,13 +11233,10 @@ function HasCoverImage(img_info)
 end
 function ReleaseAllCoverImages()
   if _G._soundmole_static then _G._soundmole_static.table_cover_cache = nil end
-  if cover_image_cache and reaper.ImGui_DestroyImage then
-    for k, cached in pairs(cover_image_cache) do
-      local img = (type(cached) == "table") and cached.image or cached
-      if img then pcall(reaper.ImGui_DestroyImage, img) end
-      cover_image_cache[k] = nil
-    end
-  end
+  -- 未挂载的图片在停止绘制后由 ReaImGui 自动回收
+  cover_image_cache = {}
+  last_cover_img, last_cover_path = nil, nil
+  original_cover_img = nil
   if cover_cache then
     for k in pairs(cover_cache) do cover_cache[k] = nil end
   end
@@ -14585,6 +14582,11 @@ function SM_DiscardInvalidCoverCacheFile(path)
   if path == "" then return end
 
   valid_image_cache[path] = nil
+  local cached = cover_image_cache[path]
+  if cached and cached.image then
+    cover_image_cache[cached.image] = nil
+    cached.image = nil
+  end
   cover_image_cache[path] = nil
   local cache_root = normalize_path(script_path .. "cover_cache" .. sep, true)
   local candidate = path
@@ -14644,34 +14646,38 @@ function ResolveCoverPathForEntry(info)
   return nil, cover_id
 end
 
-function GetCoverImageTexture(ctx, path)
+function GetCoverImageTexture(ctx, path, cache_only)
   if not path or path == "" then return nil end
-  if bad_cover_cache[path] then return nil end
-  local cached = cover_image_cache[path]
-  if type(cached) == "table" and cached.image then return cached.image end
-  if cached then
-    if reaper.ImGui_Attach then pcall(reaper.ImGui_Attach, ctx, cached) end
-    cover_image_cache[path] = { image = cached }
-    return cached
+  if bad_cover_cache[path] then
+    if bad_cover_cache[path] == true or reaper.time_precise() < bad_cover_cache[path] then return nil end
+    bad_cover_cache[path] = nil
   end
+  local cached = cover_image_cache[path]
+  if not cached then
+    cached = {}
+    cover_image_cache[path] = cached
+  end
+  if reaper.ImGui_ValidatePtr(cached.image, 'ImGui_Image*') then return cached.image end
+  if cached.image then
+    cover_image_cache[cached.image] = nil
+    cached.image = nil
+  end
+  if cache_only then return nil end
   if not IsValidImageFile(path) then
     bad_cover_cache[path] = true
     return nil
   end
-  local ok, img = pcall(reaper.ImGui_CreateImage, path)
+
+  local ok, img = pcall(reaper.ImGui_CreateImage, path, reaper.ImGui_ImageFlags_NoErrors())
   if ok and img then
-    if reaper.ImGui_Attach then
-      local attach_ok = pcall(reaper.ImGui_Attach, ctx, img)
-      if not attach_ok then
-        if reaper.ImGui_DestroyImage then pcall(reaper.ImGui_DestroyImage, img) end
-        bad_cover_cache[path] = true
-        return nil
-      end
-    end
-    cover_image_cache[path] = { image = img }
+    local previous = cover_image_cache[img]
+    if previous and previous ~= cached then previous.image = nil end
+    cached.image = img
+    cover_image_cache[img] = cached
     return img
   end
-  bad_cover_cache[path] = true
+
+  bad_cover_cache[path] = reaper.time_precise() + 1
   return nil
 end
 
@@ -14681,18 +14687,19 @@ function RenderCoverCell(ctx, i, info, row_height, idle_time)
   static.table_cover_cache = static.table_cover_cache or setmetatable({}, { __mode = "k" })
   local cached = static.table_cover_cache[info]
   if cached and cached.source_id ~= info.cover_id then cached = nil end
-  if not cached and (idle_time or 0) >= 0.15 and (static.table_cover_load_count or 0) < 2 then
+  local img = cached and cached.path and GetCoverImageTexture(ctx, cached.path, true) or nil
+  local retry_at = cached and cached.path and bad_cover_cache[cached.path]
+  if not img and (not cached or (cached.path and retry_at ~= true and (not retry_at or reaper.time_precise() >= retry_at)))
+    and (idle_time or 0) >= 0.15 and (static.table_cover_load_count or 0) < 2 then
     static.table_cover_load_count = (static.table_cover_load_count or 0) + 1
-    local cover_path, cover_id = ResolveCoverPathForEntry(info)
-    cached = {
-      image = cover_path and GetCoverImageTexture(ctx, cover_path) or nil,
-      cover_id = cover_id,
-      source_id = info.cover_id
-    }
-    static.table_cover_cache[info] = cached
+    if not cached then
+      local cover_path, cover_id = ResolveCoverPathForEntry(info)
+      cached = { path = cover_path, cover_id = cover_id, source_id = info.cover_id }
+      static.table_cover_cache[info] = cached
+    end
+    img = cached.path and GetCoverImageTexture(ctx, cached.path) or nil
   end
   local cover_id = cached and cached.cover_id or info.cover_id
-  local img = cached and cached.image
 
   reaper.ImGui_PushID(ctx, "cover_" .. tostring(info and info.path or i))
   local cur_x = reaper.ImGui_GetCursorPosX(ctx)
@@ -18824,9 +18831,6 @@ function loop()
 
   -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
   if not visible and last_window_visible then
-    if last_cover_img and reaper.ImGui_DestroyImage then
-      reaper.ImGui_DestroyImage(last_cover_img)
-    end
     last_cover_img, last_cover_path = nil, nil
     static.clipper = nil -- 防止ImGui_ListClipper报错
   end
@@ -24086,39 +24090,9 @@ function loop()
 
         reaper.ImGui_SetCursorPos(ctx, cur_x + math.max(0, pad_x), cur_y + math.max(0, pad_y))
 
-        -- 缓存并创建纹理
-        if last_cover_path ~= cover_path then
-          -- 销毁旧图
-          if last_cover_img and reaper.ImGui_DestroyImage then
-            reaper.ImGui_DestroyImage(last_cover_img)
-          end
-          last_cover_img = nil
-          -- 检查文件头，只有通过了二进制检查的文件才允许调用 CreateImage
-          if IsValidImageFile(cover_path) then
-            local ok, retval = pcall(reaper.ImGui_CreateImage, cover_path)
-            if ok and retval then
-              if reaper.ImGui_Attach then
-                local attach_ok = pcall(reaper.ImGui_Attach, ctx, retval)
-                if attach_ok then
-                  last_cover_img = retval
-                else
-                  if reaper.ImGui_DestroyImage then pcall(reaper.ImGui_DestroyImage, retval) end
-                  if audio_path then bad_cover_cache[audio_path] = true end
-                end
-              else
-                last_cover_img = retval
-              end
-            else
-              -- 通过了头检查但依然加载失败，可能是数据截断
-              if audio_path then bad_cover_cache[audio_path] = true end
-            end
-          else
-            -- 文件头验证失败直接拉黑避免崩溃
-            if audio_path then bad_cover_cache[audio_path] = true end
-          end
-
-          last_cover_path = cover_path
-        end
+        -- 与列表共用纹理缓存，每次绘制前检查图片是否已被自动回收
+        last_cover_img = GetCoverImageTexture(ctx, cover_path)
+        last_cover_path = cover_path
 
         -- 绘制图片切换文件夹路径
         if last_cover_img then
@@ -24182,6 +24156,7 @@ function loop()
     end
 
     if reaper.ImGui_BeginPopup(ctx, "##original_cover_popup") then
+      original_cover_img = GetCoverImageTexture(ctx, original_cover_path)
       local ow, oh = SM_GetImageFileDimensions(original_cover_path)
       if original_cover_img and ow and oh then
         reaper.ImGui_Image(ctx, original_cover_img, ow, oh)
