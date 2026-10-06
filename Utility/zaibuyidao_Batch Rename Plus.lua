@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.23
+-- @version 1.0.24
 -- @author zaibuyidao
 -- @changelog
---   Fixed the independent drawing logic of the Preview and Compare windows to prevent repeated white flashing when docking the window to the center area.
+--   Fixed presets not saving and restoring the renaming target.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -828,6 +828,7 @@ function EncodePreset()
     tostring(occurrence_mode),
     write_take_name and "1" or "0",
     use_regular_expression and "1" or "0",
+    tostring(process_mode),
   }
   return table.concat(data, "\t")
 end
@@ -853,6 +854,11 @@ function ApplyPreset(dataStr)
   occurrence_mode   = tonumber(params[15]) or 2
   write_take_name   = (params[16] == nil or params[16] == "") and true or (params[16] == "1")
   use_regular_expression = params[17]=="1"
+  -- 旧预设没有 Target 字段或字段无效时，保留当前目标
+  local preset_mode = tonumber(params[18])
+  if preset_mode and preset_mode % 1 == 0 and batch_modes[preset_mode + 1] then
+    process_mode = preset_mode
+  end
   SaveUseRegularExpressionState()
 end
 
