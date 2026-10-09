@@ -1,8 +1,8 @@
 -- @description TimeFold
 -- @author zaibuyidao
--- @version 1.0.2
+-- @version 1.0.3
 -- @changelog
---   Add independent project, preset, and automatic folder color modes with Show/Dim/Hide visibility.
+--   Add a label context menu and right-drag label creation.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage

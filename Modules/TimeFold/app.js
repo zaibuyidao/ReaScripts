@@ -19,6 +19,8 @@ let dirty = true, gesture = null, editing = null, viewPending = null, viewTimer 
 let previewView = null, previewAt = 0, lastCursor = '';
 let selectedViewport = null;
 let labelNodes = new Map();
+let menuLabel = null;
+let suppressTrackMenu = false;
 let ackSequence = 0, ackTimer = null;
 let snapSequence = 0, snapPending = null, snapTimer = null, snapQueued = null, notice = null;
 let languages = [], settingsKey = null;
@@ -56,6 +58,7 @@ async function send(type, data = {}) {
 }
 function controls() {
   if (!connected) selectViewport(null);
+  if (!connected || stateError) closeLabelMenu();
   ui.tracks.setAttribute('aria-disabled', String(!connected));
   ui.viewport.setAttribute('aria-disabled', String(!connected));
   ui['toggle-all'].disabled = !connected || stateError || !labels.length;
@@ -254,13 +257,14 @@ function drawLabelGuides() {
     ctx.fillRect(x, line.startY, 1, Math.max(0, guideHeight - line.startY));
   }
 }
-function selectLabel(label) {
+function selectLabel(label, seek = true) {
   if (!connected) return;
-  selectedLabel = label.id; send('seek', { position: label.start });
+  selectedLabel = label.id; if (seek) send('seek', { position: label.start });
   for (const [id, node] of labelNodes) node.dataset.selected = String(id === selectedLabel);
   for (const row of ui['label-list'].children) row.setAttribute('aria-selected', String(Number(row.dataset.id) === selectedLabel));
 }
 function renderLabels() {
+  closeLabelMenu();
   ui.labels.replaceChildren(); ui['label-list'].replaceChildren(); labelNodes = new Map();
   ui['label-count'].textContent = i18n.numbers.format(labels.length);
   ui['no-labels'].hidden = labels.length > 0;
@@ -316,6 +320,48 @@ function changeLabel(action, label, expectedRevision = revision) {
   clearError();
   return send('label', { action, revision: expectedRevision, ...label });
 }
+function closeLabelMenu(restoreFocus = false) {
+  const label = menuLabel;
+  menuLabel = null; ui['label-menu'].hidden = true;
+  if (restoreFocus && label) labelNodes.get(label.id)?.focus({ preventScroll: true });
+}
+ui.timeline.addEventListener('contextmenu', event => {
+  const node = event.target.closest('.time-label');
+  if (!node || event.defaultPrevented) return;
+  event.preventDefault();
+  if (!connected || stateError || editing) return;
+  const label = labels.find(label => label.id === Number(node.dataset.id));
+  if (!label) return;
+  cancelGesture(); selectLabel(label, false); menuLabel = label;
+  ui['label-menu-fold'].textContent = t(label.collapsed ? 'expand' : 'collapse');
+  const menu = ui['label-menu'], rect = node.getBoundingClientRect();
+  menu.hidden = false;
+  const x = event.button === 2 ? event.clientX : rect.left, y = event.button === 2 ? event.clientY : rect.bottom;
+  menu.style.left = `${clamp(x, 4, Math.max(4, window.innerWidth - menu.offsetWidth - 4))}px`;
+  menu.style.top = `${clamp(y, 4, Math.max(4, window.innerHeight - menu.offsetHeight - 4))}px`;
+  menu.firstElementChild.focus({ preventScroll: true });
+});
+for (const [id, action] of [
+  ['edit', label => openEditor(label)],
+  ['fold', label => changeLabel('update', { ...label, collapsed: !label.collapsed })],
+  ['delete', label => changeLabel('delete', { id: label.id })]
+]) ui[`label-menu-${id}`].addEventListener('click', () => {
+  const label = menuLabel;
+  closeLabelMenu(true);
+  if (label && connected && !stateError && !editing) action(label);
+});
+ui['label-menu'].addEventListener('keydown', event => {
+  event.stopPropagation();
+  if (event.key === 'Escape') { event.preventDefault(); closeLabelMenu(true); }
+  else if (event.key === 'Tab') closeLabelMenu(true);
+  else if (['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+    event.preventDefault();
+    const buttons = [...ui['label-menu'].children], index = buttons.indexOf(document.activeElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length;
+    buttons[next].focus();
+  }
+});
+window.addEventListener('resize', () => closeLabelMenu());
 function openEditor(label = null, start, finish) {
   if (!connected || stateError) return;
   const a = start ?? (sample?.selectionEnd > sample?.selectionStart ? sample.selectionStart : sample?.cursor ?? 0);
@@ -417,7 +463,8 @@ function queueSnap(target, position) {
   if (!snapPending && !snapTimer) snapTimer = setTimeout(flushSnap, 16);
 }
 function pointerDown(event) {
-  if (!connected || event.button !== 0 || editing) return;
+  const rightCreate = event.button === 2 && event.currentTarget === ui.tracks;
+  if (!connected || event.button !== 0 && !rightCreate || editing || rightCreate && stateError) return;
   cancelGesture();
   const viewport = event.target.closest('.viewport');
   if (viewport) { selectViewport(viewport); viewport.focus({ preventScroll: true }); }
@@ -432,14 +479,14 @@ function pointerDown(event) {
     if (event.shiftKey) { openEditor(label); return; }
     if (label.collapsed) return;
     gesture = { kind: 'label', label, preview: { ...label }, edge: event.target.dataset.edge, start: eventTime(event), mapping: map, revision };
-  } else if (event.ctrlKey && !stateError) {
+  } else if ((event.ctrlKey || rightCreate) && !stateError) {
     gesture = { kind: 'create', start: eventTime(event), mapping: map };
   } else if (viewport) {
     gesture = { kind: 'view', view: { ...viewRange() }, start: eventTime(event), mapping: map, pinned: viewport.dataset.pinned === 'true', trackMapping: trackMap, geometry: layout, areaTop: ui.tracks.getBoundingClientRect().top };
   } else {
     gesture = { kind: 'seek', start: eventTime(event), mapping: map };
   }
-  Object.assign(gesture, { x: event.clientX, y: event.clientY, pointer: event.pointerId, element: event.currentTarget, moved: false });
+  Object.assign(gesture, { x: event.clientX, y: event.clientY, button: event.button, pointer: event.pointerId, element: event.currentTarget, moved: false });
   event.currentTarget.setPointerCapture(event.pointerId); event.preventDefault();
 }
 function pointerMove(event) {
@@ -501,9 +548,18 @@ for (const element of [ui.timeline, ui.tracks]) {
     queueView(next.start, next.finish);
   }, { passive: false });
 }
-document.addEventListener('pointerdown', event => { if (!event.target.closest('.viewport')) selectViewport(null); }, true);
+document.addEventListener('contextmenu', event => {
+  if (ui.tracks.contains(event.target) || gesture?.button === 2 || suppressTrackMenu && event.button === 2) event.preventDefault();
+  suppressTrackMenu = false;
+}, true);
+document.addEventListener('pointerdown', event => {
+  suppressTrackMenu = event.button === 2 && ui.tracks.contains(event.target);
+  if (!ui['label-menu'].contains(event.target)) closeLabelMenu();
+  if (!event.target.closest('.viewport')) selectViewport(null);
+}, true);
 document.addEventListener('focusin', event => { selectViewport(connected && !editing ? event.target.closest('.viewport') : null); });
 window.addEventListener('blur', () => {
+  closeLabelMenu();
   if (!selectedViewport) return;
   bridge.window.getState().then(state => { if (!state.focused && !document.hasFocus()) selectViewport(null); }).catch(() => {});
 });
