@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5f5379ac7ef6bd044c7940754959f9c9954a5c3d">
+<index version="1" name="zaibuyidao Scripts" commit="6b6eccfd1794ab6a45850297d2806fd26d1f9902">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7315,6 +7315,27 @@ Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
         <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/f8d8deb6fc07bd27ef90d750352a9047f27907d3/Modules/TimeFold/locales/ko.json</source>
         <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/f8d8deb6fc07bd27ef90d750352a9047f27907d3/Modules/TimeFold/locales/zh-CN.json</source>
         <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/f8d8deb6fc07bd27ef90d750352a9047f27907d3/Modules/TimeFold/locales/zh-TW.json</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2026-10-09T15:52:01Z">
+        <changelog><![CDATA[Add a label context menu and right-drag label creation.]]></changelog>
+        <source main="main" file="zaibuyidao_TimeFold.lua">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/zaibuyidao_TimeFold.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/index.html</source>
+        <source file="app.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/app.js</source>
+        <source file="model.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/model.js</source>
+        <source file="colors.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/colors.js</source>
+        <source file="i18n.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/i18n.js</source>
+        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/style.css</source>
+        <source file="settings.html">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/settings.html</source>
+        <source file="settings.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/settings.js</source>
+        <source file="editor.html">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/editor.html</source>
+        <source file="editor.js">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/editor.js</source>
+        <source file="grid.lua">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/grid.lua</source>
+        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/json.lua</source>
+        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/locales/en.json</source>
+        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/locales/ja.json</source>
+        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/locales/ko.json</source>
+        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/locales/zh-CN.json</source>
+        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/6b6eccfd1794ab6a45850297d2806fd26d1f9902/Modules/TimeFold/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
