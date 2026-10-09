@@ -1,15 +1,16 @@
-import { defaults, preferences, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
+import { defaults, preferences, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, mixerValueText, parseMixerValue, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
 
 const $ = id => document.getElementById(id);
 const el = (tag, className = '', text = '') => { const n = document.createElement(tag); n.className = className; n.textContent = text; return n; };
 const storageKey = 'trackaxis.preferences.v1', searchHistoryKey = 'trackaxis.searchHistory.v1';
+const defaultTrackColor = '#6e9992';
 let searchHistory = [], searchView = null;
 let prefs = preferences(), locale = {}, english = {}, languages = [], session = null, api, audio;
 let state = {}, connected = false, dirty = new Set(), catalog = [], dialogContext, overviewRevision = 0, overviewKey = '', overviewData;
 let disposed = false, closing = false, cleanupPromise, unsubscribe, lifecycleStop, projectStop;
 let nativeTheme, gestureSequence = 0, fxDrag = null;
-let routePicker, modeSwitching;
+let routePicker, modeSwitching, panelDrag;
 const isMaster = () => state.tracks?.mode === 'master';
 const routeExpansion = new Map(), routeScroll = new Map();
 const listLayouts = new Map(), listScroll = new Map();
@@ -39,13 +40,16 @@ function renderMode() {
     control.disabled = !connected || !state.tracks || !!modeSwitching;
   }
   for (const id of ['parameters','items','appearance']) $(`panel-${id}`).hidden = master;
+  if (panelDrag && (panelDrag.mode !== (master ? 'master' : 'track') || !state.tracks?.count)) finishPanelDrag(false);
+  applyPanelOrder();
   $('search').closest('.search-wrap').hidden = master;
   $('inspector').inert = !!modeSwitching;
 }
 function switchMode(mode) {
   if (!connected || modeSwitching || mode === (isMaster() ? 'master' : 'track')) return;
+  finishPanelDrag(false);
   for (const finish of [...gestures.values()]) finish();
-  document.activeElement?.blur(); closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
+  document.activeElement?.blur(); closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeEnvelopeMenu(); closeSearch(true);
   modeSwitching = mode; renderMode(); act({action:'mode',value:mode});
 }
 $('mode-track').onclick = () => switchMode('track');
@@ -54,6 +58,110 @@ function savePreferences(next) {
   try { localStorage.setItem(storageKey, JSON.stringify(next)); return true; }
   catch { report('preferencesFailed'); return false; }
 }
+function orderedPanels() { return [...$('inspector').querySelectorAll(':scope > [data-panel]')]; }
+function applyPanelOrder() {
+  const panels = orderedPanels(), order = prefs.panelOrder[isMaster() ? 'master' : 'track'];
+  const ids = [...order, ...panels.map(panel => panel.dataset.panel).filter(id => !order.includes(id))];
+  let anchor = panels[0];
+  for (const id of ids) {
+    const panel = $(`panel-${id}`);
+    if (panel !== anchor) $('inspector').insertBefore(panel, anchor);
+    anchor = panel.nextElementSibling;
+  }
+}
+function savePanelOrder(mode, order) {
+  if (order.every((id, index) => prefs.panelOrder[mode][index] === id)) return;
+  const next = {...prefs, panelOrder:{...prefs.panelOrder, [mode]:order}};
+  if (savePreferences(next)) { prefs = next; applyPanelOrder(); }
+}
+function updatePanelDrop() {
+  const drag = panelDrag, bounds = $('inspector').getBoundingClientRect();
+  const panels = orderedPanels().filter(panel => !panel.hidden && panel !== drag.panel);
+  drag.before = panels.find(panel => {
+    const rect = panel.querySelector('summary').getBoundingClientRect();
+    return drag.y < rect.top + rect.height / 2;
+  });
+  drag.valid = drag.x >= bounds.left - 24 && drag.x <= bounds.right + 24;
+  const edge = drag.before ? drag.before.getBoundingClientRect().top : panels.at(-1).getBoundingClientRect().bottom;
+  Object.assign(drag.marker.style, {left:`${bounds.left}px`, top:`${edge}px`, width:`${bounds.width}px`});
+  drag.marker.hidden = !drag.valid;
+  Object.assign(drag.preview.style, {left:`${bounds.left}px`, top:`${Math.max(0, Math.min(innerHeight - drag.preview.offsetHeight, drag.y - drag.offset))}px`, width:`${bounds.width}px`});
+}
+function scrollPanelDrag(time) {
+  const drag = panelDrag;
+  if (!drag?.active) return;
+  if (document.querySelector('dialog[open]') || $('inspector').hidden) { finishPanelDrag(false); return; }
+  const top = document.querySelector('.toolbar').getBoundingClientRect().bottom + 40;
+  const speed = drag.y < top ? -Math.min(1, (top - drag.y) / 40) : drag.y > innerHeight - 40 ? Math.min(1, (drag.y - innerHeight + 40) / 40) : 0;
+  if (drag.valid && speed) window.scrollBy(0, speed * Math.min(32, time - (drag.time ?? time)) * .65);
+  drag.time = time;
+  updatePanelDrop();
+  drag.frame = requestAnimationFrame(scrollPanelDrag);
+}
+function finishPanelDrag(commit) {
+  const drag = panelDrag;
+  if (!drag) return;
+  panelDrag = null;
+  cancelAnimationFrame(drag.frame);
+  drag.preview?.remove(); drag.marker?.remove();
+  drag.panel.classList.remove('panel-dragging'); document.body.classList.remove('panel-reordering');
+  if (drag.handle.hasPointerCapture(drag.pointerId)) drag.handle.releasePointerCapture(drag.pointerId);
+  if (!drag.active) return;
+  if (commit && drag.valid && drag.mode === (isMaster() ? 'master' : 'track')) {
+    const order = prefs.panelOrder[drag.mode].filter(id => id !== drag.panel.dataset.panel);
+    const at = drag.before ? order.indexOf(drag.before.dataset.panel) : order.length;
+    order.splice(at, 0, drag.panel.dataset.panel);
+    savePanelOrder(drag.mode, order);
+    drag.handle.focus({preventScroll:true});
+  }
+}
+for (const panel of orderedPanels()) {
+  const summary = panel.querySelector('summary');
+  const handle = el('button', 'panel-drag-handle'); handle.type = 'button'; handle.dataset.title = 'reorderPanel';
+  handle.setAttribute('aria-keyshortcuts', 'Alt+ArrowUp Alt+ArrowDown'); summary.append(handle);
+  handle.addEventListener('click', event => {
+    event.preventDefault(); event.stopPropagation();
+  }, true);
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !event.isPrimary || event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) return;
+    finishPanelDrag(false);
+    handle.setPointerCapture(event.pointerId);
+    panelDrag = {panel, summary, handle, pointerId:event.pointerId, mode:isMaster() ? 'master' : 'track',
+      startX:event.clientX, startY:event.clientY, x:event.clientX, y:event.clientY, offset:event.clientY-summary.getBoundingClientRect().top};
+  });
+  handle.addEventListener('pointermove', event => {
+    const drag = panelDrag;
+    if (!drag || drag.summary !== summary || drag.pointerId !== event.pointerId) return;
+    drag.x = event.clientX; drag.y = event.clientY;
+    if (!drag.active && Math.hypot(drag.x-drag.startX, drag.y-drag.startY) < 5) return;
+    event.preventDefault();
+    if (!drag.active) {
+      drag.active = true;
+      drag.preview = el('div', 'panel-drag-preview', summary.querySelector('[data-i18n]')?.textContent || summary.textContent);
+      drag.marker = el('div', 'panel-drop-marker');
+      for (const node of [drag.preview, drag.marker]) { node.setAttribute('aria-hidden', 'true'); document.body.append(node); }
+      panel.classList.add('panel-dragging'); document.body.classList.add('panel-reordering');
+      drag.frame = requestAnimationFrame(scrollPanelDrag);
+    }
+    updatePanelDrop();
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) handle.addEventListener(type, event => {
+    if (panelDrag?.summary === summary && panelDrag.pointerId === event.pointerId) finishPanelDrag(type === 'pointerup');
+  });
+  handle.addEventListener('keydown', event => {
+    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+    event.preventDefault(); finishPanelDrag(false);
+    const mode = isMaster() ? 'master' : 'track', order = [...prefs.panelOrder[mode]];
+    const from = order.indexOf(panel.dataset.panel), to = from + (event.key === 'ArrowUp' ? -1 : 1);
+    if (to < 0 || to >= order.length) return;
+    [order[from], order[to]] = [order[to], order[from]];
+    savePanelOrder(mode, order); handle.focus({preventScroll:true}); handle.scrollIntoView({block:'nearest'});
+  });
+}
+window.addEventListener('blur', () => finishPanelDrag(false));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && panelDrag) { event.preventDefault(); event.stopImmediatePropagation(); finishPanelDrag(false); }
+}, true);
 function applyTheme() {
   const {scheme, ...colors} = themePalette(prefs, nativeTheme);
   for (const [key,value] of Object.entries(colors)) document.documentElement.style.setProperty(`--${key}`,value);
@@ -175,24 +283,33 @@ function liveRange(range, change, preview = () => {}) {
   range.onpointerup = finish; range.onpointercancel = finish; range.onlostpointercapture = finish;
   range.onblur = finish;
 }
-function fader(label, value, mixed, change, type = 'volume') {
+function fader(label, value, mixed, change, type = 'volume', formatted = false) {
   const isVolume = type === 'volume';
   const display = n => isVolume ? Math.max(-90, toDb(n)) : n * 100;
   const convert = n => isVolume ? fromDb(n) : n / 100;
   const n = el('div', 'fader'), range = el('input'), number = el('input');
-  range.type = 'range'; number.type = 'number';
+  range.type = 'range'; number.type = formatted && !isVolume ? 'text' : 'number';
+  number.className = 'fader-value';
+  const format = n => formatted ? mixerValueText(n,type,t('center')) : String(Number(n.toFixed(1)));
   for (const input of [range, number]) {
-    input.min = isVolume ? -90 : -100; input.max = isVolume ? 12 : 100; input.step = isVolume ? 0.1 : 1;
+    input.min = isVolume ? -90 : -100; input.max = isVolume ? 12 : 100; input.step = formatted ? 0.01 : isVolume ? 0.1 : 1;
     input.setAttribute('aria-label', `${t(label)} ${isVolume ? '(dB)' : '(%)'}`);
   }
   range.value = value == null ? (isVolume ? -12 : 0) : display(value);
-  number.value = value == null ? '' : Number(display(value).toFixed(1)); number.placeholder = mixed ? t('mixed') : '—';
+  number.value = value == null ? '' : format(display(value)); number.placeholder = mixed ? t('mixed') : '—';
   const show = () => {
-    range.title = mixed && number.value === '' ? t('mixed') : isVolume ? `${number.value <= -90 ? '−∞' : number.value} dB` : type === 'width' ? `${number.value}%` : Number(number.value) === 0 ? t('center') : `${Math.abs(number.value)}% ${t(Number(number.value) < 0 ? 'left' : 'right')}`;
+    const currentValue = Number(range.value);
+    range.title = mixed && number.value === '' ? t('mixed') : isVolume ? `${currentValue <= -90 ? '−∞' : format(currentValue)} dB` : formatted ? format(currentValue) : type === 'width' ? `${currentValue}%` : currentValue === 0 ? t('center') : `${Math.abs(currentValue)}% ${t(currentValue < 0 ? 'left' : 'right')}`;
     range.setAttribute('aria-valuetext', range.title);
   };
-  const markCommitted = commitField(number, value => { if (value !== '') { range.value = value; show(); change(convert(Number(value))); } });
-  liveRange(range, (value, gesture) => change(convert(value), gesture), () => { number.value = range.value; markCommitted(); show(); });
+  const markCommitted = commitField(number, text => {
+    if (text === '') return;
+    const next = formatted ? parseMixerValue(text,type,t('center')) : Number(text);
+    if (next === null) return;
+    range.value = next; number.value = format(next); markCommitted(); show(); change(convert(next));
+  });
+  if (formatted && !isVolume) number.oninput = () => number.setCustomValidity(number.value === '' || parseMixerValue(number.value,type,t('center')) !== null ? '' : t('invalidValue'));
+  liveRange(range, (value, gesture) => change(convert(value), gesture), () => { number.setCustomValidity(''); number.value = format(Number(range.value)); markCommitted(); show(); });
   range.ondblclick = event => {
     event.preventDefault(); range.value = 0;
     range.dispatchEvent(new Event('input', {bubbles: true}));
@@ -287,7 +404,7 @@ function editable(id, render, force = false) {
   };
   const signature = JSON.stringify([session,tr.key,prefs.language,inputs[id]]);
   if (!force && rendered.get(id) === signature) { dirty.delete(id); return; }
-  const editing = root.contains(document.activeElement) && document.activeElement.matches('textarea,input[type=text],input[type=number],input[type=color]');
+  const editing = root.contains(document.activeElement) && document.activeElement.matches('textarea,input[type=text]:not([readonly]),input[type=number],input[type=color]');
   if (!force && (editing || root.contains(listResizeHandle) || [...gestures.keys()].some(node => root.contains(node)) || fxDrag && id === 'fx' || queue.busy)) { dirty.add(id); return; }
   dirty.delete(id); root.replaceChildren(...render()); rendered.set(id, signature);
 }
@@ -305,6 +422,29 @@ function setTrack(field, value, c, gesture) { act({action: 'setTrack', field, va
 function panModeSelect(v, m, c) {
   return select('panMode', v.panMode, panModeChoices, n => setTrack('panMode',n,c), m.panMode);
 }
+function editTrackName() {
+  const input = $('track-name');
+  if (!input) return;
+  input.readOnly = false; input.focus(); input.select();
+}
+function resetTrackColor(captured) {
+  if (connected && current(captured)) {
+    // Update both swatches immediately, including when REAPER's color was already unset.
+    document.querySelectorAll('#track-header input[type=color], #appearance input[type=color]').forEach(input => { input.value = defaultTrackColor; });
+    $('track-header').style.setProperty('--track-color', defaultTrackColor);
+  }
+  act({action:'color',value:''},captured);
+}
+function trackColorControl(value, mixed, captured) {
+  const input = el('input'); input.type = 'color'; input.value = value || defaultTrackColor;
+  input.title = `${t(mixed ? 'mixedColor' : 'trackColor')} · ${t('colorResetHint')}`;
+  input.setAttribute('aria-label', t('trackColor'));
+  input.onchange = () => act({action:'color',value:input.value},captured);
+  input.onclick = event => {
+    if (event.altKey && event.button === 0) { event.preventDefault(); resetTrackColor(captured); input.blur(); }
+  };
+  return input;
+}
 
 function renderHeader(force = false) {
   editable('track-header', () => {
@@ -321,19 +461,25 @@ function renderHeader(force = false) {
     }
     if (tr.count === 1) {
       const input = el('input'); input.type = 'text'; input.value = tr.values.name; input.maxLength = 1024; input.id = 'track-name'; input.setAttribute('aria-label', t('trackName'));
+      input.readOnly = true;
+      input.ondblclick = editTrackName;
       commitField(input, value => act({action: 'rename', value}, c));
-      input.addEventListener('blur',() => { input.scrollLeft = 0; }); input.title = tr.values.name;
+      input.addEventListener('blur',() => { input.readOnly = true; input.scrollLeft = 0; });
+      input.addEventListener('keydown',event => {
+        if (event.key === 'Escape') { input.value = tr.values.name; input.blur(); }
+        else if (event.key === 'F2') { event.preventDefault(); editTrackName(); }
+      });
+      input.title = `${tr.values.name} · ${t('renameDoubleClick')}`;
       title.append(el('span', 'track-number', String(tr.refs[0].number).padStart(2, '0')), input);
     } else title.append(el('h1', '', t('selectedTracks', {count: tr.count})));
-    const color = el('input'); color.type = 'color'; color.value = tr.values.color || '#6e9992'; color.title = t(tr.mixed.color ? 'mixed' : 'trackColor'); color.setAttribute('aria-label', t('trackColor'));
-    color.onchange = () => act({action: 'color', value: color.value}, c); title.append(color);
+    title.append(trackColorControl(tr.values.color,tr.mixed.color,c));
     const info = el('div', 'track-context');
     if (tr.parent) info.append(literalButton(tr.parent.name, () => act({action: 'selectTrack', guid: tr.parent.guid}, c), 'subtle', t('parentTrack')));
     else if (tr.count === 1) info.append(el('span', '', t(tr.folder > 0 ? 'folderTrack' : 'rootTrack')));
     if (tr.count > 1) info.append(el('span', 'mixed-hint', t('multiHint')));
     if (tr.mixed.color) info.append(el('span', 'mixed-hint', t('mixedColor')));
     const result = [title, info];
-    $('track-header').style.setProperty('--track-color', tr.values.color || '#6e9992');
+    $('track-header').style.setProperty('--track-color', tr.values.color || defaultTrackColor);
     return result;
   }, force);
 }
@@ -344,6 +490,11 @@ function renderMixer(force = false) {
     for (const key of isMaster() ? ['mute','solo','envelopes','phase','mono'] : ['mute','solo','arm','envelopes','phase']) {
       if (key === 'envelopes') {
         const control = button(key,() => act({action:'quick',operation:key},c));
+        control.id = 'envelope-button'; control.setAttribute('aria-haspopup','menu'); control.setAttribute('aria-controls','envelope-menu');
+        control.oncontextmenu = event => { event.preventDefault(); openEnvelopeMenu(event,control,c); };
+        control.onkeydown = event => {
+          if (event.key === 'ContextMenu' || event.shiftKey && event.key === 'F10') { event.preventDefault(); openEnvelopeMenu(null,control,c); }
+        };
         control.disabled = state.tracks?.count !== 1; controls.append(control); continue;
       }
       const control = toggle(key === 'mono' ? v.mono ? 'mono' : 'stereo' : key, v[key], n => {
@@ -360,9 +511,9 @@ function renderMixer(force = false) {
     }
     const mode = v.panModeEffective ?? v.panMode;
     const pan = m.panModeEffective ? [panModeSelect(v,m,c)] : mode === 6
-      ? [fader('panLeft',v.panLeft,m.panLeft,(n,g) => setTrack('panLeft',n,c,g),'pan'), fader('panRight',v.panRight,m.panRight,(n,g) => setTrack('panRight',n,c,g),'pan')]
-      : [fader('pan',v.pan,m.pan,(n,g) => setTrack('pan',n,c,g),'pan')];
-    if (!m.panModeEffective && mode === 5) pan.push(fader('width',v.width,m.width,(n,g) => setTrack('width',n,c,g),'width'));
+      ? [fader('panLeft',v.panLeft,m.panLeft,(n,g) => setTrack('panLeft',n,c,g),'pan',true), fader('panRight',v.panRight,m.panRight,(n,g) => setTrack('panRight',n,c,g),'pan',true)]
+      : [fader('pan',v.pan,m.pan,(n,g) => setTrack('pan',n,c,g),'pan',true)];
+    if (!m.panModeEffective && mode === 5) pan.push(fader('width',v.width,m.width,(n,g) => setTrack('width',n,c,g),'width',true));
     for (const control of pan) {
       control.oncontextmenu = event => { event.preventDefault(); openPanMenu(event, control, c); };
       control.onkeydown = event => {
@@ -370,10 +521,73 @@ function renderMixer(force = false) {
       };
     }
     const faders = el('div','mixer-faders');
-    faders.append(fader('volume',v.volume,m.volume,(n,g) => setTrack('volume',n,c,g)),...pan);
+    faders.append(fader('volume',v.volume,m.volume,(n,g) => setTrack('volume',n,c,g),'volume',true),...pan);
     return [faders,controls];
   }, force);
 }
+let envelopeMenuContext;
+const envelopeLabels = {volume:'volume',pan:'pan',width:'width',preVolume:'envelopePreVolume',prePan:'envelopePrePan',preWidth:'envelopePreWidth',mute:'mute',trimVolume:'envelopeTrimVolume'};
+function closeEnvelopeMenu(focus = false) {
+  $('envelope-menu').hidden = true; $('envelope-button')?.setAttribute('aria-expanded','false');
+  if (focus) $('envelope-button')?.focus();
+  envelopeMenuContext = null;
+}
+function refreshEnvelopeMenu() {
+  const ctx = envelopeMenuContext;
+  if (!ctx) return;
+  if (!current(ctx.captured) || modeSwitching || !connected) { closeEnvelopeMenu(); return; }
+  const tr = state.tracks, data = state.envelopes?.key === tr.key ? state.envelopes : null;
+  const signature = JSON.stringify([tr.values.automation,tr.mixed.automation,data,prefs.language]);
+  if (signature === ctx.signature) return;
+  ctx.signature = signature;
+  const menu = $('envelope-menu'), activeKey = document.activeElement?.dataset.menuKey, scroll = menu.scrollTop;
+  menu.replaceChildren(); menu.setAttribute('aria-label',t('envelopes'));
+  const group = (label) => {
+    const node = el('div','envelope-menu-group'); node.setAttribute('role','group');
+    if (label) { node.setAttribute('aria-label',t(label)); node.append(el('div','envelope-menu-heading',t(label))); }
+    if (menu.children.length) { const divider = el('div','envelope-menu-divider'); divider.setAttribute('role','separator'); menu.append(divider); }
+    menu.append(node); return node;
+  };
+  const option = (parent,key,label,run,checked,disabled=false,hiddenActive=false) => {
+    const b = literalButton(label,() => { closeEnvelopeMenu(true); run(); }); b.dataset.menuKey = key;
+    b.setAttribute('role',checked === undefined ? 'menuitem' : key.startsWith('mode-') ? 'menuitemradio' : 'menuitemcheckbox');
+    if (checked !== undefined) b.setAttribute('aria-checked',checked);
+    b.classList.toggle('envelope-hidden-active',hiddenActive); b.disabled = disabled;
+    if (hiddenActive) b.title = `${label} · ${t('envelopeActiveHidden')}`;
+    parent.append(b);
+  };
+  const modes = group('envelopeAutomationMode');
+  for (const value of [0,1,2,4,5,3]) option(modes,`mode-${value}`,t('automationMenu'+value),() => setTrack('automation',value,ctx.captured),!tr.mixed.automation && tr.values.automation === value);
+  const envelopes = group('envelopeTrackList');
+  for (const [id,label] of Object.entries(envelopeLabels)) {
+    const entry = data?.rows.find(row => row.id === id);
+    option(envelopes,id,t(label),() => act({action:'envelope',operation:'visible',envelope:id,value:!entry.visible},ctx.captured),!!entry?.visible,!entry || entry.available === false,entry?.active && !entry.visible);
+  }
+  const actions = group();
+  for (const action of ['showActive','hideAll','armVisible','disarmAll','lanes','mediaLane']) option(actions,action,t('envelopeAction'+action),() => act({action:'envelope',operation:action},ctx.captured),undefined,!data);
+  menu.hidden = false; $('envelope-button')?.setAttribute('aria-expanded','true');
+  menu.style.left = `${Math.max(4,Math.min(ctx.x,innerWidth-menu.offsetWidth-4))}px`;
+  menu.style.top = `${Math.max(4,Math.min(ctx.y,innerHeight-menu.offsetHeight-4))}px`;
+  if (activeKey) [...menu.querySelectorAll('button')].find(b=>b.dataset.menuKey===activeKey)?.focus({preventScroll:true});
+  menu.scrollTop = scroll;
+}
+function openEnvelopeMenu(event, anchor, captured) {
+  closePanMenu(); closeRecordMenu(); closeMeterMenu();
+  const rect = anchor.getBoundingClientRect();
+  envelopeMenuContext = {captured,x:event?.clientX ?? rect.left,y:event?.clientY ?? rect.bottom};
+  refreshEnvelopeMenu();
+  ($('envelope-menu').querySelector('[aria-checked=true]') || $('envelope-menu').querySelector('button'))?.focus();
+}
+$('envelope-menu').onkeydown = event => {
+  const options = [...$('envelope-menu').querySelectorAll('button:not(:disabled)')], i = options.indexOf(document.activeElement);
+  if (['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
+    event.preventDefault(); options[event.key === 'Home' ? 0 : event.key === 'End' ? options.length-1 : (i+(event.key === 'ArrowDown' ? 1 : -1)+options.length)%options.length]?.focus();
+  } else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); closeEnvelopeMenu(true); }
+};
+document.addEventListener('pointerdown',event => { if (!$('envelope-menu').contains(event.target)) closeEnvelopeMenu(); },true);
+document.addEventListener('scroll',event => { if (!$('envelope-menu').contains(event.target)) closeEnvelopeMenu(); },true);
+window.addEventListener('blur',() => closeEnvelopeMenu());
+window.addEventListener('resize',() => closeEnvelopeMenu());
 let panMenuAnchor;
 function closePanMenu(restoreFocus = false) {
   $('pan-menu').hidden = true;
@@ -381,6 +595,7 @@ function closePanMenu(restoreFocus = false) {
   panMenuAnchor = null;
 }
 function openPanMenu(event, anchor, captured) {
+  closeEnvelopeMenu();
   closeRecordMenu();
   const menu = $('pan-menu'), tr = state.tracks;
   panMenuAnchor = anchor; menu.replaceChildren();
@@ -549,6 +764,7 @@ function refreshRecordMenu(force = false) {
   }
 }
 function openRecordMenu(event,anchor,captured,kind) {
+  closeEnvelopeMenu();
   closePanMenu(); closeRecordMenu();
   recordMenuContext = {anchor,captured,kind,panes:[],rect:anchor.getBoundingClientRect(),x:event?.clientX,y:event?.clientY,signature:recordMenuSignature()};
   $('record-menu').replaceChildren(); $('record-menu').hidden = false;
@@ -966,15 +1182,15 @@ function renderMetadata(force = false) {
 function renderAppearance(force = false) {
   editable('appearance', () => {
     const v = state.tracks?.values || {}, m = state.tracks?.mixed || {}, c = context();
-    const color = el('input'); color.type = 'color'; color.value = v.color || '#6e9992'; color.setAttribute('aria-label', t('trackColor')); color.onchange = () => act({action: 'color', value: color.value}, c);
+    const color = el('div','track-color-row');
+    color.append(button('defaultColor',() => resetTrackColor(c)), trackColorControl(v.color,m.color,c));
     const icon = el('div','track-icon-row');
     icon.append(v.icon ? trackIcon(v.icon) : el('span','hint',t(m.icon ? 'mixed' : 'noIcon')));
     icon.append(button('setIcon',() => chooseTrackIcon(c)));
     const remove = button('removeIcon',() => act({action:'setIcon',path:''},c)); remove.disabled = !v.icon && !m.icon; icon.append(remove);
     const visibility = el('div','track-visibility');
     visibility.append(checkbox('tcp', v.tcp, n => setTrack('tcp', n, c), m.tcp), checkbox('mcp', v.mcp, n => setTrack('mcp', n, c), m.mcp));
-    return [row('trackIcon',icon), row(m.color ? 'mixedColor' : 'trackColor',color),
-      button('defaultColor',() => act({action:'color',value:''},c)), visibility];
+    return [row('trackIcon',icon), row(m.color ? 'mixedColor' : 'trackColor',color), visibility];
   }, force);
 }
 function renderQuick(force = false) {
@@ -984,7 +1200,7 @@ function renderQuick(force = false) {
     const master = toggle('masterTrack',tr.masterVisible,() => act({action:'quick',operation:'master'},c));
     if (isMaster()) return [button('openChain', () => act({action:'quick',operation:'chain'},c)),master];
     const result = [];
-    const rename = button('rename', () => { $('track-name')?.focus(); $('track-name')?.select(); }); rename.disabled = tr.count !== 1; result.push(rename);
+    const rename = button('rename', editTrackName); rename.disabled = tr.count !== 1; result.push(rename);
     for (const [key, label] of [['duplicate','duplicateTrack'],['chain','openChain'],['parent','parentTrack'],['previous','previousTrack'],['next','nextTrack']]) {
       const b = button(label, () => act({action: 'quick', operation: key}, c));
       b.disabled = key !== 'duplicate' && tr.count !== 1 || key === 'parent' && !tr.parent; result.push(b);
@@ -1160,7 +1376,8 @@ function receive(raw) {
     if (changed) {
       closePanMenu(); closeRecordMenu();
       routeExpansion.clear(); routeScroll.clear(); listScroll.clear();
-      for (const part of ['routing', 'fx', 'parameters', 'items', 'metadata']) delete state[part];
+      closeEnvelopeMenu();
+      for (const part of ['routing', 'fx', 'parameters', 'items', 'metadata', 'envelopes']) delete state[part];
       for (const id of ['confirm-dialog', 'fx-dialog', 'route-dialog']) { $(id).returnValue = 'cancel'; $(id).close(); }
     }
     $('empty').hidden = message.data.count > 0; $('inspector').hidden = !message.data.count;
@@ -1175,6 +1392,7 @@ function receive(raw) {
   else if (message.part === 'metadata') renderMetadata();
   else if (message.part === 'inputs') { renderParameters(); refreshRecordMenu(true); }
   else if (message.part === 'index') { renderSearch(); renderRouting(); if ($('route-dialog').open) renderRouteCatalog(); }
+  refreshEnvelopeMenu();
 }
 function fillSettings(value) {
   const form = $('settings-form');
@@ -1189,6 +1407,7 @@ function fillSettings(value) {
 }
 function openSettings() {
   if ($('settings-dialog').open || document.querySelector('dialog[open]')) return;
+  closeEnvelopeMenu();
   closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
   fillSettings(prefs); $('settings-dialog').showModal();
 }
@@ -1290,6 +1509,7 @@ function closeMeterMenu(restoreFocus = false) {
   meterMenuAnchor = null;
 }
 function openMeterMenu(family, event) {
+  closeEnvelopeMenu();
   event.preventDefault(); event.stopPropagation();
   closePanMenu(); closeRecordMenu(); closeMeterMenu();
   const menu = $('meter-menu'), anchor = $(`meter-toggle-${family}`);
@@ -1358,6 +1578,8 @@ overviewSize.observe($('overview-canvas'));
 function cleanup() {
   if (cleanupPromise) return cleanupPromise;
   closing = true; overviewRevision++;
+  closeEnvelopeMenu();
+  finishPanelDrag(false);
   overviewSize.disconnect(); closePanMenu(); closeRecordMenu(); closeMeterMenu(); closeSearch(true);
   for (const finish of [...gestures.values()]) finish();
   if (document.activeElement?.matches('input,textarea,select')) document.activeElement.blur();

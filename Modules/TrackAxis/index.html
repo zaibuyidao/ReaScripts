@@ -29,22 +29,23 @@
       <section id="mixer" class="mixer" aria-label="Mix controls"></section>
       <details id="panel-fx" data-panel="fx"><summary><span data-i18n="fx"></span><span class="badge" id="fx-count"></span></summary><div class="panel-content"><div id="fx"></div><section id="fx-parameter-panel" aria-labelledby="fx-parameter-title" hidden><h3 id="fx-parameter-title" data-i18n="fxParameters"></h3><div id="fx-parameters"></div></section></div></details>
       <details id="panel-routing" data-panel="routing"><summary><span data-i18n="routing"></span><span class="badge" id="routing-count"></span></summary><div class="panel-content" id="routing"></div></details>
-      <details id="panel-analysis" data-panel="analysis"><summary data-i18n="analysis"></summary><div class="panel-content">
+      <details id="panel-analysis" data-panel="analysis"><summary><span data-i18n="analysis"></span></summary><div class="panel-content">
         <p id="analysis-notice" class="hint"></p>
         <details class="analysis-card" id="analysis-meter" open><summary><span data-i18n="meter"></span><span class="meter-controls"><button id="meter-toggle-rms" class="meter-toggle" type="button" aria-pressed="false" data-title="meterToggleRms" aria-haspopup="menu" aria-controls="meter-menu" aria-expanded="false">RMS</button><button id="meter-toggle-lufs" class="meter-toggle" type="button" aria-pressed="true" data-title="meterToggleLufs" aria-haspopup="menu" aria-controls="meter-menu" aria-expanded="false">LUFS</button><button id="meter-reset" type="button" data-title="resetMeter" aria-label="Reset meter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></span></summary><p class="analysis-status" role="status"></p><div class="readout" id="meter-readout"></div><div id="meter-resizer" class="list-resizer" role="separator" aria-orientation="horizontal" aria-controls="meter-readout" tabindex="0" data-title="resizeMeter"></div></details>
         <details class="analysis-card" id="analysis-spectrum" open><summary><span data-i18n="spectrum"></span><button id="spectrum-restart" class="analysis-refresh" type="button" data-analysis-kind="spectrum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></summary><p class="analysis-status"></p><canvas height="130" aria-label="Spectrum"></canvas><div class="axis" aria-hidden="true"></div></details>
         <details class="analysis-card" id="analysis-waveform" open><summary><span data-i18n="waveform"></span><button id="waveform-restart" class="analysis-refresh" type="button" data-analysis-kind="waveform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></svg></button></summary><p class="analysis-status"></p><canvas height="110" aria-label="Realtime waveform"></canvas></details>
       </div></details>
-      <details id="panel-parameters" data-panel="parameters"><summary data-i18n="parameters"></summary><div class="panel-content" id="parameters"></div></details>
+      <details id="panel-parameters" data-panel="parameters"><summary><span data-i18n="parameters"></span></summary><div class="panel-content" id="parameters"></div></details>
       <details id="panel-items" data-panel="items"><summary><span data-i18n="items"></span><span class="badge" id="items-count"></span></summary><div class="panel-content"><div id="items"></div><div id="overview" hidden><p id="overview-status" class="hint"></p><canvas id="overview-canvas" height="100" aria-label="Source waveform overview"></canvas></div></div></details>
-      <details id="panel-metadata" data-panel="metadata"><summary data-i18n="metadata"></summary><div class="panel-content" id="metadata"></div></details>
-      <details id="panel-appearance" data-panel="appearance"><summary data-i18n="appearance"></summary><div class="panel-content" id="appearance"></div></details>
-      <details id="panel-quick" data-panel="quick"><summary data-i18n="quick"></summary><div class="panel-content button-grid" id="quick"></div></details>
+      <details id="panel-metadata" data-panel="metadata"><summary><span data-i18n="metadata"></span></summary><div class="panel-content" id="metadata"></div></details>
+      <details id="panel-appearance" data-panel="appearance"><summary><span data-i18n="appearance"></span></summary><div class="panel-content" id="appearance"></div></details>
+      <details id="panel-quick" data-panel="quick"><summary><span data-i18n="quick"></span></summary><div class="panel-content button-grid" id="quick"></div></details>
     </div>
   </main>
   <footer><span class="connection-dot"></span><span id="connection" data-i18n="connecting"></span><span id="project-name"></span></footer>
   <div id="record-menu" class="context-menu" hidden></div>
   <div id="pan-menu" class="context-menu" role="menu" hidden></div>
+  <div id="envelope-menu" class="context-menu" role="menu" hidden></div>
   <div id="meter-menu" class="context-menu" role="menu" hidden></div>
   <dialog id="settings-dialog" aria-labelledby="settings-title">
     <form id="settings-form">

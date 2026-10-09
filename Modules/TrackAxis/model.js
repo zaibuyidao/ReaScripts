@@ -12,6 +12,10 @@ export const themePresets = Object.freeze({
 });
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
+export const panelOrderDefaults = Object.freeze({
+  track: Object.freeze(['fx', 'routing', 'analysis', 'parameters', 'items', 'metadata', 'appearance', 'quick']),
+  master: Object.freeze(['fx', 'routing', 'analysis', 'metadata', 'quick']),
+});
 export const defaults = Object.freeze({
   version: 1, language: 'en', density: 'comfortable', fxCompact: true, routingCompact: true, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
@@ -22,10 +26,12 @@ export const defaults = Object.freeze({
   source: 'master', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'midnight', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
   panels: { routing: true, fx: true, parameters: false, items: true, analysis: true, metadata: true, appearance: false, quick: true },
+  panelOrder: panelOrderDefaults,
 });
 
 export function preferences(raw = {}) {
-  const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights}, meterMetrics: {...defaults.meterMetrics} };
+  const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights}, meterMetrics: {...defaults.meterMetrics},
+    panelOrder: {track:[...panelOrderDefaults.track], master:[...panelOrderDefaults.master]} };
   if (!raw || raw.version !== 1) return p;
   for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'meterCompact', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
   if (raw.livePeak === true) p.meter = true;
@@ -41,6 +47,10 @@ export function preferences(raw = {}) {
   for (const key of ['colorBackground','colorPanel','colorText','colorAccent','colorBorder']) if (/^#[\da-f]{6}$/i.test(raw[key] || '')) p[key] = raw[key];
   for (const key of Object.keys(p.panels)) if (typeof raw.panels?.[key] === 'boolean') p.panels[key] = raw.panels[key];
   for (const key of Object.keys(p.meterMetrics)) if (typeof raw.meterMetrics?.[key] === 'boolean') p.meterMetrics[key] = raw.meterMetrics[key];
+  for (const [mode, ids] of Object.entries(panelOrderDefaults)) {
+    const saved = Array.isArray(raw.panelOrder?.[mode]) ? raw.panelOrder[mode] : [];
+    p.panelOrder[mode] = [...new Set([...saved.filter(id => ids.includes(id)), ...ids])];
+  }
   return p;
 }
 export function themePalette(prefs, theme) {
@@ -75,6 +85,21 @@ export const routeKnobPosition = volume => {
 export const routeKnobVolume = position => fromDb(position <= 0.5 ? position * 180 - 90 : (position - 0.5) * 24);
 export const fromDb = db => db <= -90 ? 0 : 10 ** (db / 20);
 export const dbText = value => value === -Infinity ? '−∞' : Number.isFinite(value) ? value.toFixed(1) : '—';
+export function mixerValueText(value, type, center = 'center') {
+  if (!Number.isFinite(value)) return '';
+  if (type === 'volume') return value.toFixed(2);
+  const percent = Math.round(Math.abs(value));
+  if (type === 'width') return `${percent && value < 0 ? '-' : ''}${percent}%`;
+  return percent === 0 ? center : `${percent}%${value < 0 ? 'L' : 'R'}`;
+}
+export function parseMixerValue(text, type, center = 'center') {
+  const raw = text.trim();
+  if (type === 'pan' && [center.toLowerCase(),'center','centre','c'].includes(raw.toLowerCase())) return 0;
+  const match = raw.match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*%?\s*([lr])?$/i);
+  if (!match || type !== 'pan' && match[2]) return null;
+  const value = match[2] ? Math.abs(Number(match[1])) * (match[2].toLowerCase() === 'l' ? -1 : 1) : Number(match[1]);
+  return Number.isFinite(value) && value >= (type === 'volume' ? -90 : -100) && value <= (type === 'volume' ? 12 : 100) ? value : null;
+}
 export function recentSearches(entries, limit, query = '') {
   if (!Number.isInteger(limit) || limit <= 0) return [];
   const seen = new Set(), result = [];

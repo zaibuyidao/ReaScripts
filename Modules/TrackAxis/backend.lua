@@ -135,6 +135,63 @@ return function(r, json, send)
     return found, updated
   end
 
+  local envelope_cache
+  local envelope_specs = {
+    {id="volume",chunk="VOLENV2",create=40406}, {id="pan",chunk="PANENV2",create=40407},
+    {id="width",chunk="WIDTHENV2",create=41870}, {id="preVolume",chunk="VOLENV",create=40408},
+    {id="prePan",chunk="PANENV",create=40409}, {id="preWidth",chunk="WIDTHENV",create=41869},
+    {id="mute",chunk="MUTEENV",create=40867}, {id="trimVolume",chunk="VOLENV3",create=42020},
+  }
+  local function envelope_chunk(env)
+    local ok, chunk = r.GetEnvelopeStateChunk(env, "", false)
+    if not ok then fail("saveFailed") end
+    return chunk
+  end
+  local function envelope_flag(chunk, key)
+    return tonumber((track_line(chunk, key) or ""):match("^%S+")) or 0
+  end
+  local function envelope_type(chunk) return (chunk:match('^<(%S+)') or ''):gsub('^MASTER','') end
+  local function envelope_field(chunk, key, index, value)
+    local fields = {}
+    for token in (track_line(chunk,key) or ""):gmatch("%S+") do fields[#fields+1] = token end
+    if not fields[index] then fail("invalidValue") end
+    fields[index] = tostring(value)
+    local _, updated = track_line(chunk,key,table.concat(fields," "))
+    return updated
+  end
+  local function envelope_state(track)
+    local revision = r.GetProjectStateChangeCount(project)
+    local key = track and guid(track) or ""
+    if envelope_cache and envelope_cache.key == key and envelope_cache.session == session and envelope_cache.revision == revision then return envelope_cache.rows end
+    local rows = A()
+    if track then
+      local chunks = {}
+      for i=0,r.CountTrackEnvelopes(track)-1 do
+        local chunk = envelope_chunk(r.GetTrackEnvelope(track,i))
+        chunks[envelope_type(chunk)] = chunk
+      end
+      for _, spec in ipairs(envelope_specs) do
+        local chunk = chunks[spec.chunk] or ""
+        rows[#rows+1] = {id=spec.id, available=mode ~= "master" or r.GetTrackEnvelopeByChunkName(track,"<"..spec.chunk) ~= nil,
+          visible=envelope_flag(chunk,"VIS") ~= 0, active=envelope_flag(chunk,"ACT") ~= 0}
+      end
+    end
+    envelope_cache = {key=key,session=session,revision=revision,rows=rows}
+    return rows
+  end
+  local function with_selected_track(track, fn)
+    local selected = {}
+    for i = 0, r.CountSelectedTracks2(project, true) - 1 do selected[#selected+1] = r.GetSelectedTrack2(project,i,true) end
+    r.PreventUIRefresh(1)
+    local ok, err = pcall(function()
+      for _, t in ipairs(selected) do r.SetTrackSelected(t,false) end
+      r.SetOnlyTrackSelected(track) fn()
+    end)
+    r.SetTrackSelected(track,false)
+    for _, t in ipairs(selected) do r.SetTrackSelected(t,true) end
+    r.PreventUIRefresh(-1)
+    if not ok then error(err,0) end
+  end
   local function record_values(track)
     local key, revision = guid(track), r.GetProjectStateChangeCount(project)
     local cached = record_cache[key]
@@ -542,7 +599,7 @@ return function(r, json, send)
         if not ({fxEnabled=true,volume=true,pan=true,width=true,panMode=true,panLeft=true,panRight=true,mute=true,solo=true,phase=true,mono=true,channels=true,automation=true})[m.field] then fail("invalidValue") end
       elseif action == "quick" then
         if m.operation ~= "chain" and m.operation ~= "master" and m.operation ~= "envelopes" then fail("invalidValue") end
-      elseif not ({route=true,routeAdd=true,routeDelete=true,routeOpen=true,fx=true,fxAdd=true,fxSelect=true,fxCatalog=true,setMetadata=true})[action] then
+      elseif not ({envelope=true,route=true,routeAdd=true,routeDelete=true,routeOpen=true,fx=true,fxAdd=true,fxSelect=true,fxCatalog=true,setMetadata=true})[action] then
         fail("invalidValue")
       end
     end
@@ -619,6 +676,56 @@ return function(r, json, send)
       if not changed then return end
       undo(m.field, function() for _, t in ipairs(tracks) do r.SetMediaTrackInfo_Value(t, spec[1], m.value) end end)
 
+    elseif action == "envelope" then
+      if not track then fail("singleTrack") end
+      local spec
+      if m.operation == "visible" then
+        for _, candidate in ipairs(envelope_specs) do if candidate.id == m.envelope then spec = candidate break end end
+        if not spec or type(m.value) ~= "boolean" then fail("invalidValue") end
+        if mode == "master" and not r.GetTrackEnvelopeByChunkName(track,"<"..spec.chunk) then fail("invalidValue") end
+      elseif not ({showActive=true,hideAll=true,armVisible=true,disarmAll=true,lanes=true,mediaLane=true})[m.operation] then
+        fail("invalidValue")
+      end
+      undo("Track envelopes", function()
+        local entries = {}
+        if spec then
+          -- GetTrackEnvelopeByChunkName also returns inactive placeholders, so enumerate real envelopes first.
+          local env
+          for i=0,r.CountTrackEnvelopes(track)-1 do
+            local candidate = r.GetTrackEnvelope(track,i)
+            if envelope_type(envelope_chunk(candidate)) == spec.chunk then env = candidate break end
+          end
+          if not env and m.value then
+            with_selected_track(track,function() r.Main_OnCommand(spec.create,0) end)
+            env = r.GetTrackEnvelopeByChunkName(track,"<"..spec.chunk)
+            if not env then fail("saveFailed") end
+            -- The width-selection actions do not materialize a Master's width envelope.
+            if mode == "master" and (spec.id == "width" or spec.id == "preWidth") and r.CountEnvelopePoints(env) == 0 then
+              if not r.InsertEnvelopePoint(env,0,spec.id == "width" and value(track,"D_WIDTH") or 1,0,0,false,false) then fail("saveFailed") end
+              local chunk = envelope_field(envelope_chunk(env),"ARM",1,1)
+              if not r.SetEnvelopeStateChunk(env,chunk,false) then fail("saveFailed") end
+            end
+          end
+          if env then entries[1] = env end
+        else
+          for i=0,r.CountTrackEnvelopes(track)-1 do entries[#entries+1] = r.GetTrackEnvelope(track,i) end
+        end
+        for _, env in ipairs(entries) do
+          local chunk, updated = envelope_chunk(env)
+          local visible, active = envelope_flag(chunk,"VIS") ~= 0, envelope_flag(chunk,"ACT") ~= 0
+          if spec then
+            updated = envelope_field(chunk,"VIS",1,m.value and 1 or 0)
+            if m.value then updated = envelope_field(updated,"ACT",1,1) end
+          elseif m.operation == "showActive" and active or m.operation == "hideAll" then
+            updated = envelope_field(chunk,"VIS",1,m.operation == "showActive" and 1 or 0)
+          elseif m.operation == "armVisible" and visible or m.operation == "disarmAll" then
+            updated = envelope_field(chunk,"ARM",1,m.operation == "armVisible" and 1 or 0)
+          elseif visible and (m.operation == "lanes" or m.operation == "mediaLane") then
+            updated = envelope_field(chunk,"VIS",2,m.operation == "lanes" and 1 or 0)
+          end
+          if updated and updated ~= chunk and not r.SetEnvelopeStateChunk(env,updated,false) then fail("saveFailed") end
+        end
+      end)
     elseif action == "rename" then
       if not track or not text(m.value, 1024) then
         fail("invalidValue")
@@ -945,24 +1052,7 @@ return function(r, json, send)
           r.Main_OnCommand(({spacerBefore=42665,spacerAfter=42666})[m.operation], 0)
         end)
       elseif m.operation == "envelopes" and track then
-        local selected = {}
-        for i = 0, r.CountSelectedTracks2(project, true) - 1 do
-          selected[#selected+1] = r.GetSelectedTrack2(project, i, true)
-        end
-        r.PreventUIRefresh(1)
-
-        local ok, err = pcall(function()
-          r.SetOnlyTrackSelected(track)
-          r.Main_OnCommand(40292, 0)
-        end)
-
-        r.SetTrackSelected(track, false)
-        for _, t in ipairs(selected) do
-          r.SetTrackSelected(t, true)
-        end
-
-        r.PreventUIRefresh(-1)
-        if not ok then error(err, 0) end
+        with_selected_track(track,function() r.Main_OnCommand(40292,0) end)
       elseif m.operation == "chain" and track then
         r.TrackFX_Show(track, 0, 1)
       elseif track and (m.operation == "parent" or m.operation == "next" or m.operation == "previous") then
@@ -1037,6 +1127,7 @@ return function(r, json, send)
     M.last_selection = key
 
     if force or changed or selection_changed or now >= next_detail then
+      emit("envelopes", {key=key, rows=envelope_state(t)})
       local hardware_rows = routes(r.GetMasterTrack(project), {1})
       emit("hardwareRouting", {rows = hardware_rows})
       if t then
