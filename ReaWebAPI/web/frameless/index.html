@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Frameless Window</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<body>
+  <header data-reaweb-drag><strong>Frameless Window</strong><span>Drag here / 拖动此处</span><button id="dock">Dock / 停靠</button><button id="close" aria-label="Close / 关闭">×</button></header>
+  <main>
+    <p>Native window movement and eight resize edges. Controls remain interactive.</p>
+    <p>原生窗口拖动与四边四角缩放，交互控件保留原有操作。</p>
+    <div class="controls" data-reaweb-drag>
+      <label>Input / 输入 <input value="Text selection works"></label>
+      <label>Slider / 滑块 <input type="range"></label>
+      <button id="count">Count / 计数: 0</button>
+      <span data-reaweb-no-drag>Select this text / 可选择的文本</span>
+    </div>
+    <p>Counter and input values survive Dock/Undock. Fixed Size still allows programmatic resizing.</p>
+    <p>停靠和浮动切换保留计数及输入内容。固定尺寸模式仍支持程序化调整。</p>
+    <button id="size">setSize(640, 420)</button><button id="devtools">DevTools</button>
+    <pre id="state" data-reaweb-no-drag></pre><p id="error" role="alert"></p>
+  </main>
+</body>
+</html>

@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.15
+@version 0.3.8.16
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -17,6 +17,14 @@
   [script nomain] web/external-client/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/app.js
   [script nomain] web/external-client/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/index.html
   [script nomain] web/external-client/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/style.css
+  [script main] web/frameless/Fixed.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/Fixed.lua
+  [script main] web/frameless/Open.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/Open.lua
+  [script nomain] web/frameless/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/README.md
+  [script nomain] web/frameless/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/app.js
+  [script nomain] web/frameless/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/app.json
+  [script nomain] web/frameless/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/index.html
+  [script nomain] web/frameless/launch.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/launch.lua
+  [script nomain] web/frameless/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/style.css
   [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
@@ -40,5 +48,5 @@
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Added cross-platform hidden startup via Lua ReaWeb_OpenEx and JavaScript window.open().
-  Added Lua ReaWeb_Show without forced focus, preserving hidden state on reload and deferring Docker restoration until shown.
+  Add frameless floating windows and a resizable option to Lua ReaWeb_OpenEx and JavaScript window.open.
+  Add native HTML drag regions, window state reporting.

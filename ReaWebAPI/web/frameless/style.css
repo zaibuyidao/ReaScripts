@@ -1,0 +1,11 @@
+:root { font: 14px system-ui, sans-serif; color: #e8edf4; background: #18212c; color-scheme: dark; }
+body { margin: 0; }
+header { display: flex; align-items: center; gap: 16px; min-height: 48px; padding: 6px 16px; background: #243345; }
+header span { flex: 1; color: #aabbd0; }
+main { padding: 20px; }
+button, input { font: inherit; }
+button { padding: 6px 12px; cursor: pointer; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; background: #243345; }
+label { display: flex; align-items: center; gap: 8px; }
+pre { white-space: pre-wrap; overflow: auto; }
+#error { color: #ffb0a9; }
