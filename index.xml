@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="74522ea7719d7e723ec94f7f1fc09a8d2dda8002">
+<index version="1" name="zaibuyidao Scripts" commit="fab51cf843c20e95c329c69d6ebac4c8d3f8c7de">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8673,6 +8673,54 @@ Add native HTML drag regions, window state reporting.]]></changelog>
         <source main="main" type="script" file="web/native-stream/reawebapi-native-stream.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/74522ea7719d7e723ec94f7f1fc09a8d2dda8002/ReaWebAPI/web/native-stream/reawebapi-native-stream.lua</source>
         <source type="script" file="web/native-stream/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/74522ea7719d7e723ec94f7f1fc09a8d2dda8002/ReaWebAPI/web/native-stream/style.css</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/74522ea7719d7e723ec94f7f1fc09a8d2dda8002/ReaWebAPI/web/style.css</source>
+      </version>
+      <version name="0.3.8.17" author="zaibuyidao" time="2026-10-15T03:33:44Z">
+        <changelog><![CDATA[Add frameless floating windows and a resizable option to Lua ReaWeb_OpenEx and JavaScript window.open.
+Add native HTML drag regions, window state reporting.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/app.json</source>
+        <source type="script" file="web/external-client/README.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/external-client/README.md</source>
+        <source type="script" file="web/external-client/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/external-client/app.js</source>
+        <source type="script" file="web/external-client/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/external-client/index.html</source>
+        <source type="script" file="web/external-client/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/external-client/style.css</source>
+        <source type="script" file="web/frameless/README.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/README.md</source>
+        <source type="script" file="web/frameless/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/app.js</source>
+        <source type="script" file="web/frameless/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/app.json</source>
+        <source type="script" file="web/frameless/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/index.html</source>
+        <source type="script" file="web/frameless/launch.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/launch.lua</source>
+        <source main="main" type="script" file="web/frameless/reawebapi-frameless-fixed.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/reawebapi-frameless-fixed.lua</source>
+        <source main="main" type="script" file="web/frameless/reawebapi-frameless-resizable.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/reawebapi-frameless-resizable.lua</source>
+        <source type="script" file="web/frameless/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/frameless/style.css</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/lua-backend/README.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/README.md</source>
+        <source type="script" file="web/lua-backend/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/app.js</source>
+        <source type="script" file="web/lua-backend/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/app.json</source>
+        <source type="script" file="web/lua-backend/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/index.html</source>
+        <source main="main" type="script" file="web/lua-backend/reawebapi-lua-backend.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/reawebapi-lua-backend.lua</source>
+        <source type="script" file="web/lua-backend/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/lua-backend/style.css</source>
+        <source main="main" type="script" file="web/native-service/Coexist.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/Coexist.lua</source>
+        <source type="script" file="web/native-service/README.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/README.md</source>
+        <source type="script" file="web/native-service/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/app.js</source>
+        <source type="script" file="web/native-service/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/app.json</source>
+        <source type="script" file="web/native-service/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/index.html</source>
+        <source main="main" type="script" file="web/native-service/reawebapi-native-service.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/reawebapi-native-service.lua</source>
+        <source type="script" file="web/native-service/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-service/style.css</source>
+        <source type="script" file="web/native-stream/README.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/README.md</source>
+        <source type="script" file="web/native-stream/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/app.js</source>
+        <source type="script" file="web/native-stream/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/app.json</source>
+        <source type="script" file="web/native-stream/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/index.html</source>
+        <source main="main" type="script" file="web/native-stream/reawebapi-native-stream.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/reawebapi-native-stream.lua</source>
+        <source type="script" file="web/native-stream/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/native-stream/style.css</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fab51cf843c20e95c329c69d6ebac4c8d3f8c7de/ReaWebAPI/web/style.css</source>
       </version>
     </reapack>
   </category>
