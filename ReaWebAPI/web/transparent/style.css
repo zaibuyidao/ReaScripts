@@ -1,0 +1,16 @@
+:root { color-scheme: dark; font: 14px/1.5 system-ui, sans-serif; color: #edf4ff; --panel-alpha: .72; }
+html, body { background: transparent; margin: 0; }
+body { padding: 32px; }
+main { max-width: 600px; margin: auto; overflow: hidden; border-radius: 24px; background: rgb(18 32 54 / var(--panel-alpha)); border: 1px solid #ffffff40; box-shadow: 0 12px 24px #0006; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #ffffff26; user-select: none; }
+section { padding: 24px; }
+h1 { margin: 0 0 12px; font-size: 28px; }
+p { color: #d1dceb; }
+label { display: grid; gap: 8px; margin: 20px 0; }
+input, button { font: inherit; }
+input[type=text] { padding: 8px 12px; border: 1px solid #ffffff50; border-radius: 8px; background: #0003; color: inherit; }
+button { padding: 8px 12px; border: 1px solid #ffffff50; border-radius: 8px; color: inherit; background: #ffffff16; cursor: pointer; }
+button:hover { background: #ffffff30; }
+#close { padding: 0 10px; font-size: 22px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+output { display: block; margin-top: 20px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
