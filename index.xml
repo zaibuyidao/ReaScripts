@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9276b234ecddfb1a5f5d36d6391805fb3b7956d0">
+<index version="1" name="zaibuyidao Scripts" commit="c5674d8a16a278ee581209235350540cd89c6b30">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7240,6 +7240,65 @@ Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
         <source type="script" file="web/game.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.html</source>
         <source type="script" file="web/game.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.js</source>
         <source type="script" file="web/gamepad.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/gamepad.js</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Modules/ReaWebamp">
+    <reapack name="ReaWebamp - Package.lua" type="script" desc="ReaWebamp">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 ReaWebamp is a ReaWeb App built on ReaWebAPI using a Lua backend and WebView UI. Includes local playback, classic skins, Milkdrop, project audio import and monitoring. Requires ReaWebAPI v0.3.8.21 or later. Install the extension separately and restart REAPER. Search for ReaWebamp in the Action List to launch.\par}
+}
+]]></description>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaWebAPI">ReaWebAPI</link>
+      </metadata>
+      <version name="0.1.0" author="zaibuyidao" time="2026-10-18T16:29:35Z">
+        <changelog><![CDATA[Initial release.]]></changelog>
+        <source main="main" file="zaibuydao_ReaWebamp.lua">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/zaibuydao_ReaWebamp.lua</source>
+        <source file="app.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/app.json</source>
+        <source file="backend.lua">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/backend.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/index.html</source>
+        <source file="web/adapter/app.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/app.mjs</source>
+        <source file="web/adapter/backend-messages.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/backend-messages.json</source>
+        <source file="web/adapter/browser-files.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/browser-files.mjs</source>
+        <source file="web/adapter/desktop.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/desktop.mjs</source>
+        <source file="web/adapter/diagnostics.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/diagnostics.mjs</source>
+        <source file="web/adapter/host-client.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/host-client.mjs</source>
+        <source file="web/adapter/i18n.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/i18n.mjs</source>
+        <source file="web/adapter/integration.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/integration.mjs</source>
+        <source file="web/adapter/library.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/library.mjs</source>
+        <source file="web/adapter/local-tracks.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/local-tracks.mjs</source>
+        <source file="web/adapter/mode-controller.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/mode-controller.mjs</source>
+        <source file="web/adapter/pcm-buffer.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/pcm-buffer.mjs</source>
+        <source file="web/adapter/pcm-worklet.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/pcm-worklet.mjs</source>
+        <source file="web/adapter/player-view.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/player-view.mjs</source>
+        <source file="web/adapter/preferences.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/preferences.mjs</source>
+        <source file="web/adapter/reaper-monitor.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/reaper-monitor.mjs</source>
+        <source file="web/adapter/shell.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/shell.mjs</source>
+        <source file="web/adapter/style.css">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/style.css</source>
+        <source file="web/adapter/upstream-state.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/adapter/upstream-state.mjs</source>
+        <source file="web/assets/icons/internet-folder-32x32.png">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/icons/internet-folder-32x32.png</source>
+        <source file="web/assets/icons/paint-file-32x32.png">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/icons/paint-file-32x32.png</source>
+        <source file="web/assets/icons/winamp2-32x32.png">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/icons/winamp2-32x32.png</source>
+        <source file="web/assets/skins/Green-Dimension-V2.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/Green-Dimension-V2.wsz</source>
+        <source file="web/assets/skins/Internet-Archive.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/Internet-Archive.wsz</source>
+        <source file="web/assets/skins/MacOSXAqua1-5.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/MacOSXAqua1-5.wsz</source>
+        <source file="web/assets/skins/TopazAmp1-2.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/TopazAmp1-2.wsz</source>
+        <source file="web/assets/skins/Vizor1-01.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/Vizor1-01.wsz</source>
+        <source file="web/assets/skins/XMMS-Turquoise.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/XMMS-Turquoise.wsz</source>
+        <source file="web/assets/skins/ZaxonRemake1-0.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/ZaxonRemake1-0.wsz</source>
+        <source file="web/assets/skins/base-2.91.wsz">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/skins/base-2.91.wsz</source>
+        <source file="web/assets/webamp.bundle.min.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/webamp.bundle.min.mjs</source>
+        <source file="web/assets/webamp.butterchurn-bundle.min.mjs">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/webamp.butterchurn-bundle.min.mjs</source>
+        <source file="web/assets/webamp.ico">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/assets/webamp.ico</source>
+        <source file="web/locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/locales/en.json</source>
+        <source file="web/locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/locales/ja.json</source>
+        <source file="web/locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/locales/ko.json</source>
+        <source file="web/locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/locales/zh-CN.json</source>
+        <source file="web/locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/c5674d8a16a278ee581209235350540cd89c6b30/Modules/ReaWebamp/web/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
