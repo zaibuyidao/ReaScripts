@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.18
+@version 0.3.8.26
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,5 +54,8 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Add creation-time transparent floating windows on Windows, macOS, and composited Linux (X11/XWayland).
-  Add transparency diagnostics, preserve dock preferences, and disable docking for transparent windows.
+  Added a unified JSFX Web UI API with parameter control, data synchronization, streaming, commands, and resource management.
+  Added parameter gesture grouping with Undo support, plus improved data transfer reliability.
+  Added an optional EEL SDK and three JSFX examples.
+  Improved JSFX Web UI stability, synchronization, and lifecycle management.
+  Fixed Windows WebView startup stalls and unwanted parameter-edit notifications.
