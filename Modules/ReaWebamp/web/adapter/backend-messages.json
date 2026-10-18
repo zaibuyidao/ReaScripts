@@ -1,0 +1,23 @@
+{
+  "projectChanged": "工程已切换，请刷新后重试。",
+  "recordingGuard": "录音中，已拒绝控制或渲染操作。",
+  "projectBusy": "工程正在加载、保存或渲染。",
+  "stopBeforeRender": "请先停止 REAPER 播放再生成预览。",
+  "missingRegion": "区域不存在，请刷新。",
+  "itemLimit": "一次最多收集 256 个 Item。",
+  "noTake": "Item 没有活动 Take",
+  "midiRender": "MIDI Take 需要渲染预览",
+  "sourceUnavailable": "媒体来源不是可访问的音频文件",
+  "singleTrack": "轨道预览请只选择一条轨道，多轨混音请使用 Region 预览。",
+  "noRenderSelection": "没有可渲染的选择。",
+  "tailRange": "尾音必须在 0–30 秒之间。",
+  "emptyRange": "渲染范围为空。",
+  "durationLimit": "单次预览最长 1 小时。",
+  "cacheLimit": "预览缓存将超过 2 GiB，请先清理缓存。",
+  "renderCancelled": "渲染已取消或没有生成预期文件。",
+  "emptyRender": "渲染文件为空。",
+  "renderDecode": "渲染输出无法解码。",
+  "incompleteRender": "渲染被取消或输出不完整。",
+  "invalidTime": "无效的工程时间",
+  "cleanupError": "预览工程未能自动关闭：{message}"
+}

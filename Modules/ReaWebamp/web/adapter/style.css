@@ -1,0 +1,75 @@
+html, body { margin:0; height:100%; background:#242424; color:#dedede; font:12px system-ui,sans-serif; }
+html, body { overflow:hidden; }
+.app-layout { height:100%; display:flex; flex-direction:column; }
+#viewport { flex:1; min-height:0; overflow:auto; position:relative; isolation:isolate; }
+/* Let the actual Webamp windows define overflow, without a blank minimum canvas. */
+#player { position:relative; width:100%; height:100%; z-index:1; pointer-events:none; }
+#player > div { pointer-events:auto; }
+
+.desktop-shortcuts { position:absolute; top:8px; left:8px; right:8px; z-index:0; display:flex; align-items:flex-start; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; color-scheme:dark; }
+.desktop-icon { box-sizing:border-box; flex:1 0 60px; max-width:75px; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; padding:4px 2px; border:0; background:transparent; color:#eee; font:11px/12px Tahoma,Arial,sans-serif; text-align:center; text-decoration:none; cursor:default; user-select:none; }
+.desktop-icon img { flex:none; image-rendering:pixelated; }
+.desktop-icon span { align-self:stretch; overflow-wrap:anywhere; padding:1px; }
+.desktop-icon:is(button,a):focus-visible { outline:none; }
+.desktop-icon.selected span { background:#000080; color:#fff; outline:1px dotted #fff; outline-offset:-1px; }
+.desktop-icon.selected img { filter:sepia(1) saturate(6) hue-rotate(165deg) brightness(.65); }
+.desktop-icon:focus-visible span { outline:1px dotted #fff; outline-offset:-1px; }
+.desktop-icon:disabled { opacity:.5; cursor:wait; }
+.desktop-logo { cursor:default; }
+
+/* Scope shell controls so classic Webamp skins retain their original styling. */
+.app-header, .shell-dialog { color-scheme:dark; }
+.app-header { flex:none; position:relative; z-index:10; background:#414952; }
+.app-menu { display:flex; align-items:center; gap:0; padding:0 2px; }
+.menu-group { display:flex; }
+.app-header button, .shell-dialog button, .app-header select, .shell-dialog select, .shell-dialog input { font:inherit; color:inherit; }
+.app-header button, .app-header select, .app-header label { cursor:default; }
+.shell-dialog button { cursor:pointer; }
+.app-header button:disabled, .shell-dialog button:disabled, .app-header select:disabled { opacity:.4; cursor:default; }
+.app-header :focus-visible, .shell-dialog :focus-visible { outline:2px solid #98bbd7; outline-offset:2px; }
+.app-header .menu-trigger { background:transparent; border:0; border-radius:2px; padding:1px 4px; line-height:14px; }
+.menu-trigger:hover, .menu-trigger[aria-expanded="true"] { background:#56616e; }
+.menu-panel { position:fixed; z-index:11; box-sizing:border-box; width:max-content; max-width:calc(100vw - 12px); overflow:auto; padding:3px; border:1px solid #565656; border-radius:3px; background:#303030; box-shadow:0 8px 24px #0006; }
+.menu-panel[hidden], .shell-dialog [hidden] { display:none; }
+.app-header .menu-action { display:block; width:100%; padding:2px 7px; border:0; border-radius:2px; background:transparent; text-align:left; line-height:16px; }
+.menu-action:hover:enabled, .menu-action:focus-visible { background:#454545; }
+.menu-separator { height:1px; margin:3px 4px; background:#4b4b4b; }
+.menu-settings { padding:3px 7px; }
+.menu-settings .field-label { margin-bottom:3px; }
+.app-header .menu-settings select { width:auto; max-width:100%; padding:2px 4px; }
+.preferences { display:grid; grid-template-columns:max-content minmax(0,max-content); justify-content:start; align-items:center; gap:4px 8px; }
+.field-label { display:block; margin-bottom:7px; color:#d1d1d1; }
+.app-header select, .shell-dialog select, .shell-dialog input[type="number"] { box-sizing:border-box; min-width:0; padding:7px 8px; background:#242424; border:1px solid #626262; border-radius:3px; }
+.shell-dialog select { width:100%; }
+.check-field { display:flex; align-items:center; gap:5px; margin:5px 0 2px; line-height:16px; }
+.check-field input { margin:0; accent-color:#98bbd7; }
+.check-field:has(input:disabled) { color:#999; }
+.field-hint { color:#aaa; font-size:11px; line-height:1.5; }
+.toast { position:fixed; z-index:30; right:10px; bottom:10px; display:flex; align-items:flex-start; gap:8px; box-sizing:border-box; max-width:calc(100vw - 20px); width:max-content; padding:6px 8px; background:#45403a; color:#ffe4be; font-size:12px; line-height:16px; box-shadow:0 3px 14px #0006; border-radius:3px; }
+.toast[hidden] { display:none; }
+#status { flex:1; min-width:0; margin:0; max-height:20vh; overflow:auto; overflow-wrap:anywhere; }
+#dismiss-error { flex:none; border:0; padding:0 2px; background:transparent; color:inherit; font:14px/16px system-ui,sans-serif; cursor:pointer; }
+#dismiss-error:focus-visible { outline:1px dotted currentColor; }
+.shell-dialog { box-sizing:border-box; width:410px; max-width:calc(100vw - 24px); max-height:calc(100vh - 24px); padding:18px; color:#dedede; background:#2c2c2c; border:1px solid #626262; border-radius:6px; box-shadow:0 16px 64px #0008; }
+.shell-dialog::backdrop { background:#0007; }
+.shell-dialog button { padding:6px 12px; line-height:18px; background:#3c3c3c; border:1px solid #626262; border-radius:3px; }
+.shell-dialog button:hover:enabled { background:#4b4b4b; }
+.dialog-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.dialog-heading h2 { margin:0; font-size:15px; font-weight:600; }
+.shell-dialog .icon-button { flex:none; border-color:transparent; background:transparent; padding:0 6px; font-size:20px; line-height:24px; }
+.dialog-hint { margin:0 0 18px; color:#aaa; line-height:1.6; }
+.dialog-field { margin-top:16px; }
+.field-row { display:flex; align-items:center; gap:8px; }
+.field-row select { flex:1; }
+.field-row button { flex:none; }
+#tail { width:88px; }
+.dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.shell-dialog .primary-button { border-color:#839eae; background:#455d6b; color:#f1f5f7; }
+.shell-dialog .primary-button:hover:enabled { background:#526e7e; }
+.dialog-feedback { margin:16px 0 0; color:#e6d4b2; line-height:1.5; overflow-wrap:anywhere; }
+#diagnostic-dialog { width:720px; }
+#diagnostic-text { white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 monospace; }
+#picker-input { width:100%; }
+@media (max-width:380px) {
+  .shell-dialog { padding:14px; }
+}

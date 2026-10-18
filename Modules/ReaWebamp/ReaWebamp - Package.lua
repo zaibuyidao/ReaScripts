@@ -1,0 +1,56 @@
+-- @description ReaWebamp
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
+-- @metapackage
+-- @provides
+--   [main=main] zaibuydao_ReaWebamp.lua
+--   [nomain] app.json
+--   [nomain] backend.lua
+--   [nomain] index.html
+--   [nomain] web/adapter/app.mjs
+--   [nomain] web/adapter/backend-messages.json
+--   [nomain] web/adapter/browser-files.mjs
+--   [nomain] web/adapter/desktop.mjs
+--   [nomain] web/adapter/diagnostics.mjs
+--   [nomain] web/adapter/host-client.mjs
+--   [nomain] web/adapter/i18n.mjs
+--   [nomain] web/adapter/integration.mjs
+--   [nomain] web/adapter/library.mjs
+--   [nomain] web/adapter/local-tracks.mjs
+--   [nomain] web/adapter/mode-controller.mjs
+--   [nomain] web/adapter/pcm-buffer.mjs
+--   [nomain] web/adapter/pcm-worklet.mjs
+--   [nomain] web/adapter/player-view.mjs
+--   [nomain] web/adapter/preferences.mjs
+--   [nomain] web/adapter/reaper-monitor.mjs
+--   [nomain] web/adapter/shell.mjs
+--   [nomain] web/adapter/style.css
+--   [nomain] web/adapter/upstream-state.mjs
+--   [nomain] web/assets/icons/internet-folder-32x32.png
+--   [nomain] web/assets/icons/paint-file-32x32.png
+--   [nomain] web/assets/icons/winamp2-32x32.png
+--   [nomain] web/assets/skins/Green-Dimension-V2.wsz
+--   [nomain] web/assets/skins/Internet-Archive.wsz
+--   [nomain] web/assets/skins/MacOSXAqua1-5.wsz
+--   [nomain] web/assets/skins/TopazAmp1-2.wsz
+--   [nomain] web/assets/skins/Vizor1-01.wsz
+--   [nomain] web/assets/skins/XMMS-Turquoise.wsz
+--   [nomain] web/assets/skins/ZaxonRemake1-0.wsz
+--   [nomain] web/assets/skins/base-2.91.wsz
+--   [nomain] web/assets/webamp.bundle.min.mjs
+--   [nomain] web/assets/webamp.butterchurn-bundle.min.mjs
+--   [nomain] web/assets/webamp.ico
+--   [nomain] web/locales/en.json
+--   [nomain] web/locales/ja.json
+--   [nomain] web/locales/ko.json
+--   [nomain] web/locales/zh-CN.json
+--   [nomain] web/locales/zh-TW.json
+-- @about
+--   ReaWebamp is a ReaWeb App built on ReaWebAPI using a Lua backend and WebView UI.
+--   Includes local playback, classic skins, Milkdrop, project audio import and monitoring.
+--   Requires ReaWebAPI v0.3.8.21 or later. Install the extension separately and restart REAPER.
+--   Search for ReaWebamp in the Action List to launch.

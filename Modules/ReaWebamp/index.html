@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' blob: data: ws://127.0.0.1:*; img-src 'self' blob: data:; media-src 'self' blob: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'">
+<title>ReaWebamp</title>
+<link rel="icon" type="image/x-icon" sizes="16x16 32x32" href="./web/assets/webamp.ico">
+<link rel="stylesheet" href="./web/adapter/style.css">
+<script type="module" src="./web/adapter/app.mjs"></script>
+</head>
+<body>
+<div class="app-layout">
+<header class="app-header">
+  <nav class="app-menu" aria-label="Application menu" data-i18n-label="menu">
+    <div class="menu-group">
+      <button class="menu-trigger" id="file-menu-button" aria-expanded="false" aria-controls="file-menu" data-i18n="file">File</button>
+      <div class="menu-panel" id="file-menu" aria-labelledby="file-menu-button" hidden>
+        <button class="menu-action" id="open-local" data-integration disabled data-i18n="openAudio">Open local audio…</button>
+        <div class="menu-separator"></div>
+        <button class="menu-action" id="clear-cache" data-integration disabled data-i18n="clearCache">Clear playlist and preview cache</button>
+      </div>
+    </div>
+    <div class="menu-group">
+      <button class="menu-trigger" id="playback-menu-button" aria-expanded="false" aria-controls="playback-menu" data-i18n="playback">Playback</button>
+      <div class="menu-panel" id="playback-menu" aria-labelledby="playback-menu-button" hidden>
+        <div class="menu-settings">
+          <label class="field-label" for="mode" data-i18n="mode">Playback mode</label>
+          <select id="mode" data-integration disabled><option value="player" data-i18n="playerMode">Independent playback</option><option value="monitor" data-i18n="monitorMode">Project monitoring</option></select>
+          <label class="check-field"><input type="checkbox" id="follow" disabled><span data-i18n="follow">Control project playback</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="menu-group" id="integration">
+      <button class="menu-trigger" id="import-menu-button" aria-expanded="false" aria-controls="import-menu" data-i18n="import">Import</button>
+      <div class="menu-panel" id="import-menu" aria-labelledby="import-menu-button" hidden>
+        <button class="menu-action" id="add-items" data-integration disabled data-i18n="addItems">Add selected items</button>
+        <button class="menu-action" id="replace-items" data-integration disabled data-i18n="replaceItems">Replace playlist with selected items</button>
+        <button class="menu-action" id="add-tracks" data-integration disabled data-i18n="addTracks">Add sources from selected tracks</button>
+        <button class="menu-action" data-import="region" data-integration disabled data-i18n="addRegionMenu">Add sources within a region…</button>
+        <div class="menu-separator"></div>
+        <button class="menu-action" data-import="preview" data-integration disabled data-i18n="previewMenu">Render preview…</button>
+      </div>
+    </div>
+    <div class="menu-group">
+      <button class="menu-trigger" id="view-menu-button" aria-expanded="false" aria-controls="view-menu" data-i18n="view">View</button>
+      <div class="menu-panel" id="view-menu" aria-labelledby="view-menu-button" hidden>
+        <div class="menu-settings preferences">
+          <label for="language" data-i18n="language">Language</label><select id="language"></select>
+        </div>
+        <div class="menu-separator"></div>
+        <button class="menu-action" id="open-skin" data-integration disabled data-i18n="openSkin">Choose and save skin…</button>
+        <button class="menu-action" id="reset" data-player disabled data-i18n="reset">Reset window positions</button>
+      </div>
+    </div>
+    <div class="menu-group">
+      <button class="menu-trigger" id="help-menu-button" aria-expanded="false" aria-controls="help-menu" data-i18n="help">Help</button>
+      <div class="menu-panel" id="help-menu" aria-labelledby="help-menu-button" hidden>
+        <button class="menu-action" id="diagnostics" data-player disabled data-i18n="diagnostics">Diagnostics</button>
+      </div>
+    </div>
+  </nav>
+</header>
+<main id="viewport">
+  <div class="desktop-shortcuts" id="desktop-shortcuts" role="group" aria-label="Skins and website" data-i18n-label="shortcuts">
+    <button class="desktop-icon desktop-logo" id="desktop-logo" data-i18n-label="restoreSkin" aria-label="Restore default skin" disabled><img src="./web/assets/icons/winamp2-32x32.png" width="32" height="32" alt="" draggable="false"><span>Webamp</span></button>
+    <button class="desktop-icon" data-skin="Green-Dimension-V2.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>Green Dimension V2.wsz</span></button>
+    <button class="desktop-icon" data-skin="Internet-Archive.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>Internet Archive.wsz</span></button>
+    <button class="desktop-icon" data-skin="MacOSXAqua1-5.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>Mac OSX v1.5 (Aqua).wsz</span></button>
+    <button class="desktop-icon" data-skin="TopazAmp1-2.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>TopazAmp.wsz</span></button>
+    <button class="desktop-icon" data-skin="Vizor1-01.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>Vizor.wsz</span></button>
+    <button class="desktop-icon" data-skin="XMMS-Turquoise.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>XMMS Turquoise.wsz</span></button>
+    <button class="desktop-icon" data-skin="ZaxonRemake1-0.wsz" disabled><img src="./web/assets/icons/paint-file-32x32.png" width="32" height="32" alt="" draggable="false"><span>Zaxon Remake.wsz</span></button>
+    <a class="desktop-icon" id="skin-museum" href="https://skins.webamp.org/"><img src="./web/assets/icons/internet-folder-32x32.png" width="32" height="32" alt="" draggable="false"><span>Winamp Skin Museum</span></a>
+  </div>
+  <div id="player"></div>
+</main>
+</div>
+<div class="toast" id="error-toast" hidden><p id="status" role="alert"></p><button id="dismiss-error" aria-label="Close" data-i18n-label="close">×</button></div>
+<p id="source" hidden></p>
+<dialog class="shell-dialog" id="import-dialog" aria-labelledby="import-title" aria-describedby="import-hint">
+  <div class="dialog-heading"><h2 id="import-title" data-i18n="addRegion">Add sources within a region</h2><button class="icon-button" data-close aria-label="Close" data-i18n-label="close">×</button></div>
+  <p class="dialog-hint" id="import-hint"></p>
+  <div id="preview-settings" hidden>
+    <label class="field-label" for="preview-scope" data-i18n="scope">Render range</label>
+    <select id="preview-scope"><option value="item" data-i18n="itemScope">Selected items through Master</option><option value="track" data-i18n="trackScope">One selected track through Master</option><option value="region" data-i18n="regionScope">Region through project Master mix</option></select>
+  </div>
+  <div class="dialog-field" id="region-settings">
+    <label class="field-label" for="region" data-i18n="region">Region</label>
+    <div class="field-row"><select id="region" aria-label="Region" data-i18n-label="region"></select><button id="refresh-regions" data-i18n="refresh">Refresh</button></div>
+  </div>
+  <div class="dialog-field" id="tail-settings" hidden>
+    <label class="field-label" for="tail" data-i18n="tail">Tail</label>
+    <div class="field-row"><input id="tail" type="number" min="0" max="30" value="0" step="0.1"><span class="field-hint" data-i18n="seconds">seconds (0–30)</span></div>
+  </div>
+  <p class="dialog-feedback" id="import-feedback" role="status" hidden></p>
+  <div class="dialog-actions"><button data-close data-i18n="cancel">Cancel</button><button class="primary-button" id="add-region" data-i18n="addSource">Add source files</button><button class="primary-button" id="render-preview" hidden data-i18n="preview">Render preview</button></div>
+</dialog>
+<dialog class="shell-dialog" id="picker" aria-labelledby="picker-label"><form method="dialog"><p id="picker-label"></p><input id="picker-input" type="file"><div class="dialog-actions"><button value="cancel" data-i18n="cancel">Cancel</button><button class="primary-button" value="ok" data-i18n="open">Open</button></div></form></dialog>
+<dialog class="shell-dialog" id="diagnostic-dialog" aria-labelledby="diagnostic-title"><div class="dialog-heading"><h2 id="diagnostic-title" data-i18n="diagnostics">Diagnostics</h2><button class="icon-button" data-close aria-label="Close" data-i18n-label="close">×</button></div><pre id="diagnostic-text"></pre><form method="dialog" class="dialog-actions"><button data-i18n="close">Close</button></form></dialog>
+</body></html>
