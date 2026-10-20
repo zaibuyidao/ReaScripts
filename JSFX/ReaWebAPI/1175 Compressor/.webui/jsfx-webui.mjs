@@ -98,6 +98,8 @@ export async function connectJSFX(reaper = globalThis.reaper, onError = console.
   const dataListeners = new Set(), operationListeners = new Set(), consumers = new Set();
   const dataRevisions = new Map(), operationRevisions = new Map();
   const transfers = new Map();
+  const sizeListeners = new Set();
+  let editorSize, pendingSize = Promise.resolve();
   let capabilityRequest = 0;
   const closeTransfers = () => {
     const cleanup = [...transfers].map(([transferId, transfer]) => {
@@ -190,13 +192,24 @@ export async function connectJSFX(reaper = globalThis.reaper, onError = console.
     sessionId = next.sessionId; capabilities = freeze(next); return capabilities;
   };
   const present = async () => {
+    await pendingSize;
     if (!active || disposed) return { presented: false };
     const at = activation;
     try { return await invoke('present', { activation: at }); }
     catch (error) { if (!disposed && active && activation === at) throw error; return { presented: false }; }
   };
+  const applySize = next => {
+    if (disposed || (editorSize && revisionOf(next.revision) < revisionOf(editorSize.revision))) return editorSize;
+    editorSize = freeze(next); notify(sizeListeners, editorSize); return editorSize;
+  };
   try {
     await getCapabilities();
+    if (capabilities.features?.editorSize) {
+      stops.push(await service.on('editorSizeChanged', event => {
+        if (!disposed && event.sessionId === sessionId) applySize(event.size);
+      }));
+      applySize(await invoke('getEditorSize'));
+    }
     stops.push(await service.on('paramsChanged', event => {
       if (disposed || event.sessionId !== sessionId || event.activation < activation || (state && (!active || event.activation !== activation))) return;
       if (event.activation > activation) { activation = event.activation; revision = 0n; observed.clear(); }
@@ -234,6 +247,7 @@ export async function connectJSFX(reaper = globalThis.reaper, onError = console.
       cancelQueued(failure('FX_STALE', 'JSFX editor activation changed'));
       if (state) state = freeze({ ...state, active, activation });
       if (event.paramState) apply(event.paramState);
+      if (event.editorSize) applySize(event.editorSize);
       notify(visibility, active);
       if (active) {
         const at = activation;
@@ -374,6 +388,26 @@ export async function connectJSFX(reaper = globalThis.reaper, onError = console.
     });
   }
   return Object.freeze({
+    editor: Object.freeze({
+      get size() { return editorSize; },
+      async getSize() {
+        if (!capabilities.features?.editorSize) throw failure('UNSUPPORTED', 'This runtime does not expose JSFX editor sizing');
+        return applySize(await invoke('getEditorSize'));
+      },
+      setSize(width, height) {
+        const request = (async () => {
+          if (!capabilities.features?.editorSize) throw failure('UNSUPPORTED', 'This runtime does not expose JSFX editor sizing');
+          if (![width, height].every(value => Number.isInteger(value) && value >= 100 && value <= 8192))
+            throw failure('INVALID_ARGUMENT', 'Expected integer JSFX content dimensions in [100,8192]');
+          const at = current();
+          const next = await invoke('setEditorSize', { width, height, activation: at });
+          return applySize(next);
+        })();
+        pendingSize = Promise.allSettled([pendingSize, request]).then(() => {});
+        return request;
+      },
+      onSizeChange: fn => subscribe(sizeListeners, fn)
+    }),
     params: Object.freeze({
       get snapshot() { return state; }, getState: refresh,
       onChange: fn => subscribe(listeners, fn),
@@ -496,7 +530,7 @@ export async function connectJSFX(reaper = globalThis.reaper, onError = console.
         } finally {
           await closeConsumers();
           const results = await Promise.allSettled(stops.map(off => off()));
-          listeners.clear(); visibility.clear(); capabilityListeners.clear(); dataListeners.clear(); operationListeners.clear();
+          listeners.clear(); visibility.clear(); capabilityListeners.clear(); dataListeners.clear(); operationListeners.clear(); sizeListeners.clear();
           const error = results.find(r => r.status === 'rejected'); if (error) throw error.reason;
         }
       })();

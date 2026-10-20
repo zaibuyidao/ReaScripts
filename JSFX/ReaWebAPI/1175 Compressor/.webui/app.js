@@ -1,7 +1,6 @@
 import {connectJSFX} from './jsfx-webui.mjs';
 import {buildPanel,paintTheme} from './panel.js';
 import {meterAngle,MeterSignal} from './vu-meter.js';
-import {connectWindowZoom} from './window-zoom.js';
 import {openJSFXEditor} from './edit-jsfx.js';
 
 const $=id=>document.getElementById(id);
@@ -13,7 +12,7 @@ let jsfx=null,gesture=null,queue=Promise.resolve(),meterMode='gr',stream=null,op
 let lastPacket=0,grDb=0,outPower=0,needle=meterAngle(0),frame=0,lastFrame=0,wheelTimer=0,disposed=false;
 const meterSignal=new MeterSignal();
 let meterSampleRate=0,meterGapUntil=0;
-let resizeFXWindow=null,zoomRequest=0;
+let nativeSizing=false,zoomRequest=0;
 const pendingParameters=Array(6).fill(0);
 let pointer=null,hostVisible=true,meterEpoch=0,meterClosing=Promise.resolve();
 let bypassIndex=null,bypassed=false,bypassPending=0,transportQueue=Promise.resolve();
@@ -50,27 +49,22 @@ function recall(key,fallback){try{return localStorage.getItem('1175.'+key)||fall
 function paintZoom(value){
   const zoom=[.5,.75,1,1.5,2,2.5,3].includes(Number(value))?Number(value):1;
   const viewport=$('surface-scroll'),previous=Number($('ui-zoom').dataset.current||1),factor=zoom/previous;
-  $('app').style.setProperty('--ui-scale',resizeFXWindow?1:zoom);
+  $('app').style.setProperty('--ui-scale',nativeSizing?1:zoom);
   $('app').style.setProperty('--window-scale',zoom);$('ui-zoom').value=String(zoom);$('ui-zoom').dataset.current=zoom;
   viewport.scrollLeft*=factor;viewport.scrollTop*=factor;
   return zoom;
 }
-function setZoom(value,mode='change'){
-  // Paint the shared chain scale before the helper acknowledges presentation.
-  // Native window geometry is already retained at that scale during switching.
-  if(mode==='sync'&&resizeFXWindow?.kind==='chain')value=recall('chain-zoom',value);
-  const zoom=paintZoom(value);
-  if(mode==='change')remember('zoom',zoom);
-  if(resizeFXWindow&&active&&!disposed){
+function setZoom(value){
+  const zoom=paintZoom(value);remember('zoom',zoom);
+  if(nativeSizing&&active&&!disposed){
     const request=++zoomRequest;$('ui-zoom').dataset.resizing='true';
-    const current=()=>request===zoomRequest&&active&&!disposed;
-    finish();queue.then(()=>resizeFXWindow(zoom,mode,current)).then(effective=>{
-      if(current()&&effective!==null){
-        paintZoom(effective);remember('zoom',effective);
-        if(resizeFXWindow.kind==='chain')remember('chain-zoom',effective);
-      }
-    }).catch(e=>{if(current())report(e);}).finally(()=>{if(request===zoomRequest)$('ui-zoom').dataset.resizing='false';});
+    jsfx.editor.setSize(Math.round(1380*zoom),Math.ceil((30+1380*258/1400+34)*zoom))
+      .catch(e=>{if(request===zoomRequest&&active)report(e);})
+      .finally(()=>{if(request===zoomRequest)$('ui-zoom').dataset.resizing='false';});
   }
+}
+function editorSize(size){
+  if(size?.customized){const zoom=size.width/1380;paintZoom(zoom);remember('zoom',zoom);}
 }
 function render(){
   for(const i of [0,2,3,4,5]){
@@ -291,15 +285,10 @@ function animate(now){
   if($('meter-readout').innerHTML!==readout)$('meter-readout').innerHTML=readout;
   frame=requestAnimationFrame(animate);
 }
-function visibility(hostActivation=false){
+function visibility(){
   // A visible meter must continue even when the editor does not own keyboard focus.
   const visible=hostVisible&&!document.hidden&&!disposed;
-  if(active===visible){
-    // Reparenting can report a fresh host activation while the DOM remains
-    // visible. The new floating/chain frame still needs its size checked.
-    if(visible&&hostActivation===true)setZoom($('ui-zoom').value,'sync');
-    return;
-  }
+  if(active===visible)return;
   active=visible;meterEpoch++;
   if(!visible){
     zoomRequest++;$('ui-zoom').dataset.resizing='false';
@@ -307,7 +296,7 @@ function visibility(hostActivation=false){
     const previous=stream;stream=null;
     meterClosing=Promise.allSettled([meterClosing,previous?.close()]);
     cancelAnimationFrame(frame);frame=0;
-  }else{lastFrame=0;lastPacket=0;if(!frame)frame=requestAnimationFrame(animate);openMeter();setZoom($('ui-zoom').value,'sync');}
+  }else{lastFrame=0;lastPacket=0;if(!frame)frame=requestAnimationFrame(animate);openMeter();}
 }
 
 buildPanel();
@@ -336,21 +325,21 @@ $('all').onclick=toggleAll;$('legacy').onclick=toggleLegacy;$('cap-switch').oncl
 window.addEventListener('blur',()=>{pointer=null;finish();clearTimeout(wheelTimer);});
 window.addEventListener('focus',()=>{visibility();openMeter();});
 document.addEventListener('visibilitychange',visibility);
-window.addEventListener('storage',e=>{
-  // Prepaint parked chain instances; floating preferences remain independent.
-  if(e.key==='1175.chain-zoom'&&e.newValue&&!active&&resizeFXWindow?.kind==='chain')paintZoom(e.newValue);
-});
 window.addEventListener('pagehide',()=>{disposed=true;finish();clearInterval(retryTimer);clearTimeout(wheelTimer);cancelAnimationFrame(frame);jsfx?.dispose().catch(()=>{});});
 render();frame=requestAnimationFrame(animate);visibility();
 const retryTimer=setInterval(openMeter,1200);
 if(globalThis.reaper){
   try{
     jsfx=await connectJSFX(globalThis.reaper,report);hostState(jsfx.params.snapshot);
-    await jsfx.params.onChange(hostState);await jsfx.onVisibilityChange(v=>{hostVisible=v;visibility(v);});await jsfx.onCapabilitiesChange(openMeter);
+    if(!jsfx.editor.size)throw Error('Window scaling requires ReaWebAPI v0.3.8.31 or later.');
+    nativeSizing=true;document.body.classList.add('native-window');
+    if(jsfx.editor.size.customized)editorSize(jsfx.editor.size);
+    else {
+      const zoom=paintZoom($('ui-zoom').value);
+      await jsfx.editor.setSize(Math.round(1380*zoom),Math.ceil((30+1380*258/1400+34)*zoom));
+    }
+    await jsfx.editor.onSizeChange(editorSize);
+    await jsfx.params.onChange(hostState);await jsfx.onVisibilityChange(v=>{hostVisible=v;visibility();});await jsfx.onCapabilitiesChange(openMeter);
     $('connection').textContent='REAPER';$('connection').className='live';hostVisible=jsfx.active;visibility();openMeter();
-    if(globalThis.reaper.window?.getSize&&globalThis.reaper.app?.getRootPath)try{
-      resizeFXWindow=await connectWindowZoom(globalThis.reaper);
-      document.body.classList.add('native-window');setZoom($('ui-zoom').value,'init');
-    }catch(e){report(e);}
   }catch(e){$('connection').textContent='Disconnected';report(e);}
 }else{$('connection').textContent='Preview';$('connection').title='Preview only. Connect to REAPER to process audio.';}
