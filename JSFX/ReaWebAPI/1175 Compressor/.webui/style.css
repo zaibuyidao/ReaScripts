@@ -28,7 +28,8 @@ button:focus-visible,[role=slider]:focus-visible,[role=button]:focus-visible,inp
 .ink{fill:#f2f1e8;stroke:none;font-family:"Arial Narrow",Arial,sans-serif;font-size:12px;font-weight:400;font-stretch:condensed;letter-spacing:.45px;text-rendering:geometricPrecision}
 .ink.small{font-size:9.5px;letter-spacing:.55px}
 .ink.label{font-size:12px;letter-spacing:1px}
-.ink,.scale,.badge,.brand-print{filter:url(#printed-ink)}
+/* Keep printed labels/scales as vectors: SVG ink filtering softens them in WebKit. */
+.ink,.scale,.badge,.brand-print{filter:none}
 .brand-print{fill:#e9ebdf;opacity:.96}
 .scale line,.scale circle{stroke:#efeee4;fill:#efeee4}
 .scale text{fill:#f0efe5;font:12px Arial,sans-serif;letter-spacing:0;text-rendering:geometricPrecision}
