@@ -1,19 +1,19 @@
-//@version: 0.1.0
-//@changelog: Initial release with ReaWebAPI Web UI.
-//@provides:
-//  1175 Compressor.json
-//  .webui/app.js
-//  .webui/edit-jsfx.js
-//  .webui/edit-jsfx.lua
-//  .webui/index.html
-//  .webui/jsfx-webui.mjs
-//  .webui/panel.js
-//  .webui/reaweb_jsfx.inc
-//  .webui/resize-window.lua
-//  .webui/style.css
-//  .webui/vu-meter.js
-//  .webui/window-zoom.js
-//
+version: 0.1.0
+changelog: Initial release with ReaWebAPI Web UI.
+provides:
+  1175 Compressor.json
+  .webui/app.js
+  .webui/edit-jsfx.js
+  .webui/edit-jsfx.lua
+  .webui/index.html
+  .webui/jsfx-webui.mjs
+  .webui/panel.js
+  .webui/reaweb_jsfx.inc
+  .webui/resize-window.lua
+  .webui/style.css
+  .webui/vu-meter.js
+  .webui/window-zoom.js
+
 // Copyright 2006, Thomas Scott Stillwell
 // All rights reserved.
 //
