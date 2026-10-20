@@ -24,8 +24,8 @@
 
 desc:1175 Compressor (Reaweb)
 desc:1175 FAST Attack Compressor with Program-Dependent Release [Stillwell]
-//version: 0.1.0
-//changelog: Initial release with ReaWebAPI Web UI.
+version: 0.1.0
+changelog: Initial release with ReaWebAPI Web UI.
 //tags: dynamics compressor
 //author: Stillwell
 //provides:
