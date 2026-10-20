@@ -24,23 +24,23 @@
 
 desc:1175 Compressor (Reaweb)
 desc:1175 FAST Attack Compressor with Program-Dependent Release [Stillwell]
-version: 0.1.0
-changelog: Initial release with ReaWebAPI Web UI.
+//version: 0.1.0
+//changelog: Initial release with ReaWebAPI Web UI.
 //tags: dynamics compressor
 //author: Stillwell
-provides:
-  1175 Compressor.json
-  .webui/app.js
-  .webui/edit-jsfx.js
-  .webui/edit-jsfx.lua
-  .webui/index.html
-  .webui/jsfx-webui.mjs
-  .webui/panel.js
-  .webui/reaweb_jsfx.inc
-  .webui/resize-window.lua
-  .webui/style.css
-  .webui/vu-meter.js
-  .webui/window-zoom.js
+//provides:
+//  1175 Compressor.json
+//  .webui/app.js
+//  .webui/edit-jsfx.js
+//  .webui/edit-jsfx.lua
+//  .webui/index.html
+//  .webui/jsfx-webui.mjs
+//  .webui/panel.js
+//  .webui/reaweb_jsfx.inc
+//  .webui/resize-window.lua
+//  .webui/style.css
+//  .webui/vu-meter.js
+//  .webui/window-zoom.js
 
 options:no_meter
 options:gmem=ReaWebUI_1175_v1
