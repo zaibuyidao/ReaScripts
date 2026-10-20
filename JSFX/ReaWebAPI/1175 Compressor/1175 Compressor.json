@@ -3,8 +3,8 @@
   "JSFX_WebUI": {
     "entry": ".webui/index.html",
     "enabled": true,
-    "width": 1380,
-    "height": 319,
+    "width": 690,
+    "height": 160,
     "native": {
       "protocolVersion": 1,
       "gmem": "ReaWebUI_1175_v1",

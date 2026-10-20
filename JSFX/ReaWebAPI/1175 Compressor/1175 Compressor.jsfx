@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.1.2
 changelog: Initial release with ReaWebAPI Web GUI.
 provides:
   1175 Compressor.json

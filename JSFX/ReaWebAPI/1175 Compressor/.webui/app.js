@@ -47,15 +47,29 @@ async function readyParameters(){
 }
 function remember(key,value){try{localStorage.setItem('1175.'+key,value);}catch{}}
 function recall(key,fallback){try{return localStorage.getItem('1175.'+key)||fallback;}catch{return fallback;}}
-function setZoom(value){
+function paintZoom(value){
   const zoom=[.5,.75,1,1.5,2,2.5,3].includes(Number(value))?Number(value):1;
   const viewport=$('surface-scroll'),previous=Number($('ui-zoom').dataset.current||1),factor=zoom/previous;
   $('app').style.setProperty('--ui-scale',resizeFXWindow?1:zoom);
   $('app').style.setProperty('--window-scale',zoom);$('ui-zoom').value=String(zoom);$('ui-zoom').dataset.current=zoom;
-  viewport.scrollLeft*=factor;viewport.scrollTop*=factor;remember('zoom',zoom);
-  if(resizeFXWindow){
+  viewport.scrollLeft*=factor;viewport.scrollTop*=factor;
+  return zoom;
+}
+function setZoom(value,mode='change'){
+  // Paint the shared chain scale before the helper acknowledges presentation.
+  // Native window geometry is already retained at that scale during switching.
+  if(mode==='sync'&&resizeFXWindow?.kind==='chain')value=recall('chain-zoom',value);
+  const zoom=paintZoom(value);
+  if(mode==='change')remember('zoom',zoom);
+  if(resizeFXWindow&&active&&!disposed){
     const request=++zoomRequest;$('ui-zoom').dataset.resizing='true';
-    finish();queue.then(()=>resizeFXWindow(zoom)).catch(report).finally(()=>{if(request===zoomRequest)$('ui-zoom').dataset.resizing='false';});
+    const current=()=>request===zoomRequest&&active&&!disposed;
+    finish();queue.then(()=>resizeFXWindow(zoom,mode,current)).then(effective=>{
+      if(current()&&effective!==null){
+        paintZoom(effective);remember('zoom',effective);
+        if(resizeFXWindow.kind==='chain')remember('chain-zoom',effective);
+      }
+    }).catch(e=>{if(current())report(e);}).finally(()=>{if(request===zoomRequest)$('ui-zoom').dataset.resizing='false';});
   }
 }
 function render(){
@@ -277,17 +291,23 @@ function animate(now){
   if($('meter-readout').innerHTML!==readout)$('meter-readout').innerHTML=readout;
   frame=requestAnimationFrame(animate);
 }
-function visibility(){
+function visibility(hostActivation=false){
   // A visible meter must continue even when the editor does not own keyboard focus.
   const visible=hostVisible&&!document.hidden&&!disposed;
-  if(active===visible)return;
+  if(active===visible){
+    // Reparenting can report a fresh host activation while the DOM remains
+    // visible. The new floating/chain frame still needs its size checked.
+    if(visible&&hostActivation===true)setZoom($('ui-zoom').value,'sync');
+    return;
+  }
   active=visible;meterEpoch++;
   if(!visible){
+    zoomRequest++;$('ui-zoom').dataset.resizing='false';
     pointer=null;finish();clearTimeout(wheelTimer);
     const previous=stream;stream=null;
     meterClosing=Promise.allSettled([meterClosing,previous?.close()]);
     cancelAnimationFrame(frame);frame=0;
-  }else{lastFrame=0;lastPacket=0;if(!frame)frame=requestAnimationFrame(animate);openMeter();}
+  }else{lastFrame=0;lastPacket=0;if(!frame)frame=requestAnimationFrame(animate);openMeter();setZoom($('ui-zoom').value,'sync');}
 }
 
 buildPanel();
@@ -304,7 +324,7 @@ $('edit-jsfx').onclick=async()=>{
 };
 document.addEventListener('keydown',transportSpace,true);
 document.addEventListener('keyup',e=>{if(isTransportSpace(e)){e.preventDefault();e.stopImmediatePropagation();}},true);
-setZoom(recall('zoom','1'));$('ui-zoom').addEventListener('change',e=>setZoom(e.target.value));
+paintZoom(recall('zoom','1'));$('ui-zoom').addEventListener('change',e=>setZoom(e.target.value));
 const savedTheme=recall('theme','ae');paintTheme(['ae','silver','black'].includes(savedTheme)?savedTheme:'ae');
 const savedMeter=recall('meter','gr');setMeter(['gr','8','4','off'].includes(savedMeter)?savedMeter:'gr');
 for(const i of [0,2,3,4,5])bindKnob(i);
@@ -316,17 +336,21 @@ $('all').onclick=toggleAll;$('legacy').onclick=toggleLegacy;$('cap-switch').oncl
 window.addEventListener('blur',()=>{pointer=null;finish();clearTimeout(wheelTimer);});
 window.addEventListener('focus',()=>{visibility();openMeter();});
 document.addEventListener('visibilitychange',visibility);
+window.addEventListener('storage',e=>{
+  // Prepaint parked chain instances; floating preferences remain independent.
+  if(e.key==='1175.chain-zoom'&&e.newValue&&!active&&resizeFXWindow?.kind==='chain')paintZoom(e.newValue);
+});
 window.addEventListener('pagehide',()=>{disposed=true;finish();clearInterval(retryTimer);clearTimeout(wheelTimer);cancelAnimationFrame(frame);jsfx?.dispose().catch(()=>{});});
 render();frame=requestAnimationFrame(animate);visibility();
 const retryTimer=setInterval(openMeter,1200);
 if(globalThis.reaper){
   try{
     jsfx=await connectJSFX(globalThis.reaper,report);hostState(jsfx.params.snapshot);
-    await jsfx.params.onChange(hostState);await jsfx.onVisibilityChange(v=>{hostVisible=v;visibility();});await jsfx.onCapabilitiesChange(openMeter);
+    await jsfx.params.onChange(hostState);await jsfx.onVisibilityChange(v=>{hostVisible=v;visibility(v);});await jsfx.onCapabilitiesChange(openMeter);
     $('connection').textContent='REAPER';$('connection').className='live';hostVisible=jsfx.active;visibility();openMeter();
     if(globalThis.reaper.window?.getSize&&globalThis.reaper.app?.getRootPath)try{
       resizeFXWindow=await connectWindowZoom(globalThis.reaper);
-      document.body.classList.add('native-window');setZoom($('ui-zoom').value);
+      document.body.classList.add('native-window');setZoom($('ui-zoom').value,'init');
     }catch(e){report(e);}
   }catch(e){$('connection').textContent='Disconnected';report(e);}
 }else{$('connection').textContent='Preview';$('connection').title='Preview only. Connect to REAPER to process audio.';}
