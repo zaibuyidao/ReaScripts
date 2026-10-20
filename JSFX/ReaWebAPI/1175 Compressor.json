@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "JSFX_WebUI": {
+    "entry": ".webui/index.html",
+    "enabled": true,
+    "width": 1380,
+    "height": 319,
+    "native": {
+      "protocolVersion": 1,
+      "gmem": "ReaWebUI_1175_v1",
+      "base": 0,
+      "transportParam": 6,
+      "streams": [
+        {
+          "id": "meter",
+          "kind": "audio",
+          "source": "gainReduction/postDSP/energy-v2",
+          "channels": 3,
+          "channelLabels": [
+            "GR gain",
+            "Output L mean square",
+            "Output R mean square"
+          ],
+          "fftSize": 256,
+          "points": 256,
+          "updateRate": 30
+        }
+      ]
+    }
+  }
+}

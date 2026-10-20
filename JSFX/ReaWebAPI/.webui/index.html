@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="application-version" content="0.8.6">
+  <title>1175 · REAWEB UI V0.8.6</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-theme="ae">
+  <main id="app">
+    <header class="toolbar">
+      <button id="power" aria-label="Effect enabled: bypass" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9M7.5 5.5a8 8 0 1 0 9 0"/></svg></button>
+      <div class="identity"><strong>1175</strong><span>FET LIMITING AMPLIFIER</span></div>
+      <nav class="styles" aria-label="Panel style">
+        <button data-theme="ae" aria-pressed="true"><i></i>ANNIVERSARY</button>
+        <button data-theme="silver" aria-pressed="false"><i></i>SILVER</button>
+        <button data-theme="black" aria-pressed="false"><i></i>BLACKFACE</button>
+      </nav>
+      <label class="zoom-control">SCALE <select id="ui-zoom" aria-label="Interface scale"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.5">150%</option><option value="2">200%</option><option value="2.5">250%</option><option value="3">300%</option></select></label>
+      <button id="edit-jsfx" aria-label="Edit JSFX source">EDIT JSFX</button>
+      <span id="connection" role="status" hidden>Connecting</span>
+    </header>
+    <div class="surface-scroll" id="surface-scroll" tabindex="0" aria-label="Scalable hardware panel"><div class="surface" id="surface">
+    <section class="rack-viewport" aria-label="1175 hardware panel">
+      <div id="rack" class="rack">
+        <svg id="faceplate" viewBox="0 0 1400 258" aria-label="1175 rack compressor"></svg>
+      </div>
+    </section>
+    <footer class="readouts" aria-label="Parameter values">
+      <label>THRESHOLD <span><input id="value-0" aria-label="Threshold dB" type="number" min="-60" max="0" step="0.1" value="0"><small>dB</small></span></label>
+      <label>OUTPUT <span><input id="value-2" aria-label="Output gain dB" type="number" min="-20" max="20" step="0.1" value="0"><small>dB</small></span></label>
+      <label>ATTACK <span><input id="value-3" aria-label="Attack microseconds" type="number" min="20" max="2000" step="10" value="20"><small>µs</small></span></label>
+      <label>RELEASE <span><input id="value-4" aria-label="Release milliseconds" type="number" min="20" max="1000" step="1" value="250"><small>ms</small></span></label>
+      <label>MIX <span><input id="value-5" aria-label="Mix percent" type="number" min="0" max="100" step="0.1" value="100"><small>%</small></span></label>
+      <div class="mode-controls" role="group" aria-label="Compressor modes">
+        <button id="all" aria-pressed="false">ALL IN</button>
+        <button id="legacy" aria-pressed="false">CAP <b>NORMAL</b></button>
+      </div>
+      <span id="meter-readout" aria-live="off">GR <b>0.0</b> dB</span>
+    </footer>
+    </div></div>
+    <div id="message" role="status" hidden></div>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
+
+
+
