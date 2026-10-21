@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.30
+@version 0.3.8.31
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,4 +54,5 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Fix a Windows REAPER hang when switching window focus from a JSFX Web UI in an FX chain.
+  Added persistent, shared JSFX editor sizing via jsfx.editor, with native window adaptation on Windows, macOS, and Linux.
+  Restores the requested size before displaying chain and floating editors, including at scales below 100%.
