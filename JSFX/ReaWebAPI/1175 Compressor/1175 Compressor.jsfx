@@ -1,4 +1,4 @@
-version: 0.1.3
+version: 0.1.4
 changelog: Initial release with ReaWebAPI Web GUI.
 provides:
   1175 Compressor.json
@@ -9,10 +9,8 @@ provides:
   .webui/jsfx-webui.mjs
   .webui/panel.js
   .webui/reaweb_jsfx.inc
-  .webui/resize-window.lua
   .webui/style.css
   .webui/vu-meter.js
-  .webui/window-zoom.js
 
 // Copyright 2006, Thomas Scott Stillwell
 // All rights reserved.
