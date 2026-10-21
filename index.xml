@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="108cc10ba21bc67524349373e5ecf1022f69a0dc">
+<index version="1" name="zaibuyidao Scripts" commit="ba3d6d0b7585e915cf2afad67fd775ac45311517">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2054,6 +2054,20 @@ Renamed extension binaries from reaper_soundmole-* to reaper_reamole-*.]]></chan
         <source file=".webui/style.css">https://github.com/zaibuyidao/ReaScripts/raw/0748301036ab3c1d5dae2f24ddad07f320a6389b/JSFX/ReaWebAPI/1175%20Compressor/.webui/style.css</source>
         <source file=".webui/vu-meter.js">https://github.com/zaibuyidao/ReaScripts/raw/0748301036ab3c1d5dae2f24ddad07f320a6389b/JSFX/ReaWebAPI/1175%20Compressor/.webui/vu-meter.js</source>
         <source file=".webui/window-zoom.js">https://github.com/zaibuyidao/ReaScripts/raw/0748301036ab3c1d5dae2f24ddad07f320a6389b/JSFX/ReaWebAPI/1175%20Compressor/.webui/window-zoom.js</source>
+      </version>
+      <version name="0.1.4" time="2026-10-21T03:00:00Z">
+        <changelog><![CDATA[Initial release with ReaWebAPI Web GUI.]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/1175%20Compressor.jsfx</source>
+        <source file="1175 Compressor.json">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/1175%20Compressor.json</source>
+        <source file=".webui/app.js">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/app.js</source>
+        <source file=".webui/edit-jsfx.js">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/edit-jsfx.js</source>
+        <source file=".webui/edit-jsfx.lua">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/edit-jsfx.lua</source>
+        <source file=".webui/index.html">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/index.html</source>
+        <source file=".webui/jsfx-webui.mjs">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/jsfx-webui.mjs</source>
+        <source file=".webui/panel.js">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/panel.js</source>
+        <source file=".webui/reaweb_jsfx.inc">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/reaweb_jsfx.inc</source>
+        <source file=".webui/style.css">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/style.css</source>
+        <source file=".webui/vu-meter.js">https://github.com/zaibuyidao/ReaScripts/raw/ba3d6d0b7585e915cf2afad67fd775ac45311517/JSFX/ReaWebAPI/1175%20Compressor/.webui/vu-meter.js</source>
       </version>
     </reapack>
   </category>
