@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.33
+@version 0.3.8.38
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,6 +54,5 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Preload a shared pool of blank WebViews for Apps and JSFX on Windows, macOS and Linux, with idle replenishment, diagnostics and a configurable target of 0–32 containers, default 2.
-  Read initial JSFX editor size and parameters concurrently while preserving instance validation, size restoration and parameter consistency.
-  Prevent the first non-activating Show on macOS from briefly taking keyboard focus.
+  Reduce redundant native-control geometry and meter lookups when concealing JSFX editors on Windows, macOS and Linux.
+  Include macOS and Linux pre-paint editor discovery in JSFX observer timing.
