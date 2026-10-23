@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.8.38
+@version 0.3.9.1
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,5 +54,4 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Reduce redundant native-control geometry and meter lookups when concealing JSFX editors on Windows, macOS and Linux.
-  Include macOS and Linux pre-paint editor discovery in JSFX observer timing.
+  Mitigate rendering stalls during WebView2 cold starts on Windows by disabling GPU rasterization.
