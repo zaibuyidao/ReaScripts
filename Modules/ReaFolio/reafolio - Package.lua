@@ -1,0 +1,46 @@
+-- @description ReaFolio
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
+--   Upstream source https://github.com/dullage/flatnotes
+-- @metapackage
+-- @provides
+--   [nomain] app.json
+--   [nomain] assets/css/LoadingIndicator.css
+--   [nomain] assets/css/Note.css
+--   [nomain] assets/css/SearchResults.css
+--   [nomain] assets/css/Tags.css
+--   [nomain] assets/css/constants.css
+--   [nomain] assets/css/style.css
+--   [nomain] assets/fonts/Poppins/Poppins-Italic.ttf
+--   [nomain] assets/fonts/Poppins/Poppins-Regular.ttf
+--   [nomain] assets/fonts/Poppins/Poppins-SemiBold.ttf
+--   [nomain] assets/fonts/Poppins/Poppins-SemiBoldItalic.ttf
+--   [nomain] assets/icons/apple-touch-icon.png
+--   [nomain] assets/icons/favicon-16x16.png
+--   [nomain] assets/icons/favicon-32x32.png
+--   [nomain] assets/icons/favicon.ico
+--   [nomain] assets/icons/safari-pinned-tab.svg
+--   [nomain] assets/js/Home.js
+--   [nomain] assets/js/LoadingIndicator.js
+--   [nomain] assets/js/Note.js
+--   [nomain] assets/js/SearchResults.js
+--   [nomain] assets/js/Tags.js
+--   [nomain] assets/js/constants.js
+--   [nomain] assets/js/index.js
+--   [nomain] index.html
+--   [nomain] lua/backend.lua
+--   [nomain] lua/json.lua
+--   [main=main] zaibuyidao_ReaFolio.lua
+
+-- @about
+--   Local Markdown notes inside REAPER. Run zaibuyidao_ReaFolio.lua from the Action List.
+--   Requires ReaWebAPI v0.3.9.2 or later. Install the extension separately.
+--   Includes English, Simplified Chinese, Traditional Chinese (Taiwan), Japanese and Korean.
+--   Runs offline. The default notebook is the notes folder beside this package.
+--   Settings: Ctrl+,. New note: Ctrl+N. Close: Esc (confirms unsaved changes).
+--   Images use relative attachments/ paths; unused images move to .reafolio-trash.
+--   Includes only runtime files and required license notices.

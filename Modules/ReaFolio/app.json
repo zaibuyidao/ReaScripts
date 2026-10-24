@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "reafolio",
+  "name": "ReaFolio",
+  "version": "0.1.0",
+  "author": "zaibuyidao (based on work by Adam Dullage)",
+  "entry": "index.html"
+}
