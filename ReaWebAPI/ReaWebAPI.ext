@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.6
+@version 0.3.9.10
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,5 +54,5 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Restore SDK-managed JSFX DSP streams and subscriptions after session replacement or transport closure, including preset reset, recompilation and audio-device recovery.
-  Keep valid silent streams connected, bound failed recovery attempts, and cancel recovery on explicit close, editor deactivation or page cleanup.
+  Move JSFX enumeration metadata from parameter.reaweb.enum to parameter.enum.
+  Remove the unused JSFX parameter fields unit and section, and the empty reaweb wrapper. Update SDK types and examples.
