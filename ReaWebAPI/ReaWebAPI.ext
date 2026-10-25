@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.2
+@version 0.3.9.6
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,8 +54,5 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Add live title-bar switching with window.setFrameless(boolean).
-  Add window.setCornerRadius(0..64) with Dock/maximize suspension and floating restoration.
-  Fix Windows frameless border remnants and resizing from all four edges and corners.
-  Add worker-thread fs.moveFile() with explicit source/destination paths, overwrite control and cross-volume moves.
-  Align page context menus with native window menus while retaining custom page menus and hiding browser defaults.
+  Restore SDK-managed JSFX DSP streams and subscriptions after session replacement or transport closure, including preset reset, recompilation and audio-device recovery.
+  Keep valid silent streams connected, bound failed recovery attempts, and cancel recovery on explicit close, editor deactivation or page cleanup.
