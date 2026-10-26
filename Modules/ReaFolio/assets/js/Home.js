@@ -1,1 +1,109 @@
-import{At as e,Bt as t,Ht as n,Mt as r,Pt as i,Qt as a,T as o,_t as s,dt as c,g as l,gt as u,ht as d,mt as f,n as p,rn as m,sn as h,u as g,yt as _}from"./constants.js";import{_ as v,a as y,c as b,d as x,i as S,l as C,n as w,o as T,r as E}from"./index.js";import{t as D}from"./LoadingIndicator.js";var O={class:`home-page flex h-full justify-center`},k={class:`flex w-full max-w-[500px] flex-1 flex-col items-center pt-[25vh]`},A={key:0,class:`mb-2 text-xs font-bold uppercase text-theme-text-very-muted`},j={__name:`Home`,setup(j){let M=w(),N=a(),P=a([]),F=a(``),I=o();function L(){if(M.config.quickAccessHide&&!F.value.trim()){P.value=[],N.value?.setLoaded();return}try{P.value=T(F.value.trim()||M.config.quickAccessTerm,F.value.trim()?`score`:M.config.quickAccessSort,!F.value.trim()&&M.config.quickAccessSort===`title`?`asc`:`desc`,F.value.trim()?void 0:E.recentNotesLimit+1),F.value.trim()&&!P.value.length?N.value?.setFailed(l(`noResults`)):N.value?.setLoaded()}catch(e){N.value?.setFailed(),y(e,I)}}return t(()=>g.revision,L),t(F,L),t(()=>E.recentNotesLimit,L),e(L),(e,t)=>(r(),s(`div`,O,[f(`div`,k,[_(b,{class:`mb-5`}),_(S,{class:`mb-5 shadow-[0_0_20px] shadow-theme-shadow`,"onUpdate:searchTerm":t[0]||(t[0]=e=>F.value=e)}),_(D,{ref_key:`loadingIndicator`,ref:N,class:`home-recent flex min-h-0 flex-col items-center`,hideLoader:``},{default:n(()=>[P.value.length>0?(r(),s(`p`,A,h(m(l)(F.value.trim()?`search`:`recent`)),1)):u(``,!0),(r(!0),s(c,null,i(F.value.trim()?P.value:P.value.slice(0,m(E).recentNotesLimit),e=>(r(),d(m(v),{to:{name:`note`,params:{title:e.title}},class:`mb-1`},{default:n(()=>[_(C,{label:e.title},null,8,[`label`])]),_:2},1032,[`to`]))),256)),!F.value.trim()&&P.value.length>m(E).recentNotesLimit?(r(),d(m(v),{key:1,to:{name:`search`,query:{term:m(M).config.quickAccessTerm,sortBy:m(p)[m(M).config.quickAccessSort]}},title:m(l)(`showMore`)},{default:n(()=>[_(C,{iconPath:m(x)},null,8,[`iconPath`])]),_:1},8,[`to`,`title`])):u(``,!0)]),_:1},512)])]))}};export{j as default};
+import {
+  At as onMounted,
+  Bt as watch,
+  Qt as ref,
+  T as useToast,
+  g as translate,
+  n as searchSortOptions,
+  u as workspaceState,
+  yt as h,
+} from './constants.js';
+import {
+  _ as RouterLink,
+  a as apiErrorHandler,
+  c as Logo,
+  d as moreIcon,
+  i as SearchInput,
+  l as CustomButton,
+  n as useGlobalStore,
+  o as getNotes,
+  r as preferences,
+} from './index.js';
+import {t as LoadingIndicator} from './LoadingIndicator.js';
+
+const Home = {
+  __name: 'Home',
+  setup() {
+    const store = useGlobalStore();
+    const loadingIndicator = ref();
+    const notes = ref([]);
+    const searchTerm = ref('');
+    const toast = useToast();
+    const defaultTerm = () => preferences.homeFilter || store.config.quickAccessTerm || '*';
+    const defaultSort = () => preferences.homeSort || store.config.quickAccessSort || 'lastModified';
+
+    function refresh() {
+      const term = searchTerm.value.trim();
+      if (store.config.quickAccessHide && !term) {
+        notes.value = [];
+        loadingIndicator.value?.setLoaded();
+        return;
+      }
+      try {
+        notes.value = getNotes(
+          term || defaultTerm(),
+          term ? 'score' : defaultSort(),
+          !term && defaultSort() === 'title' ? 'asc' : 'desc',
+          term ? undefined : preferences.recentNotesLimit + 1,
+        );
+        if ((term || preferences.homeFilter) && !notes.value.length) {
+          loadingIndicator.value?.setFailed(translate('noResults'));
+        } else {
+          loadingIndicator.value?.setLoaded();
+        }
+      } catch (error) {
+        loadingIndicator.value?.setFailed();
+        apiErrorHandler(error, toast);
+      }
+    }
+
+    watch([
+      () => workspaceState.revision,
+      searchTerm,
+      () => preferences.recentNotesLimit,
+      () => preferences.homeFilter,
+      () => preferences.homeSort,
+      () => store.config.quickAccessHide,
+      () => store.config.quickAccessTerm,
+      () => store.config.quickAccessSort,
+    ], refresh);
+    onMounted(refresh);
+
+    return () => {
+      const searching = !!searchTerm.value.trim();
+      const heading = searching ? translate('search') : preferences.homeFilter
+        ? translate('homeFilteredNotes') + ': ' + preferences.homeFilter
+        : translate(defaultSort() === 'lastModified' ? 'recent' : 'allNotes');
+      const visibleNotes = searching ? notes.value : notes.value.slice(0, preferences.recentNotesLimit);
+      return h('div', {class: 'home-page flex h-full justify-center'}, [
+        h('div', {class: 'flex w-full max-w-[500px] flex-1 flex-col items-center pt-[25vh]'}, [
+          h(Logo, {class: 'mb-5'}),
+          h(SearchInput, {
+            class: 'mb-5 shadow-[0_0_20px] shadow-theme-shadow',
+            'onUpdate:searchTerm': value => {searchTerm.value = value;},
+          }),
+          h(LoadingIndicator, {
+            ref: loadingIndicator,
+            class: 'home-recent flex min-h-0 flex-col items-center',
+            hideLoader: '',
+          }, {default: () => [
+            notes.value.length ? h('p', {
+              class: 'mb-2 max-w-full break-words text-xs font-bold uppercase text-theme-text-very-muted',
+            }, heading) : null,
+            ...visibleNotes.map(note => h(RouterLink, {
+              key: note.title,
+              to: {name: 'note', params: {title: note.title}},
+              class: 'mb-1',
+            }, {default: () => [h(CustomButton, {label: note.title})]})),
+            !searching && notes.value.length > preferences.recentNotesLimit ? h(RouterLink, {
+              to: {name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]}},
+              title: translate('showMore'),
+            }, {default: () => [h(CustomButton, {iconPath: moreIcon})]}) : null,
+          ]}),
+        ]),
+      ]);
+    };
+  },
+};
+
+export {Home as default};
