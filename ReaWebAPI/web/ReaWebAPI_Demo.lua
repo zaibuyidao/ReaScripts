@@ -4,10 +4,11 @@ local reaper = reaper
 local bridge_apis = {
   "ReaWeb_Open", "ReaWeb_Close", "ReaWeb_IsOpen", "ReaWeb_IsReady",
   "ReaWeb_Send", "ReaWeb_Receive", "ReaWeb_GetDiagnostics", "ReaWeb_GetLastError",
+  "ReaWeb_SetFrame",
 }
 for _, name in ipairs(bridge_apis) do
   if not reaper.APIExists(name) then
-    reaper.MB("Install a ReaWebAPI version with the Lua message bridge and restart REAPER.", "ReaWebAPI", 0)
+    reaper.MB("Install ReaWebAPI v0.3.9.12 or later and restart REAPER.", "ReaWebAPI", 0)
     return
   end
 end
@@ -66,8 +67,9 @@ end
 
 local project, master_guid, selected_track, selected_guid
 local epoch, selection = 0, 0
-local session, previous, next_update = nil, nil, 0
-local received, sent, last_send_error = 0, 0, ""
+local session, previous = nil, nil
+local received, sent, state_skipped, write_skipped, last_send_error = 0, 0, 0, 0, ""
+local frames_written, frame_error = 0, ""
 local function update_context()
   local current = reaper.EnumProjects(-1)
   local master = reaper.GetTrackGUID(reaper.GetMasterTrack(current))
@@ -152,8 +154,9 @@ local function execute(command, value, requested_epoch, requested_selection)
   end
   if command == "diagnostics" then
     return {
-      runtime = reaper.ReaWeb_GetDiagnostics(window), backend = "Lua / reaper.defer",
-      stateIntervalMs = 100, maxMessagesPerTick = 32, received = received, sent = sent,
+      runtime = reaper.ReaWeb_GetDiagnostics(window), backend = "Lua / reaper.defer + extension frame timer",
+      frameWrites = frames_written, frameError = frame_error, maxMessagesPerTick = 32,
+      received = received, sent = sent, stateSkipped = state_skipped, writeSkipped = write_skipped,
       lastSendError = last_send_error, reaperVersion = reaper.GetAppVersion(),
     }
   end
@@ -222,36 +225,96 @@ local function send(value)
   last_send_error = reaper.ReaWeb_GetLastError()
   return false
 end
-local function handle_message(message)
-  -- UI -> Lua: session TAB requestId TAB command TAB epoch TAB selection TAB value.
-  -- Only the first five tabs are separators, so console text can contain tabs/newlines.
-  -- Lua -> UI: JSON responses and state. No JSON decoder or JS API mirror is needed.
+-- Continuous controls are written many times per gesture. Answering each step
+-- with a full snapshot cost about ten REAPER reads per step on top of the write.
+-- The page already receives the same content through the frame channel, so these
+-- replies carry only the confirmed value. Every other command still returns state.
+local continuous = { volume = true, pan = true }
+-- UI -> Lua: session TAB requestId TAB command TAB epoch TAB selection TAB value.
+-- Only the first five tabs are separators, so console text can contain tabs/newlines.
+-- Lua -> UI: JSON responses and state. No JSON decoder or JS API mirror is needed.
+local function parse(message)
   local client, request_id, command, requested_epoch, requested_selection, value =
     message:match("^([%w%-]+)\t(%d+)\t([%w%-]+)\t(%d+)\t(%d+)\t(.*)$")
-  if not client then return end
-  if command == "ready" then
-    session, previous, next_update = client, nil, 0
-  elseif client ~= session then return end
+  if not client then return nil end
+  return {
+    client = client, id = tonumber(request_id), command = command,
+    epoch = tonumber(requested_epoch), selection = tonumber(requested_selection), value = value,
+  }
+end
+-- Every request is answered exactly once, because the page counts outstanding
+-- requests and waits for all of them. A drag step that a newer step of the same
+-- control replaced is answered without touching REAPER: the write it asked for
+-- is already obsolete, and skipping it saves a track write plus an arrange redraw
+-- while the pointer is still moving.
+local function handle_message(request, superseded)
+  if request.command == "ready" then
+    session, previous = request.client, nil
+  elseif request.client ~= session then return end
   received = received + 1
-  local ok, result = pcall(execute, command, value, tonumber(requested_epoch), tonumber(requested_selection))
-  local response = { type = "response", session = client, id = tonumber(request_id), ok = ok }
-  if ok then response.data = result else response.error = tostring(result) end
-  if command ~= "console" then response.state = snapshot() end
+  local response = { type = "response", session = request.client, id = request.id, ok = true }
+  if superseded then
+    response.data = { superseded = true }
+    write_skipped = write_skipped + 1
+  else
+    local ok, result = pcall(execute, request.command, request.value, request.epoch, request.selection)
+    response.ok = ok
+    if ok then response.data = result else response.error = tostring(result) end
+    -- A drag step is already on screen and already in the frame channel, so
+    -- repeating the whole state in its reply only costs REAPER reads.
+    if ok and continuous[request.command] then
+      state_skipped = state_skipped + 1
+    elseif request.command ~= "console" then
+      response.state = snapshot()
+    end
+  end
   send(response)
-  next_update = 0
 end
 local function tick()
+  -- A drag can leave several steps of one control waiting in the queue. Applying
+  -- every step costs a track write plus an arrange redraw each, and only the last
+  -- value is visible, so a batch keeps the newest step per control and answers the
+  -- rest as superseded. Other commands keep their order.
+  local batch, newest = {}, {}
   for _ = 1, 32 do
     local message = reaper.ReaWeb_Receive(window)
     if message == "" then break end
-    handle_message(message)
+    local request = parse(message)
+    -- Unparseable text is ignored, exactly as before.
+    if request then
+      batch[#batch + 1] = request
+      -- Only this window's own steps compete with each other. Counting a step
+      -- from any other document would drop the step this window is waiting for.
+      if continuous[request.command] and request.client == session then
+        newest[request.command] = #batch
+      end
+    end
   end
-  local now = reaper.time_precise()
-  if session and reaper.ReaWeb_IsReady(window) and now >= next_update then
-    local state = snapshot()
-    local encoded = json(state)
-    if encoded ~= previous and send({ type = "state", session = session, state = state }) then previous = encoded end
-    next_update = now + 0.1
+  for index, request in ipairs(batch) do
+    -- Only the last step of a control in this batch reaches REAPER; the earlier
+    -- ones still get a reply, so the page stops waiting for them.
+    local superseded = continuous[request.command] and request.client == session
+      and newest[request.command] ~= index
+    handle_message(request, superseded)
+  end
+  -- Hand the current content to the extension on every pass. The extension owns
+  -- the frame rate and pushes it to the page on its own timer, so the page keeps
+  -- refreshing even when this loop is between defers. Replacing is enough: the
+  -- previous content stays on screen until a newer one arrives, so no queue and
+  -- no per-pass send are needed. The state is read and encoded on every pass;
+  -- only a change is written, so the extension is not asked to replace identical
+  -- content.
+  if session and reaper.ReaWeb_IsReady(window) then
+    local encoded = json(snapshot())
+    if encoded ~= previous then
+      if reaper.ReaWeb_SetFrame(window, encoded) then
+        previous = encoded
+        frames_written = frames_written + 1
+        frame_error = ""
+      else
+        frame_error = reaper.ReaWeb_GetLastError()
+      end
+    end
   end
 end
 local function loop()

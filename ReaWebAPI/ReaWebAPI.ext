@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.10
+@version 0.3.9.12
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -54,5 +54,7 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Move JSFX enumeration metadata from parameter.reaweb.enum to parameter.enum.
-  Remove the unused JSFX parameter fields unit and section, and the empty reaweb wrapper. Update SDK types and examples.
+  Add timer-driven frame events and ReaWeb_SetFrame for native transport samples and replaceable Lua content on Windows, macOS and Linux.
+  Reduce Lua message latency by dispatching pending WebView requests during receive polling.
+  Coalesce Demo volume and pan writes and render the latest frame with requestAnimationFrame.
+  Validate JavaScript event names against native capabilities, including devicesChanged and frame.

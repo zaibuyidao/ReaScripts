@@ -47,7 +47,7 @@
     </section>
     <div class="host-tools"><input id="keyboard-test" type="text" aria-label="Keyboard focus test" placeholder="Type here to test keyboard focus"><button id="diagnostics" class="text-button disclosure-button" type="button" disabled aria-expanded="false" aria-controls="diagnostic-panel"><span>Backend diagnostics</span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg></button></div>
     <section id="diagnostic-panel" class="diagnostic-panel" aria-labelledby="diagnostics" hidden>
-      <div class="diagnostic-heading"><p>Connection and message activity reported by Lua.</p><button id="refresh-diagnostics" class="text-button" type="button" disabled>Refresh snapshot</button></div>
+      <div class="diagnostic-heading"><p>Runtime connection, frame delivery and Lua message activity.</p><button id="refresh-diagnostics" class="text-button" type="button" disabled>Refresh snapshot</button></div>
       <dl class="metrics diagnostic-metrics"><div><dt>WebView backend</dt><dd id="diagnostic-backend">—</dd></div><div><dt>Connection</dt><dd id="diagnostic-stage">—</dd></div><div><dt>REAPER access</dt><dd id="diagnostic-api">—</dd></div><div><dt>Lua messages</dt><dd id="diagnostic-queue">—</dd></div></dl>
       <p id="diagnostic-snapshot" class="diagnostic-caption" role="status"></p>
       <details id="diagnostic-details" hidden><summary>View diagnostic JSON</summary><pre id="diagnostic-output" tabindex="0" aria-label="Diagnostic JSON"></pre></details>

@@ -1,12 +1,19 @@
 'use strict';
-// The page only uses the message bridge. All REAPER APIs run in ReaWebAPI_Demo.lua.
+// Two channels, on purpose. Commands and replies use the message bridge and run
+// in ReaWebAPI_Demo.lua. What the page displays comes from the frame event,
+// which the extension pushes on its own timer: Lua supplies the content, the
+// extension supplies the timing, so a slow defer cannot stall the page.
 const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
 const events = [], busy = new Set(), pending = new Map();
 const session = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-let requestId = 0, backendState = null, connected = false, pageClosed = false, unsubscribe;
+let requestId = 0, backendState = null, connected = false, pageClosed = false, unsubscribe, unsubscribeFrame;
 let observedTrack = null, colorDirty = false;
+// Frames arrive faster than the page should repaint, so keep only the newest one
+// and let the browser's own refresh loop decide when to draw it. The extension
+// timer decides when, Lua decides what.
+let latestFrame = null, drawnFrame = null, renderedLua = null, frameCount = 0;
 const sliders = Object.fromEntries(['volume', 'pan'].map(key => [key, {
-  queued: null, flight: null, editing: false, pendingLog: null, logTimer: null,
+  queued: null, flights: [], editing: false, failed: false, reported: false, pendingLog: null, logTimer: null,
 }]));
 let diagnosticRequest = 0;
 
@@ -151,7 +158,7 @@ function renderState(state) {
   const projectChanged = previous && (previous.epoch !== state.epoch || previous.changeCount !== state.changeCount);
   backendState = state;
   if (selectionChanged) {
-    for (const slider of Object.values(sliders)) { slider.queued = null; slider.editing = false; }
+    for (const slider of Object.values(sliders)) { slider.queued = null; slider.flights.length = 0; slider.editing = false; }
     colorDirty = false;
   }
   if (projectChanged) invalidateProject();
@@ -162,12 +169,44 @@ function renderState(state) {
   ui['track-name'].textContent = track ? track.name : 'No track selected.';
   ui['track-count'].textContent = `${state.count} ${state.count === 1 ? 'track' : 'tracks'} in project`;
   for (const [key, slider] of Object.entries(sliders)) {
-    if (selectionChanged || (!slider.editing && !slider.flight && !slider.queued)) showSlider(key, track ? track[key] : 0);
+    if (selectionChanged || (!slider.editing && !slider.flights.length && !slider.queued)) showSlider(key, track ? track[key] : 0);
   }
   if (selectionChanged || (!colorDirty && !busy.has('color'))) ui['track-color'].value = track ? track.hex : '#b7f58a';
   ui['color-state'].textContent = !track ? 'No track selected' : track.color ? 'Custom track color' : 'Default track color';
   ui.version.textContent = `REAPER ${state.version} / Lua backend`;
   observeTrack(state); controls();
+}
+function onFrame(frame) {
+  if (pageClosed || !frame) return;
+  frameCount += 1;
+  latestFrame = frame;
+}
+// Transport readouts are pushed by the extension itself, so they keep moving
+// even when Lua is between defers. That is the visible proof the frame channel
+// is running.
+function renderTransport(frame) {
+  // Each field is optional: the extension drops one when REAPER lacks the
+  // function. Render what arrived and leave the rest showing its last value
+  // rather than inventing a zero.
+  if (typeof frame.tempo === 'number') ui.tempo.textContent = `${frame.tempo.toFixed(2)} BPM`;
+  if (typeof frame.playing === 'number' && typeof frame.position === 'number') {
+    const status = frame.playing & 4 ? 'Recording' : frame.playing & 2 ? 'Paused' : frame.playing & 1 ? 'Playing' : 'Stopped';
+    ui['play-state'].textContent = `${status} · ${frame.position.toFixed(2)} s`;
+  }
+  if (typeof frame.cursor === 'number') ui['cursor-position'].textContent = `${frame.cursor.toFixed(3)} s`;
+}
+function draw() {
+  requestAnimationFrame(draw);
+  const frame = latestFrame;
+  if (pageClosed || !frame || frame === drawnFrame) return;
+  drawnFrame = frame;
+  renderTransport(frame);
+  // Lua's own content is an opaque JSON string. Redraw only when it actually
+  // changed, so an idle page costs nothing even though frames keep arriving.
+  if (typeof frame.lua !== 'string' || frame.lua === renderedLua) return;
+  renderedLua = frame.lua;
+  try { renderState(JSON.parse(frame.lua)); }
+  catch (error) { report(error); }
 }
 function receive(text) {
   if (pageClosed) return;
@@ -212,49 +251,67 @@ ui['log-reaper'].addEventListener('change', () => {
   log(ui['log-reaper'].checked ? 'REAPER console output enabled.' : 'REAPER console output disabled.', 'info', 'LOG');
 });
 
-function pumpSlider(key) {
+// A drag step no longer waits for the previous reply. Waiting added a whole round
+// trip (one Lua defer plus the reply) to every step, which is what made REAPER's
+// own fader trail behind the pointer. The host queue holds 256 messages per
+// direction and rejects the rest, so a long drag keeps at most this many writes
+// in flight and only the newest pending value beyond that.
+const maxSliderFlights = 8;
+function sendSlider(key, value, context) {
   const slider = sliders[key];
-  if (slider.flight || !slider.queued) return;
-  const next = slider.queued; slider.queued = null;
-  slider.flight = (async () => {
-    try { await request(key, next.value, next.context); }
+  const flight = (async () => {
+    try { await request(key, value, context); }
     catch (error) {
-      // A stale request must not discard a new gesture on another track.
-      if (next.context.epoch === backendState?.epoch && next.context.selection === backendState?.selection) {
-        slider.queued = null; slider.editing = false;
-      }
-      report(error);
-    } finally {
-      slider.flight = null;
-      if (slider.queued) pumpSlider(key);
-      else if (!slider.editing && !pageClosed) showSlider(key, backendState?.track?.[key] ?? 0);
+      // A stale write must not discard a new gesture on another track.
+      if (context.epoch === backendState?.epoch && context.selection === backendState?.selection) slider.editing = false;
+      // One gesture fails for one reason; report it once, not once per step.
+      slider.failed = true;
+      if (!slider.reported) { slider.reported = true; report(error); }
     }
   })();
+  slider.flights.push(flight);
+  flight.finally(() => {
+    const index = slider.flights.indexOf(flight);
+    if (index >= 0) slider.flights.splice(index, 1);
+    pumpSlider(key);
+    // A failed write leaves the control showing a value REAPER never took, so
+    // only that case repaints from the last known state. A successful gesture
+    // keeps the value under the pointer until a frame confirms it; repainting
+    // from an older snapshot here would snap the control back for one frame.
+    if (slider.failed && !slider.flights.length && !slider.queued && !pageClosed)
+      showSlider(key, backendState?.track?.[key] ?? 0);
+  });
+}
+function pumpSlider(key) {
+  const slider = sliders[key];
+  while (slider.queued && slider.flights.length < maxSliderFlights) {
+    const next = slider.queued; slider.queued = null;
+    sendSlider(key, next.value, next.context);
+  }
 }
 async function drainSlider(key) {
   const slider = sliders[key];
-  while (slider.flight || slider.queued) { pumpSlider(key); await slider.flight; }
+  while (slider.flights.length || slider.queued) { pumpSlider(key); await Promise.all(slider.flights); }
   flushSliderLog(key);
 }
 for (const [key, slider] of Object.entries(sliders)) {
   ui[key].addEventListener('input', () => {
     if (!connected || !backendState?.track || ui[key].disabled) return;
+    // A new gesture starts clean: one failure report and one repaint at most.
+    if (!slider.editing) { slider.failed = false; slider.reported = false; }
     slider.editing = true;
     const value = sliderValue(key);
     showSlider(key, value);
-    // Each control keeps one request in flight and only its latest queued value.
     slider.queued = { value, context: backendState };
     pumpSlider(key);
   });
   ui[key].addEventListener('change', () => {
     slider.editing = false;
-    void drainSlider(key).then(() => {
-      if (!pageClosed && !slider.editing) showSlider(key, backendState?.track?.[key] ?? 0);
-    }).catch(report);
+    void drainSlider(key).then(() => { slider.failed = false; slider.reported = false; }).catch(report);
   });
   ui[key].addEventListener('blur', () => {
     slider.editing = false;
-    if (!slider.flight && !slider.queued) showSlider(key, backendState?.track?.[key] ?? 0);
+    if (slider.failed && !slider.flights.length && !slider.queued) showSlider(key, backendState?.track?.[key] ?? 0);
   });
 }
 for (const [id, key, label] of [['reset-volume', 'volume', 'Volume reset to 0 dB'], ['center-pan', 'pan', 'Center Pan applied']]) {
@@ -324,8 +381,8 @@ async function readDiagnostics() {
     const runtime = JSON.parse(text);
     ui['diagnostic-backend'].textContent = runtime.backend || '—';
     ui['diagnostic-stage'].textContent = `${runtime.stage || 'ready'} · Lua connected`;
-    ui['diagnostic-api'].textContent = backend.backend;
-    ui['diagnostic-queue'].textContent = `${backend.received} received · ${backend.sent} sent`;
+    ui['diagnostic-api'].textContent = `${backend.backend} · ${frameCount} frames received`;
+    ui['diagnostic-queue'].textContent = `${backend.received} received · ${backend.sent} sent · ${backend.frameWrites ?? 0} frame writes · ${backend.writeSkipped ?? 0} drag steps skipped · ${backend.stateSkipped ?? 0} replies without state`;
     ui['diagnostic-output'].textContent = JSON.stringify({ backend, runtime }, null, 2);
     ui['diagnostic-details'].hidden = false;
     ui['diagnostic-snapshot'].textContent = `Snapshot updated at ${new Date().toLocaleTimeString()}. Refresh to read again.`;
@@ -355,12 +412,13 @@ ui['refresh-diagnostics'].addEventListener('click', () => {
 window.addEventListener('pagehide', () => {
   pageClosed = true; connected = false; ++diagnosticRequest;
   for (const slider of Object.values(sliders)) {
-    slider.queued = null; slider.editing = false;
+    slider.queued = null; slider.flights.length = 0; slider.editing = false;
     clearTimeout(slider.logTimer); slider.logTimer = null; slider.pendingLog = null;
   }
   for (const entry of pending.values()) { clearTimeout(entry.timer); entry.reject(new Error('Page closed.')); }
   pending.clear();
   if (unsubscribe) void Promise.resolve(unsubscribe()).catch(() => {});
+  if (unsubscribeFrame) void Promise.resolve(unsubscribeFrame()).catch(() => {});
 });
 
 async function start() {
@@ -369,13 +427,18 @@ async function start() {
     if (!window.reaper?.host?.send || !window.reaper?.events?.on)
       throw new Error('Load ReaWebAPI_Demo.lua from the REAPER Action List with a ReaWebAPI version that supports host messages.');
     unsubscribe = await window.reaper.events.on('message', receive);
+    // The frame subscription is what makes the page refresh on the extension's
+    // timer instead of waiting for Lua. Without it the page only moves when Lua
+    // happens to send, which is the stutter this replaces.
+    unsubscribeFrame = await window.reaper.events.on('frame', onFrame);
+    requestAnimationFrame(draw);
     // Subscribe first. Each page reload gets its own session and fresh Lua snapshot.
     const response = await request('ready');
     if (pageClosed) return;
     connected = true; controls();
     ui.status.textContent = 'Lua connected'; ui.status.classList.add('connected');
     renderProject({ ...response, data: response.data.project });
-    log('Connected to Lua. Selection and project changes update through the defer loop.');
+    log('Connected to Lua. The page refreshes on the extension frame timer; Lua supplies the content.');
   } catch (error) {
     if (pageClosed) return;
     connected = false; controls(); ui.status.textContent = 'Lua unavailable'; report(error);
