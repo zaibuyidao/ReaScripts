@@ -84,7 +84,7 @@ local L = require('lib.locales')
 local Freesound = require ('lib.freesound')
 -- Inline source PCM spectrum: ReaPack's Soundmole source list is explicit.
 local SourceSpectrum = (function()
-  -- Source-only mini-spectrum for Soundmole. No track, hardware-output, or microphone tap.
+  -- 仅分析 Soundmole 当前预览文件 PCM，不读取 REAPER 的输出信号。
   -- At the native source sample rate, PCM_Source_GetPeaks returns individual
   -- waveform samples (max == min). Refuse lower-resolution peak envelopes.
   local M = {}
@@ -2758,7 +2758,7 @@ do
 
   function Section_SourceSpectrum()
     local changed, enabled = reaper.ImGui_Checkbox(ctx,
-      T("Analyze original preview source (ignores microphone and track FX)"),
+      T("Analyze original preview file instead of output signal"),
       spectrum_mini.source_enabled)
     if changed then
       spectrum_mini.source_enabled = enabled

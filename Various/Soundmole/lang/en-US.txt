@@ -1,7 +1,7 @@
 # @noindex
 # English Language Pack
 Spectrum Analyzer=Spectrum Analyzer
-Analyze original preview source (ignores microphone and track FX)=Analyze original preview source (ignores microphone and track FX)
+Analyze original preview file instead of output signal=Analyze original preview file instead of output signal
 Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included.=Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included.
 Original preview source spectrum (before track FX)=Original preview source spectrum (before track FX)
 Real-time output spectrum=Real-time output spectrum
