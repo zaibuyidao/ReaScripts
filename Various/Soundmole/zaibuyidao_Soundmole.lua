@@ -82,6 +82,164 @@ require ('lib.utils')
 MIDI = require('lib.midi')
 local L = require('lib.locales')
 local Freesound = require ('lib.freesound')
+-- Inline source PCM spectrum: ReaPack's Soundmole source list is explicit.
+local SourceSpectrum = (function()
+  -- Source-only mini-spectrum for Soundmole. No track, hardware-output, or microphone tap.
+  -- At the native source sample rate, PCM_Source_GetPeaks returns individual
+  -- waveform samples (max == min). Refuse lower-resolution peak envelopes.
+  local M = {}
+
+  local FFT_SIZE = 4096
+  local INTERVAL = 0.08
+  local MIN_HZ = 30
+  local MAX_CHANNELS = 8
+  local LOG10 = math.log(10)
+
+  function M.new(band_count)
+    local state = {
+      band_count = band_count or 31,
+      levels = {},
+      last_time = 0,
+      sample_buf = nil,
+      fft_buf = reaper.new_array(FFT_SIZE),
+      window = {},
+      mapped_bins = {},
+      mapped_rate = nil,
+      source = nil,
+      preview = nil,
+      last_error = nil,
+    }
+
+    for i = 1, state.band_count do state.levels[i] = 0 end
+    for i = 1, FFT_SIZE do
+      state.window[i] = 0.54 - 0.46 * math.cos(2 * math.pi * (i - 1) / (FFT_SIZE - 1))
+    end
+
+    function state:reset()
+      for i = 1, self.band_count do self.levels[i] = 0 end
+      self.last_time = 0
+      self.source = nil
+      self.preview = nil
+      self.last_error = nil
+    end
+
+    function state:map_bins(sample_rate)
+      if self.mapped_rate == sample_rate then return end
+      local nyquist = sample_rate * 0.5
+      local top = math.log(math.max(nyquist, MIN_HZ + 1) / MIN_HZ)
+      for k = 1, FFT_SIZE / 2 - 1 do
+        local hz = k * sample_rate / FFT_SIZE
+        local pos = math.log(math.max(hz, MIN_HZ) / MIN_HZ) / top
+        self.mapped_bins[k] = math.min(self.band_count,
+          math.max(1, math.floor(pos * self.band_count) + 1))
+      end
+      self.mapped_rate = sample_rate
+    end
+
+    function state:tick(preview, source, paused, play_rate, source_offset)
+      if not preview or not source or paused or not reaper.CF_Preview_GetValue then
+        self:reset()
+        return self.levels
+      end
+
+      local now = reaper.time_precise()
+      if source ~= self.source or preview ~= self.preview then
+        self.source = source
+        self.preview = preview
+        self.last_time = 0
+      end
+      if self.last_time > 0 and now - self.last_time < INTERVAL then
+        return self.levels
+      end
+      self.last_time = now
+
+      local ok_pos, playback_pos = reaper.CF_Preview_GetValue(preview, "D_POSITION")
+      if not ok_pos or not playback_pos then
+        self:reset()
+        return self.levels
+      end
+
+      -- Source-only PCM excludes the preview gain stage. Read its scalar volume
+      -- separately so muted previews do not display a misleading active spectrum.
+      local ok_volume, volume = reaper.CF_Preview_GetValue(preview, "D_VOLUME")
+      local preview_gain = (ok_volume and tonumber(volume)) or 1
+      preview_gain = math.max(0, preview_gain)
+      if preview_gain == 0 then
+        for i = 1, self.band_count do self.levels[i] = 0 end
+        self.last_error = nil
+        return self.levels
+      end
+
+      local rate = tonumber(play_rate) or 1
+      local source_pos = math.max(0, playback_pos * math.max(0.01, rate) + (tonumber(source_offset) or 0))
+      local sample_rate = tonumber(reaper.GetMediaSourceSampleRate(source)) or 0
+      local channels = tonumber(reaper.GetMediaSourceNumChannels(source)) or 0
+      if sample_rate <= 0 or channels <= 0 then
+        for i = 1, self.band_count do self.levels[i] = 0 end
+        self.last_error = "No source sample rate or channel count"
+        return self.levels
+      end
+      channels = math.min(channels, MAX_CHANNELS)
+      self:map_bins(sample_rate)
+      if not self.sample_buf or self.buf_channels ~= channels then
+        self.sample_buf = reaper.new_array(FFT_SIZE * channels * 2)
+        self.buf_channels = channels
+      end
+
+      local ok, value = pcall(reaper.PCM_Source_GetPeaks,
+        source, sample_rate, source_pos, channels, FFT_SIZE, 0, self.sample_buf)
+      if not ok or type(value) ~= "number" then
+        for i = 1, self.band_count do self.levels[i] = 0 end
+        self.last_error = tostring(value)
+        return self.levels
+      end
+      local count = value & 0xFFFFF
+      local output_mode = (value >> 20) & 0xF
+      -- Output mode 1 is individual waveform samples. Never FFT peak envelopes.
+      if count <= 0 or output_mode ~= 1 then
+        self.last_error = "No full-resolution PCM samples returned"
+        for i = 1, self.band_count do self.levels[i] = 0 end
+        return self.levels
+      end
+
+      local maxima = {}
+      for i = 1, self.band_count do maxima[i] = 0 end
+      local fft = self.fft_buf
+      local samples = self.sample_buf
+      for channel = 1, channels do
+        for i = 1, FFT_SIZE do
+          local sample = i <= count and samples[(i - 1) * channels + channel] or 0
+          fft[i] = sample * self.window[i]
+        end
+        -- ReaScript arrays use dot syntax for FFT (not colon syntax).
+        fft.fft_real(FFT_SIZE, true)
+        for k = 1, FFT_SIZE / 2 - 1 do
+          local real, imaginary = fft[k * 2 + 1], fft[k * 2 + 2]
+          local amplitude = (math.sqrt(real * real + imaginary * imaginary) * 4 / FFT_SIZE) * preview_gain
+          local band = self.mapped_bins[k]
+          if amplitude > maxima[band] then maxima[band] = amplitude end
+        end
+      end
+
+      for band = 1, self.band_count do
+        local amplitude = maxima[band]
+        if amplitude < 0.000001 then
+          self.levels[band] = 0
+        else
+          -- Fixed -96 dBFS floor retains brief transient energy.
+          local level = (20 * math.log(amplitude) / LOG10 + 96) / 96
+          self.levels[band] = math.max(0, math.min(1, level))
+        end
+      end
+      self.last_error = nil
+      return self.levels
+    end
+
+    return state
+  end
+
+  return M
+end)()
 local trans_status, trans_result = pcall(require, "lib.translation")
 local Translator = nil
 if trans_status then
@@ -645,9 +803,18 @@ local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
 local MINI_SPECTRUM_BANDS = 31 -- 扩展支持 8-64，默认31
 local MINI_SPECTRUM_DISPLAY_GAIN = 1.5 -- 仅放大显示，使频段达到满格，不改变实际音量
-MINI_SPECTRUM_BANDS = reaper.SM_Spectrum_SetBandCount(MINI_SPECTRUM_BANDS)
-local spectrum_mini = { levels = {}, last_t = 0 } -- 最终硬件输出的真实 FFT 频谱
-reaper.SM_Spectrum_SetEnabled(true)
+local spectrum_mini = {
+  levels = {}, last_t = 0,
+  source = SourceSpectrum.new(MINI_SPECTRUM_BANDS),
+  source_enabled = SM_GetState(EXT_SECTION, "preview_source_spectrum") == "1",
+  native_available = type(reaper.SM_Spectrum_SetEnabled) == "function"
+    and type(reaper.SM_Spectrum_GetBand) == "function"
+    and type(reaper.SM_Spectrum_GetBandCount) == "function",
+}
+if spectrum_mini.native_available then
+  MINI_SPECTRUM_BANDS = reaper.SM_Spectrum_SetBandCount(MINI_SPECTRUM_BANDS) or MINI_SPECTRUM_BANDS
+  reaper.SM_Spectrum_SetEnabled(not spectrum_mini.source_enabled)
+end
 local last_manual_wave_zoom_time = 0 -- 手动缩放后短暂抑制自动滚屏覆盖鼠标锚点
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
@@ -2589,6 +2756,23 @@ do
     end
   end
 
+  function Section_SourceSpectrum()
+    local changed, enabled = reaper.ImGui_Checkbox(ctx,
+      T("Analyze original preview source (ignores microphone and track FX)"),
+      spectrum_mini.source_enabled)
+    if changed then
+      spectrum_mini.source_enabled = enabled
+      if spectrum_mini.native_available then
+        reaper.SM_Spectrum_SetEnabled(not enabled)
+      end
+      ResetMiniSpectrum()
+      SM_SetState(EXT_SECTION, "preview_source_spectrum", enabled and "1" or "0", true)
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      DrawTooltip(T("Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included."))
+    end
+  end
+
   function Section_WaveformPreview()
     reaper.ImGui_Text(ctx, T("Waveform Preview Settings:"))
 
@@ -2976,6 +3160,10 @@ do
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
       preserve_pitch       = true
+      spectrum_mini.source_enabled = false
+      if spectrum_mini.native_available then reaper.SM_Spectrum_SetEnabled(true) end
+      ResetMiniSpectrum()
+      SM_SetState(EXT_SECTION, "preview_source_spectrum", "0", true)
       bg_alpha             = 1.0
       peak_chans           = 6
       font_size            = 14
@@ -3102,6 +3290,8 @@ do
         Section_PlaybackCtrl()
         DrawSubTitle(T("Waveform Preview"))
         Section_WaveformPreview()
+        DrawSubTitle(T("Spectrum Analyzer"))
+        Section_SourceSpectrum()
       end
     },
 
@@ -7707,6 +7897,7 @@ end
 --------------------------------------------- mini 频谱视觉反馈 ---------------------------------------------
 
 function ResetMiniSpectrum()
+  spectrum_mini.source:reset()
   for i = 1, #(spectrum_mini.levels or {}) do
     spectrum_mini.levels[i] = 0
   end
@@ -7725,7 +7916,19 @@ function DrawMiniSpectrumAnalyzer(ctx, width)
   if dt > 0.12 then dt = 0.12 end
   spectrum_mini.last_t = now
 
-  local band_count = reaper.SM_Spectrum_GetBandCount()
+  local band_count = MINI_SPECTRUM_BANDS
+  local source_levels
+  if spectrum_mini.source_enabled then
+    local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
+    local offset = (__rate_cursor_preview == playing_preview) and (__rate_cursor_offset or 0) or 0
+    source_levels = spectrum_mini.source:tick(playing_preview, playing_source, is_paused, rate, offset)
+  else
+    source_levels = {}
+    if spectrum_mini.native_available then
+      band_count = reaper.SM_Spectrum_GetBandCount()
+      for i = 1, band_count do source_levels[i] = reaper.SM_Spectrum_GetBand(i - 1) end
+    end
+  end
   local bars = math.max(1, math.min(band_count, math.floor((width + 1) / 3)))
   local gap = 1
   local bar_w = math.max(2, math.floor((width - (bars - 1) * gap) / bars))
@@ -7738,7 +7941,7 @@ function DrawMiniSpectrumAnalyzer(ctx, width)
   for i = 1, bars do
     local ratio = (i - 1) / math.max(1, bars - 1)
     local band = math.min(band_count - 1, math.floor((i - 1) * band_count / bars))
-    local target = math.max(0, math.min(1, reaper.SM_Spectrum_GetBand(band) * MINI_SPECTRUM_DISPLAY_GAIN))
+    local target = math.max(0, math.min(1, (source_levels[band + 1] or 0) * MINI_SPECTRUM_DISPLAY_GAIN))
     local cur = spectrum_mini.levels[i] or 0
     if target > cur then
       cur = cur + (target - cur) * 0.55
@@ -7761,7 +7964,9 @@ function DrawMiniSpectrumAnalyzer(ctx, width)
 
   reaper.ImGui_Dummy(ctx, width, height)
   if reaper.ImGui_IsItemHovered(ctx) then
-    DrawTooltip("Real-time output spectrum")
+    DrawTooltip(spectrum_mini.source_enabled
+      and T("Original preview source spectrum (before track FX)")
+      or T("Real-time output spectrum"))
   end
 end
 
@@ -25390,7 +25595,7 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
-  reaper.SM_Spectrum_SetEnabled(false)
+  if spectrum_mini.native_available then reaper.SM_Spectrum_SetEnabled(false) end
   if media_analysis_task and media_analysis_task.handle and type(reaper.SM_DB_AnalyzeMediaRelease) == "function" then
     reaper.SM_DB_AnalyzeMediaRelease(media_analysis_task.handle)
     media_analysis_task = nil
