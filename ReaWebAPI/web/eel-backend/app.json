@@ -1,0 +1,6 @@
+{
+  "id": "reawebapi-eel-backend",
+  "name": "EEL2 Backend",
+  "version": "1.0.0",
+  "entry": "index.html"
+}

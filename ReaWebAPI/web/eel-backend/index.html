@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EEL2 Backend · ReaWebAPI</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">REAWEBAPI · EEL2 BACKEND</p>
+    <h1>Selected track</h1>
+    <p id="name" aria-live="polite">Click the button to read the selected track.</p>
+    <button id="refresh" type="button" disabled>Read selected track</button>
+    <fieldset id="controls" disabled>
+      <label for="volume">Volume <output id="volume-value">0.0 dB</output></label>
+      <input id="volume" type="range" min="0" max="4" step="0.001" value="1">
+    </fieldset>
+    <p id="error" role="alert"></p>
+    <p id="status" role="status">Connecting to EEL2…</p>
+  </main>
+</body>
+</html>

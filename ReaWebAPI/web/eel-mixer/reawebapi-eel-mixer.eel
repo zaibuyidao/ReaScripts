@@ -1,0 +1,142 @@
+// @noindex
+// Requires REAPER 6.24+ and ReaWebAPI installed.
+// @description ReaWebAPI: EEL2 selected-track mixer
+
+function cleanup() (
+  ReaWeb_Close(window_id);
+  GetExtState(#owner, "ReaWebAPI.EELBackends", #filename);
+  !strcmp(#owner, #window_id) ? DeleteExtState("ReaWebAPI.EELBackends", #filename, 0);
+);
+
+function update_context() local(project) (
+  project = EnumProjects(-1, #project_path);
+  GetTrackGUID(#master_guid, GetMasterTrack(0));
+  track = GetSelectedTrack(0, 0);
+  track ? GetTrackGUID(#guid, track) : #guid = "-";
+  project != previous_project || strcmp(#master_guid, #previous_master) ||
+    track != previous_track || strcmp(#guid, #previous_guid) ? (
+    context += 1;
+    previous_project = project; previous_track = track;
+    strcpy(#previous_master, #master_guid); strcpy(#previous_guid, #guid);
+    force_state = 1;
+  );
+);
+
+function snapshot() local(color, r, g, b) (
+  update_context();
+  track ? (
+    GetTrackName(track, #name);
+    color = GetTrackColor(track);
+    ColorFromNative(color, r, g, b);
+    sprintf(#state, "%d %s %.9f %.9f %d %d %d %d %d %d\n%s", context, #guid,
+      GetMediaTrackInfo_Value(track, "D_VOL"), GetMediaTrackInfo_Value(track, "D_PAN"),
+      r, g, b, color != 0, GetMediaTrackInfo_Value(track, "B_MUTE"),
+      GetMediaTrackInfo_Value(track, "I_SOLO"), #name);
+  ) : sprintf(#state, "%d - 0 0 0 0 0 0 0 0\n", context);
+  strlen(#session) && (force_state || strcmp(#state, #last_state)) ? (
+    revision += 1;
+    sprintf(#out, "state %s %d %s", #session, revision, #state);
+    ReaWeb_SetFrame(window_id, #out) ? (strcpy(#last_state, #state); force_state = 0;);
+  );
+);
+
+// client requestId command context trackGUID arguments
+function parse() (
+  match("%S %d %S %d %S %s", #message, #client, request_id, #verb, requested_context, #target, #args);
+);
+
+function command(superseded) local(value, r, g, b, changed, actual) (
+  !strcmp(#verb, "ready") ? strcpy(#session, #client);
+  !strcmp(#client, #session) ? (
+    update_context();
+    #status = "invalid"; actual = 0; changed = 0;
+    !strcmp(#verb, "ready") ? #status = "ok" : (
+      !track || requested_context != context || strcmp(#target, #guid) ? #status = "stale" : (
+        superseded ? #status = "superseded" : (
+          #parameter = "";
+          !strcmp(#verb, "volume") && match("%f", #args, value) && value >= 0 && value <= 4 ? #parameter = "D_VOL";
+          !strcmp(#verb, "pan") && match("%f", #args, value) && value >= -1 && value <= 1 ? #parameter = "D_PAN";
+          !strcmp(#verb, "mute") && match("%d", #args, value) && (value == 0 || value == 1) ? #parameter = "B_MUTE";
+          !strcmp(#verb, "solo") && match("%d", #args, value) && (value == 0 || value == 2) ? #parameter = "I_SOLO";
+          strlen(#parameter) ? (
+            changed = SetMediaTrackInfo_Value(track, #parameter, value);
+            actual = GetMediaTrackInfo_Value(track, #parameter);
+            #status = changed && abs(actual - value) < 0.000001 ? "ok" : "readback";
+          );
+          !strcmp(#verb, "color") && match("%d %d %d", #args, r, g, b) &&
+            min(r, min(g, b)) >= 0 && max(r, max(g, b)) <= 255 ? (
+            value = ColorToNative(r, g, b);
+            SetTrackColor(track, value); changed = 1;
+            #status = GetTrackColor(track) == (value | 0x1000000) ? "ok" : "readback";
+          );
+          !strcmp(#verb, "reset-color") ? (
+            changed = SetMediaTrackInfo_Value(track, "I_CUSTOMCOLOR", 0);
+            #status = changed && GetTrackColor(track) == 0 ? "ok" : "readback";
+          );
+          changed ? (UpdateArrange(); Undo_OnStateChangeEx("EEL2 track mixer", 1, -1););
+        );
+      );
+    );
+    revision += 1;
+    sprintf(#reply, "ack %s %d %d %d %s %s %.9f", #client, request_id, revision, context, #guid, #status, actual);
+    force_state = 1;
+  );
+);
+
+function collect() (
+  batch_count = 0; batch_index = 0; newest_volume = -1; newest_pan = -1;
+  update_context();
+  ReaWeb_Receive(#message, window_id);
+  while (strlen(#message) && batch_count < 32) (
+    // Fixed string slots 0..31 hold one bounded batch.
+    strcpy(batch_count, #message);
+    parse() && !strcmp(#client, #session) && requested_context == context && !strcmp(#target, #guid) ? (
+      !strcmp(#verb, "volume") ? newest_volume = batch_count;
+      !strcmp(#verb, "pan") ? newest_pan = batch_count;
+    );
+    batch_count += 1;
+    batch_count < 32 ? ReaWeb_Receive(#message, window_id);
+  );
+);
+
+function flush_reply() (
+  !strlen(#reply) ? 1 : ReaWeb_Send(window_id, #reply) ? (#reply = ""; 1;) : 0;
+);
+
+function poll() local(blocked, superseded) (
+  ReaWeb_IsOpen(window_id) ? (
+    ReaWeb_IsReady(window_id) ? (
+      // Retain a rejected reply and stop consuming requests until it is queued.
+      blocked = !flush_reply();
+      !blocked ? (
+        batch_index >= batch_count ? collect();
+        while (!blocked && batch_index < batch_count) (
+          strcpy(#message, batch_index);
+          parse() ? (
+            superseded = (!strcmp(#verb, "volume") && batch_index < newest_volume) ||
+              (!strcmp(#verb, "pan") && batch_index < newest_pan);
+            command(superseded);
+          );
+          batch_index += 1;
+          blocked = !flush_reply();
+        );
+      );
+      snapshot();
+    );
+    defer("poll();");
+  );
+);
+
+get_action_context(#filename, section, command_id, mode, resolution, value);
+offset = strlen(#filename);
+while (offset > 0 && str_getchar(#filename, offset - 1) != '/' && str_getchar(#filename, offset - 1) != '\\') (offset -= 1;);
+strncpy(#path, #filename, offset); strcat(#path, "index.html");
+window_id = ReaWeb_Open(#path, #filename);
+window_id ? (
+  sprintf(#window_id, "%d", window_id);
+  GetExtState(#owner, "ReaWebAPI.EELBackends", #filename);
+  strcmp(#owner, #window_id) ? (
+    SetExtState("ReaWebAPI.EELBackends", #filename, #window_id, 0);
+    atexit("cleanup();"); force_state = 1; poll();
+  );
+) : (ReaWeb_GetLastError(#error); ShowMessageBox(#error, "ReaWebAPI", 0););

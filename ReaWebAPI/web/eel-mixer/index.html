@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EEL2 Track Mixer</title>
+<link rel="stylesheet" href="style.css">
+<main>
+  <p class="eyebrow">ReaWebAPI · EEL2 backend</p>
+  <h1>Track mixer</h1>
+  <p id="name" aria-live="polite">Connecting…</p>
+  <fieldset id="controls" disabled>
+    <label for="volume">Volume <output id="volume-value">0 dB</output></label>
+    <input id="volume" type="range" min="0" max="4" step="0.001" value="1">
+    <label for="pan">Pan <output id="pan-value">Center</output></label>
+    <input id="pan" type="range" min="-1" max="1" step="0.01" value="0">
+    <div class="row"><button id="mute" aria-pressed="false">Mute</button><button id="solo" aria-pressed="false">Solo</button></div>
+    <div class="row"><label for="color">Track color</label><input id="color" type="color" value="#808080"><button id="reset-color">Default</button></div>
+    <p id="color-state"></p>
+  </fieldset>
+  <p class="hint">Select a track in REAPER. Changes sync in both directions.</p>
+  <p id="error" role="alert"></p>
+</main>
+<script src="app.js" defer></script>
+</html>

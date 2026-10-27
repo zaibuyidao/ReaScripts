@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.13
+@version 0.3.9.14
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -13,6 +13,20 @@
   [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
   [script nomain] web/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.json
+  [script nomain] web/eel-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/README.md
+  [script nomain] web/eel-backend/README.zh-CN.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/README.zh-CN.md
+  [script nomain] web/eel-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/app.js
+  [script nomain] web/eel-backend/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/app.json
+  [script nomain] web/eel-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/index.html
+  [script main] web/eel-backend/reawebapi-eel-backend.eel https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/reawebapi-eel-backend.eel
+  [script nomain] web/eel-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/style.css
+  [script nomain] web/eel-mixer/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/README.md
+  [script nomain] web/eel-mixer/README.zh-CN.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/README.zh-CN.md
+  [script nomain] web/eel-mixer/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/app.js
+  [script nomain] web/eel-mixer/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/app.json
+  [script nomain] web/eel-mixer/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/index.html
+  [script main] web/eel-mixer/reawebapi-eel-mixer.eel https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/reawebapi-eel-mixer.eel
+  [script nomain] web/eel-mixer/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/style.css
   [script nomain] web/external-client/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/README.md
   [script nomain] web/external-client/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/app.js
   [script nomain] web/external-client/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/index.html
@@ -54,4 +68,5 @@
   [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
   [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Fixed a version mismatch error caused by an outdated WebKit helper in the Linux x86_64 ReaPack package.
+  Fixed ReaWeb_Open optional boolean compatibility for Lua and EEL2 while preserving window reuse behavior.
+  Added EEL2 WebView examples for bidirectional messaging and track volume, pan, color, mute, and solo control.

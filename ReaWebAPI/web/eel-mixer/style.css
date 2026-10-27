@@ -1,0 +1,15 @@
+:root { color-scheme: dark; font: 15px/1.5 system-ui, sans-serif; background: #161a20; color: #e8edf5; }
+body { margin: 0; padding: 28px; }
+main { max-width: 560px; margin: auto; }
+h1 { margin: 4px 0 20px; font-size: 28px; }
+.eyebrow, .hint, #color-state { color: #98a6bc; font-size: 13px; }
+#name { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 4px solid #8797b1; padding-left: 12px; }
+fieldset { border: 0; padding: 12px 0; min-width: 0; }
+label { display: block; }
+output { float: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; margin: 12px 0 26px; accent-color: #85b9ff; }
+.row { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+button { padding: 8px 16px; border: 1px solid #51617a; border-radius: 6px; background: #242c38; color: inherit; cursor: pointer; }
+button[aria-pressed="true"] { background: #426b9d; border-color: #85b9ff; }
+fieldset:disabled { opacity: .45; }
+#error { color: #ffb0a9; }
