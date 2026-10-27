@@ -2,6 +2,9 @@
 # English Language Pack
 Spectrum Analyzer=Spectrum Analyzer
 Analyze original preview file instead of output signal=Analyze original preview file instead of output signal
-Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included.=Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included.
+Source spectrum uses original PCM, not the processed output. Optional pitch mapping is approximate.=Source spectrum uses original PCM, not the processed output. Optional pitch mapping is approximate.
 Original preview source spectrum (before track FX)=Original preview source spectrum (before track FX)
 Real-time output spectrum=Real-time output spectrum
+Approximate preview pitch in source spectrum=Approximate preview pitch in source spectrum
+Map frequency bands using preview pitch and preserve-pitch settings. This is an approximation, not the processed audio spectrum.=Map frequency bands using preview pitch and preserve-pitch settings. This is an approximation, not the processed audio spectrum.
+Pitch-adjusted source spectrum (approximate)=Pitch-adjusted source spectrum (approximate)

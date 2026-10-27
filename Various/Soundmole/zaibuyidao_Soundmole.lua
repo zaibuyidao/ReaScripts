@@ -105,6 +105,7 @@ local SourceSpectrum = (function()
       window = {},
       mapped_bins = {},
       mapped_rate = nil,
+      mapped_frequency_ratio = nil,
       source = nil,
       preview = nil,
       last_error = nil,
@@ -123,20 +124,22 @@ local SourceSpectrum = (function()
       self.last_error = nil
     end
 
-    function state:map_bins(sample_rate)
-      if self.mapped_rate == sample_rate then return end
+    function state:map_bins(sample_rate, frequency_ratio)
+      frequency_ratio = math.max(0.01, math.min(64, tonumber(frequency_ratio) or 1))
+      if self.mapped_rate == sample_rate and self.mapped_frequency_ratio == frequency_ratio then return end
       local nyquist = sample_rate * 0.5
       local top = math.log(math.max(nyquist, MIN_HZ + 1) / MIN_HZ)
       for k = 1, FFT_SIZE / 2 - 1 do
-        local hz = k * sample_rate / FFT_SIZE
+        local hz = k * sample_rate / FFT_SIZE * frequency_ratio
         local pos = math.log(math.max(hz, MIN_HZ) / MIN_HZ) / top
         self.mapped_bins[k] = math.min(self.band_count,
           math.max(1, math.floor(pos * self.band_count) + 1))
       end
       self.mapped_rate = sample_rate
+      self.mapped_frequency_ratio = frequency_ratio
     end
 
-    function state:tick(preview, source, paused, play_rate, source_offset)
+    function state:tick(preview, source, paused, play_rate, source_offset, pitch_aware)
       if not preview or not source or paused or not reaper.CF_Preview_GetValue then
         self:reset()
         return self.levels
@@ -180,7 +183,20 @@ local SourceSpectrum = (function()
         return self.levels
       end
       channels = math.min(channels, MAX_CHANNELS)
-      self:map_bins(sample_rate)
+      -- 仅以预览参数重映射源文件 FFT 的频率位置，不声称取得 DSP 后的采样数据。
+      -- 每次 FFT 更新时才读取变调信息，避免逐帧访问 SWS 预览状态。
+      local frequency_ratio = 1
+      if pitch_aware then
+        local pitch_ok, semitones = reaper.CF_Preview_GetValue(preview, "D_PITCH")
+        if pitch_ok then
+          frequency_ratio = 2 ^ (math.max(-48, math.min(48, tonumber(semitones) or 0)) / 12)
+        end
+        local preserve_ok, preserve = reaper.CF_Preview_GetValue(preview, "B_PPITCH")
+        if preserve_ok and tonumber(preserve) == 0 then
+          frequency_ratio = frequency_ratio * math.max(0.01, tonumber(play_rate) or 1)
+        end
+      end
+      self:map_bins(sample_rate, frequency_ratio)
       if not self.sample_buf or self.buf_channels ~= channels then
         self.sample_buf = reaper.new_array(FFT_SIZE * channels * 2)
         self.buf_channels = channels
@@ -807,6 +823,7 @@ local spectrum_mini = {
   levels = {}, last_t = 0,
   source = SourceSpectrum.new(MINI_SPECTRUM_BANDS),
   source_enabled = SM_GetState(EXT_SECTION, "preview_source_spectrum") == "1",
+  pitch_map_enabled = SM_GetState(EXT_SECTION, "preview_pitch_aware_spectrum") == "1",
   native_available = type(reaper.SM_Spectrum_SetEnabled) == "function"
     and type(reaper.SM_Spectrum_GetBand) == "function"
     and type(reaper.SM_Spectrum_GetBandCount) == "function",
@@ -2769,7 +2786,21 @@ do
       SM_SetState(EXT_SECTION, "preview_source_spectrum", enabled and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
-      DrawTooltip(T("Displays the original preview file spectrum, not REAPER output or track FX. Pitch processing is not included."))
+      DrawTooltip(T("Source spectrum uses original PCM, not the processed output. Optional pitch mapping is approximate."))
+    end
+    if spectrum_mini.source_enabled then
+      reaper.ImGui_Indent(ctx, 20)
+      local pitch_changed, pitch_enabled = reaper.ImGui_Checkbox(ctx,
+        T("Approximate preview pitch in source spectrum"), spectrum_mini.pitch_map_enabled)
+      if pitch_changed then
+        spectrum_mini.pitch_map_enabled = pitch_enabled
+        ResetMiniSpectrum()
+        SM_SetState(EXT_SECTION, "preview_pitch_aware_spectrum", pitch_enabled and "1" or "0", true)
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        DrawTooltip(T("Map frequency bands using preview pitch and preserve-pitch settings. This is an approximation, not the processed audio spectrum."))
+      end
+      reaper.ImGui_Unindent(ctx, 20)
     end
   end
 
@@ -3161,9 +3192,11 @@ do
       auto_play_waveform_when_stopped = false
       preserve_pitch       = true
       spectrum_mini.source_enabled = false
+      spectrum_mini.pitch_map_enabled = false
       if spectrum_mini.native_available then reaper.SM_Spectrum_SetEnabled(true) end
       ResetMiniSpectrum()
       SM_SetState(EXT_SECTION, "preview_source_spectrum", "0", true)
+      SM_SetState(EXT_SECTION, "preview_pitch_aware_spectrum", "0", true)
       bg_alpha             = 1.0
       peak_chans           = 6
       font_size            = 14
@@ -7921,7 +7954,8 @@ function DrawMiniSpectrumAnalyzer(ctx, width)
   if spectrum_mini.source_enabled then
     local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
     local offset = (__rate_cursor_preview == playing_preview) and (__rate_cursor_offset or 0) or 0
-    source_levels = spectrum_mini.source:tick(playing_preview, playing_source, is_paused, rate, offset)
+    source_levels = spectrum_mini.source:tick(playing_preview, playing_source, is_paused,
+      rate, offset, spectrum_mini.pitch_map_enabled)
   else
     source_levels = {}
     if spectrum_mini.native_available then
@@ -7964,9 +7998,10 @@ function DrawMiniSpectrumAnalyzer(ctx, width)
 
   reaper.ImGui_Dummy(ctx, width, height)
   if reaper.ImGui_IsItemHovered(ctx) then
-    DrawTooltip(spectrum_mini.source_enabled
-      and T("Original preview source spectrum (before track FX)")
-      or T("Real-time output spectrum"))
+    DrawTooltip(not spectrum_mini.source_enabled and T("Real-time output spectrum")
+      or (spectrum_mini.pitch_map_enabled
+        and T("Pitch-adjusted source spectrum (approximate)")
+        or T("Original preview source spectrum (before track FX)")))
   end
 end
 
