@@ -82,6 +82,124 @@ require ('lib.utils')
 MIDI = require('lib.midi')
 local L = require('lib.locales')
 local Freesound = require ('lib.freesound')
+-- Keep the wheel handler in this file so ReaPack requires no new bundled sources.
+local HorizontalWheel = (function()
+  -- Linear horizontal trackpad scrolling for Soundmole on Windows.
+  -- Intercept native horizontal input while the file table is hovered;
+  -- use linear reversed scrolling. Windows supplies touchpad inertia.
+  local M = {}
+  local MESSAGE = "WM_MOUSEHWHEEL"
+
+  -- One standard wheel notch maps to 98 pixels; fractional deltas scale linearly.
+  -- No event-rate threshold, large-event boost, deadzone, or added momentum.
+  local PIXELS_PER_NOTCH = 98
+  local DIRECTION = 1
+
+  local function clamp(value, low, high)
+    return math.max(low, math.min(high, value))
+  end
+
+  function M.new(title)
+    local state = {
+      title = title,
+      hwnd = nil,
+      intercepted = false,
+      passthrough = true,
+      last_time = nil,
+      table_active_this_frame = false,
+      enabled = true,
+      available = reaper.GetOS():match("^Win") ~= nil
+        and type(reaper.JS_Window_Find) == "function"
+        and type(reaper.JS_WindowMessage_Intercept) == "function"
+        and type(reaper.JS_WindowMessage_Peek) == "function"
+        and type(reaper.JS_WindowMessage_PassThrough) == "function"
+        and type(reaper.JS_WindowMessage_Release) == "function",
+    }
+
+    -- The disabled mode restores native wheel handling and avoids interception.
+    function state:set_enabled(value)
+      value = value == true
+      if self.enabled == value then return end
+      if not value then self:release() end
+      self.enabled = value
+    end
+
+    function state:attach()
+      if not self.available or not self.enabled then return false end
+      if self.intercepted then return true end
+      local hwnd = reaper.JS_Window_Find(self.title, true)
+      if not hwnd then return false end
+      if reaper.JS_WindowMessage_Intercept(hwnd, MESSAGE, true) ~= 1 then
+        return false
+      end
+      self.hwnd = hwnd
+      self.intercepted = true
+      self.passthrough = true
+      return true
+    end
+
+    function state:set_table_hovered(hovered)
+      if not self:attach() then return end
+      if hovered then self.table_active_this_frame = true end
+      local pass = not hovered
+      if pass ~= self.passthrough then
+        reaper.JS_WindowMessage_PassThrough(self.hwnd, MESSAGE, pass)
+        self.passthrough = pass
+      end
+    end
+
+    function state:begin_frame()
+      self.table_active_this_frame = false
+      if not self.enabled then return end
+      self:attach()
+    end
+
+    function state:apply_in_table(ctx)
+      if not self.enabled then return end
+      if not self:attach() then return end
+      local hovered = reaper.ImGui_IsWindowHovered(ctx)
+        and not reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        and not reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift())
+      self:set_table_hovered(hovered)
+      if not hovered then return end
+
+      -- Poll immediately before applying scroll, rather than early in the frame.
+      local hit, passed, time, _, raw_delta =
+        reaper.JS_WindowMessage_Peek(self.hwnd, MESSAGE)
+      if not hit or passed or not time or time <= 0 or time == self.last_time then
+        return
+      end
+      self.last_time = time
+
+      local delta = tonumber(raw_delta) or 0
+      if delta == 0 then return end
+      local max_x = reaper.ImGui_GetScrollMaxX(ctx)
+      if max_x <= 0 then return end
+
+      local pixels = DIRECTION * PIXELS_PER_NOTCH * (delta / 120)
+      local scroll_x = reaper.ImGui_GetScrollX(ctx)
+      reaper.ImGui_SetScrollX(ctx, clamp(scroll_x + pixels, 0, max_x))
+    end
+
+    function state:end_frame()
+      if not self.intercepted then return end
+      if not self.table_active_this_frame then self:set_table_hovered(false) end
+    end
+
+    function state:release()
+      if self.intercepted then
+        pcall(reaper.JS_WindowMessage_Release, self.hwnd, MESSAGE)
+      end
+      self.intercepted = false
+      self.hwnd = nil
+      self.last_time = nil
+    end
+
+    return state
+  end
+
+  return M
+end)()
 local trans_status, trans_result = pcall(require, "lib.translation")
 local Translator = nil
 if trans_status then
@@ -157,6 +275,9 @@ SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local EXT_SECTION = "Soundmole"
+local horizontal_wheel = HorizontalWheel.new(SCRIPT_NAME)
+local reverse_horizontal_trackpad_scroll = SM_GetState(EXT_SECTION, "reverse_horizontal_trackpad_scroll") == "1"
+horizontal_wheel:set_enabled(reverse_horizontal_trackpad_scroll)
 
 local UI_SCALE_MIN = 0.50
 local UI_SCALE_MAX = 3.00
@@ -2471,6 +2592,18 @@ do
     end
   end
 
+  function Section_System_HorizontalScrolling()
+    if not horizontal_wheel.available then return end
+    local changed, enabled = reaper.ImGui_Checkbox(ctx,
+      T("Reverse horizontal trackpad scrolling direction in file table"),
+      reverse_horizontal_trackpad_scroll)
+    if changed then
+      reverse_horizontal_trackpad_scroll = enabled
+      horizontal_wheel:set_enabled(enabled)
+      SM_SetState(EXT_SECTION, "reverse_horizontal_trackpad_scroll", enabled and "1" or "0", true)
+    end
+  end
+
   function Section_DblClick_Preview()
     reaper.ImGui_Text(ctx, T("Double-Click Action:"))
     if reaper.ImGui_RadioButton(ctx, T("Insert media file to arrange"), doubleclick_action == DOUBLECLICK_INSERT) then
@@ -2973,6 +3106,9 @@ do
       doubleclick_action   = DOUBLECLICK_NONE
       row_height           = DEFAULT_ROW_HEIGHT
       table_row_hover_feedback = false
+      reverse_horizontal_trackpad_scroll = false
+      horizontal_wheel:set_enabled(false)
+      SM_SetState(EXT_SECTION, "reverse_horizontal_trackpad_scroll", "0", true)
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
       preserve_pitch       = true
@@ -3086,6 +3222,7 @@ do
         reaper.ImGui_Separator(ctx)
         DrawSubTitle(T("User Interface Settings"))
         Section_System_Tooltips()
+        Section_System_HorizontalScrolling()
       end
     },
 
@@ -18648,6 +18785,7 @@ function SM_ProcessBuilderLoop()
 end
 
 function loop()
+  horizontal_wheel:begin_frame()
   -- 在任何后台读盘前检查本帧鼠标状态，避免滚动检测滞后一帧
   static.table_scroll_busy = reaper.ImGui_IsMouseDown(ctx, 0) or reaper.ImGui_GetMouseWheel(ctx) ~= 0 or (static.last_scroll_time and reaper.time_precise() - static.last_scroll_time < 0.15)
   ProcessPendingSelectionNativeDrops()
@@ -22888,6 +23026,10 @@ function loop()
           _G.scroll_target = 0.5 -- 0.0=顶部
         end
 
+        -- Suppress native horizontal wheel input over this table and replace it
+        -- with reversed, linear scrolling. Vertical and modified wheel input stay native.
+        horizontal_wheel:apply_in_table(ctx)
+
         -- 缓存命中整段直读
         static.wf_enqueue_count = 0
         static.table_cover_load_count = 0
@@ -25310,6 +25452,8 @@ function loop()
     reaper.ImGui_End(ctx)
   end
 
+  horizontal_wheel:end_frame()
+
   -- 仅在主窗口结束后，才绘制独立的顶层窗口
   DrawPreviewFolderWindow()
 
@@ -25390,6 +25534,7 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  horizontal_wheel:release()
   reaper.SM_Spectrum_SetEnabled(false)
   if media_analysis_task and media_analysis_task.handle and type(reaper.SM_DB_AnalyzeMediaRelease) == "function" then
     reaper.SM_DB_AnalyzeMediaRelease(media_analysis_task.handle)
