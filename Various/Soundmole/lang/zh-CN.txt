@@ -374,6 +374,7 @@ Insert media file to arrange=插入媒体文件到编排视图
 Preview media=预览媒体
 Do nothing=无操作
 Auto-play selected media=自动播放所选媒体
+Restart playback when clicking the selected file again=再次点击已选中文件时从头播放
 Auto-play from clicked waveform position when stopped=未播放时，从点击的波形位置自动播放
 Playback Settings:=播放设置:
 Preserve pitch when changing rate=更改播放速率时保持音高
