@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.1
+-- @version 0.1.2
 -- @changelog
 --   Initial release.
 -- @links
@@ -31,6 +31,7 @@
 --   [nomain] assets/js/Tags.js
 --   [nomain] assets/js/constants.js
 --   [nomain] assets/js/index.js
+--   [nomain] assets/js/Shortcuts.js
 --   [nomain] index.html
 --   [nomain] lua/backend.lua
 --   [nomain] lua/json.lua
