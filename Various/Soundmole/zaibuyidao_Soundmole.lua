@@ -157,6 +157,7 @@ SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local EXT_SECTION = "Soundmole"
+SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK = SM_GetState(EXT_SECTION, "close_sidebar_tabs_with_middle_click") == "1"
 
 local UI_SCALE_MIN = 0.50
 local UI_SCALE_MAX = 3.00
@@ -573,13 +574,21 @@ function SM_SaveSidebarTabs()
 end
 
 function SM_BeginSidebarTab(id, label, flags)
-  local selected, open = reaper.ImGui_BeginTabItem(ctx, label .. "###Sidebar_" .. id, true, flags)
+  local selected, open
+  if SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK then
+    selected = reaper.ImGui_BeginTabItem(ctx, label .. "###Sidebar_" .. id, nil, flags)
+  else
+    selected, open = reaper.ImGui_BeginTabItem(ctx, label .. "###Sidebar_" .. id, true, flags)
+  end
   SM_SIDEBAR_TAB_X[id] = select(1, reaper.ImGui_GetItemRectMin(ctx))
-  if not open then
+  if (SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK
+      and reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 2))
+    or (not SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK and open == false) then
     SM_SIDEBAR_TAB_VISIBLE[id] = false
     SM_SIDEBAR_TAB_X[id] = nil
     SM_SaveSidebarTabs()
   end
+  -- Caller must EndTabItem if selected, including the frame a tab is closed.
   return selected
 end
 
@@ -1557,6 +1566,7 @@ function SaveSettings()
   -- SM_SetState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   SM_SetState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   SM_SetState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "close_sidebar_tabs_with_middle_click", SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK and "1" or "0", true)
   SM_SetState(EXT_SECTION, "auto_play_waveform_when_stopped", tostring(auto_play_waveform_when_stopped and 1 or 0), true)
   SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
@@ -2285,6 +2295,15 @@ do
     end
   end
 
+  function Section_SidebarTabs()
+    local changed, enabled = reaper.ImGui_Checkbox(ctx,
+      T("Close sidebar tabs with middle-click (hide X buttons)"), SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK)
+    if changed then
+      SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK = enabled
+      SM_SetState(EXT_SECTION, "close_sidebar_tabs_with_middle_click", enabled and "1" or "0", true)
+    end
+  end
+
   function Section_Window()
     reaper.ImGui_Text(ctx, T("Window background alpha:"))
     reaper.ImGui_SameLine(ctx, UIScale(200))
@@ -2975,6 +2994,7 @@ do
       table_row_hover_feedback = false
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
+      SM_CLOSE_SIDEBAR_TABS_WITH_MIDDLE_CLICK = false
       preserve_pitch       = true
       bg_alpha             = 1.0
       peak_chans           = 6
@@ -3066,6 +3086,8 @@ do
         DrawSubTitle(T("UI")) Section_UI()
         DrawSubTitle(T("Window"))
         Section_Window()
+        DrawSubTitle(T("Sidebar tabs"))
+        Section_SidebarTabs()
         DrawSubTitle(T("Peak Meter"))
         Section_Peaks()
         DrawSubTitle(T("PeekTree"))
