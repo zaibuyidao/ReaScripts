@@ -375,6 +375,7 @@ Preview media=预览媒体
 Do nothing=无操作
 Auto-play selected media=自动播放所选媒体
 Auto-play from clicked waveform position when stopped=未播放时，从点击的波形位置自动播放
+Reset waveform cursor to start when playback ends=播放自然结束后将波形光标复位到开头
 Playback Settings:=播放设置:
 Preserve pitch when changing rate=更改播放速率时保持音高
 Stop preview playback when main window collapses=折叠主窗口时停止预览播放
