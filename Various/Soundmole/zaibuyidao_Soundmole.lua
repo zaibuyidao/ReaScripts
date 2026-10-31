@@ -779,6 +779,7 @@ end
 -- 定义Wave类
 local Wave = {
   play_cursor = 0,
+  restart_selected_media_on_click = SM_GetState(EXT_SECTION, "restart_selected_media_on_click") == "1",
   src_len = 0,
   scroll = 0,
   zoom = 1,
@@ -1557,6 +1558,7 @@ function SaveSettings()
   -- SM_SetState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   SM_SetState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   SM_SetState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "restart_selected_media_on_click", Wave.restart_selected_media_on_click and "1" or "0", true)
   SM_SetState(EXT_SECTION, "auto_play_waveform_when_stopped", tostring(auto_play_waveform_when_stopped and 1 or 0), true)
   SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
@@ -2487,6 +2489,13 @@ do
     local chg_auto
     chg_auto, auto_play_selected = reaper.ImGui_Checkbox(ctx, T("Auto-play selected media"), auto_play_selected)
 
+    local changed_reclick, new_reclick = reaper.ImGui_Checkbox(ctx,
+      T("Restart playback when clicking the selected file again"), Wave.restart_selected_media_on_click)
+    if changed_reclick then
+      Wave.restart_selected_media_on_click = new_reclick
+      SM_SetState(EXT_SECTION, "restart_selected_media_on_click", new_reclick and "1" or "0", true)
+    end
+
     local chg_wave_click, new_wave_click = reaper.ImGui_Checkbox(ctx, T("Auto-play from clicked waveform position when stopped"), auto_play_waveform_when_stopped)
     if chg_wave_click then
       auto_play_waveform_when_stopped = new_wave_click
@@ -2975,6 +2984,7 @@ do
       table_row_hover_feedback = false
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
+      Wave.restart_selected_media_on_click = false
       preserve_pitch       = true
       bg_alpha             = 1.0
       peak_chans           = 6
@@ -10223,6 +10233,18 @@ function handle_group_click(idx, folder)
 end
 
 -- 文件件列表多选/选中状态，Shift+点击范围多选，Ctrl+点击离散多选，单击选中
+-- Only a plain repeated click on the same file/section retriggers playback.
+-- A row index by itself is not a stable file identity across filters.
+function SM_ShouldRestartSelectedFileRow(idx, info, shift, ctrl, double_click)
+  if not Wave.restart_selected_media_on_click or shift or ctrl or double_click
+    or idx ~= selected_row or type(info) ~= "table" or type(last_selected_info) ~= "table"
+  then return false end
+  local path = normalize_path(info.path or "", false)
+  return path ~= "" and path == normalize_path(last_selected_info.path or "", false)
+    and (tonumber(info.section_offset) or 0) == (tonumber(last_selected_info.section_offset) or 0)
+    and (tonumber(info.section_length) or 0) == (tonumber(last_selected_info.section_length) or 0)
+end
+
 function handle_file_click(idx)
   local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
   local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
@@ -15254,12 +15276,39 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), table_row_hover_feedback and colors.table_header_active or (is_sel and colors.header or 0x00000000))
       local clicked = reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height)
       reaper.ImGui_PopStyleColor(ctx, 2)
+      local row_double_click = reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0)
+      -- ImGui may report the second Selectable click on release, after double-click press.
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 0)
+        and not row_double_click then
+        Wave.reclick_suppress = nil
+      end
+      local preview_already_restarted = row_double_click and Wave.last_repeat_click_restart
+        and Wave.last_repeat_click_restart.row == i and Wave.last_repeat_click_restart.path == info.path
+      if row_double_click then
+        Wave.reclick_suppress = { row = i, path = info.path }
+        Wave.last_repeat_click_restart = nil
+      end
       if clicked then
+        local shift = SM_IsShiftDown()
+        local ctrl = SM_IsCtrlDown()
+        local suppress = row_double_click or (Wave.reclick_suppress
+          and Wave.reclick_suppress.row == i and Wave.reclick_suppress.path == info.path)
+        local restart = SM_ShouldRestartSelectedFileRow(i, info, shift, ctrl, suppress)
         handle_file_click(i)
+        Wave.last_repeat_click_restart = restart and { row = i, path = info.path } or nil
+        if restart then
+          Wave.play_cursor = 0
+          wf_play_start_cursor = 0
+          PlayFromStart(info)
+        end
+      end
+      if reaper.ImGui_IsMouseReleased(ctx, 0) and Wave.reclick_suppress
+        and Wave.reclick_suppress.row == i then
+        Wave.reclick_suppress = nil
       end
 
       -- 双击播放
-      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+      if row_double_click then
         if doubleclick_action == DOUBLECLICK_INSERT then
           WithAutoCrossfadeDisabled(function()
             reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
@@ -15277,7 +15326,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
           end)
         elseif doubleclick_action == DOUBLECLICK_PREVIEW then
-          PlayFromStart(info)
+          -- Avoid restarting twice if this double-click followed a repeat-click restart.
+          if not preview_already_restarted then PlayFromStart(info) end
         elseif doubleclick_action == DOUBLECLICK_NONE then
           -- Do nothing
         end
