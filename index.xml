@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="66174298809715e4f183a35904fbc60a960bb5c0">
+<index version="1" name="zaibuyidao Scripts" commit="311475fb3aa14cc30ad0bdcbeee61e92474a5327">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7405,6 +7405,39 @@ Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
         <source type="script" file="web/game.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.html</source>
         <source type="script" file="web/game.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.js</source>
         <source type="script" file="web/gamepad.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/gamepad.js</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Modules/ReaKeymap">
+    <reapack name="ReaKeymap - Package.lua" type="script" desc="ReaKeymap">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 REAPER shortcut manager with a Lua backend and Vue 3 WebView UI. Run ReaKeymap.lua with the lua/ and web/ folders beside it. Requires ReaWebAPI; js_ReaScriptAPI for advanced action management. Search actions, edit shortcuts, manage favorites, detect conflicts, add notes, and import/export presets with backup and restore. Settings and backups: Data/ReaKeymap.\par}
+}
+]]></description>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaWebAPI">ReaWebAPI</link>
+      </metadata>
+      <version name="0.1.0" author="zaibuyidao" time="2026-10-31T14:36:06Z">
+        <changelog><![CDATA[Initial release.]]></changelog>
+        <source main="main" file="ReaKeymap.lua">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/ReaKeymap.lua</source>
+        <source file="lua/engine.lua">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/lua/engine.lua</source>
+        <source file="lua/json.lua">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/lua/json.lua</source>
+        <source file="lua/service.lua">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/lua/service.lua</source>
+        <source file="web/app.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/app.js</source>
+        <source file="web/brand.svg">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/brand.svg</source>
+        <source file="web/bridge.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/bridge.js</source>
+        <source file="web/i18n.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/i18n.js</source>
+        <source file="web/index.html">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/index.html</source>
+        <source file="web/list-data.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/list-data.js</source>
+        <source file="web/locales.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/locales.js</source>
+        <source file="web/shortcut-names.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/shortcut-names.js</source>
+        <source file="web/style.css">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/style.css</source>
+        <source file="web/themes.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/themes.js</source>
+        <source file="web/vendor/VUE-LICENSE.md">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/vendor/VUE-LICENSE.md</source>
+        <source file="web/vendor/vue.global.prod.js">https://github.com/zaibuyidao/ReaScripts/raw/311475fb3aa14cc30ad0bdcbeee61e92474a5327/Modules/ReaKeymap/web/vendor/vue.global.prod.js</source>
       </version>
     </reapack>
   </category>
