@@ -1,0 +1,32 @@
+-- @description ReaKeymap
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
+-- @metapackage
+-- @provides
+--   [main=main] ReaKeymap.lua
+--   [nomain] lua/engine.lua
+--   [nomain] lua/json.lua
+--   [nomain] lua/service.lua
+--   [nomain] web/app.js
+--   [nomain] web/brand.svg
+--   [nomain] web/bridge.js
+--   [nomain] web/i18n.js
+--   [nomain] web/index.html
+--   [nomain] web/list-data.js
+--   [nomain] web/locales.js
+--   [nomain] web/shortcut-names.js
+--   [nomain] web/style.css
+--   [nomain] web/themes.js
+--   [nomain] web/vendor/VUE-LICENSE.md
+--   [nomain] web/vendor/vue.global.prod.js
+-- @about
+--   REAPER shortcut manager with a Lua backend and Vue 3 WebView UI.
+--   Run ReaKeymap.lua with the lua/ and web/ folders beside it.
+--   Requires ReaWebAPI; js_ReaScriptAPI for advanced action management.
+--   Search actions, edit shortcuts, manage favorites, detect conflicts,
+--   add notes, and import/export presets with backup and restore.
+--   Settings and backups: Data/ReaKeymap.
