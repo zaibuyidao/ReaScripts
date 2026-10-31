@@ -157,6 +157,7 @@ SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local EXT_SECTION = "Soundmole"
+SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE = SM_GetState(EXT_SECTION, "page_badge_middle_click_close") == "1"
 
 local UI_SCALE_MIN = 0.50
 local UI_SCALE_MAX = 3.00
@@ -1585,6 +1586,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_resident_cache_enabled", page_resident_cache_enabled and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "page_badge_middle_click_close", SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE and "1" or "0", true)
   SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_main_search_on_startup and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
@@ -2282,6 +2284,15 @@ do
     if changed_row_feedback then
       table_row_hover_feedback = new_row_feedback
       SM_SetState(EXT_SECTION, "table_row_hover_feedback", table_row_hover_feedback and "1" or "0", true)
+    end
+  end
+
+  function Section_PageSettings()
+    local changed, enabled = reaper.ImGui_Checkbox(ctx,
+      T("Close page badges with middle-click"), SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE)
+    if changed then
+      SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE = enabled
+      SM_SetState(EXT_SECTION, "page_badge_middle_click_close", enabled and "1" or "0", true)
     end
   end
 
@@ -2987,6 +2998,7 @@ do
       retain_search_on_exit = false
       page_resident_cache_enabled = true
       page_bar_full        = true
+      SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE = false
       focus_main_search_on_startup = false
       SM_SetState(EXT_SECTION, "retained_search_text", "", true)
       build_waveform_cache = false
@@ -3066,6 +3078,8 @@ do
         DrawSubTitle(T("UI")) Section_UI()
         DrawSubTitle(T("Window"))
         Section_Window()
+        DrawSubTitle(T("Pages"))
+        Section_PageSettings()
         DrawSubTitle(T("Peak Meter"))
         Section_Peaks()
         DrawSubTitle(T("PeekTree"))
@@ -18204,7 +18218,12 @@ function SM_DrawPageBar(ctx)
         end
       end
       if reaper.ImGui_IsItemHovered(ctx) then
-        DrawTooltip(page_count > 1 and T("Alt+Click to Close Page") or T("At least one page must remain"))
+        if SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE and page_count > 1 and reaper.ImGui_IsMouseClicked(ctx, 2) then
+          delete_page_index = page_index
+        end
+        DrawTooltip(page_count <= 1 and T("At least one page must remain")
+          or (SM_PAGE_BADGE_MIDDLE_CLICK_CLOSE and T("Middle-click or Alt+Click to Close Page")
+          or T("Alt+Click to Close Page")))
       end
       if is_active then reaper.ImGui_PopStyleColor(ctx, 3) end
     end
