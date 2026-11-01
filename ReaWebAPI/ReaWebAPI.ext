@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.16
+@version 0.3.9.19
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -13,60 +13,9 @@
   [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
   [script nomain] web/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.json
-  [script nomain] web/eel-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/README.md
-  [script nomain] web/eel-backend/README.zh-CN.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/README.zh-CN.md
-  [script nomain] web/eel-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/app.js
-  [script nomain] web/eel-backend/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/app.json
-  [script nomain] web/eel-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/index.html
-  [script main] web/eel-backend/reawebapi-eel-backend.eel https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/reawebapi-eel-backend.eel
-  [script nomain] web/eel-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-backend/style.css
-  [script nomain] web/eel-mixer/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/README.md
-  [script nomain] web/eel-mixer/README.zh-CN.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/README.zh-CN.md
-  [script nomain] web/eel-mixer/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/app.js
-  [script nomain] web/eel-mixer/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/app.json
-  [script nomain] web/eel-mixer/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/index.html
-  [script main] web/eel-mixer/reawebapi-eel-mixer.eel https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/reawebapi-eel-mixer.eel
-  [script nomain] web/eel-mixer/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/eel-mixer/style.css
-  [script nomain] web/external-client/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/README.md
-  [script nomain] web/external-client/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/app.js
-  [script nomain] web/external-client/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/index.html
-  [script nomain] web/external-client/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/style.css
-  [script nomain] web/frameless/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/README.md
-  [script nomain] web/frameless/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/app.js
-  [script nomain] web/frameless/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/app.json
-  [script nomain] web/frameless/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/index.html
-  [script nomain] web/frameless/launch.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/launch.lua
-  [script main] web/frameless/reawebapi-frameless-fixed.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/reawebapi-frameless-fixed.lua
-  [script main] web/frameless/reawebapi-frameless-resizable.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/reawebapi-frameless-resizable.lua
-  [script nomain] web/frameless/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/frameless/style.css
   [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
-  [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
-  [script nomain] web/lua-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.js
-  [script nomain] web/lua-backend/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.json
-  [script nomain] web/lua-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/index.html
-  [script main] web/lua-backend/reawebapi-lua-backend.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/reawebapi-lua-backend.lua
-  [script nomain] web/lua-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/style.css
-  [script main] web/native-service/Coexist.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/Coexist.lua
-  [script nomain] web/native-service/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/README.md
-  [script nomain] web/native-service/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.js
-  [script nomain] web/native-service/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.json
-  [script nomain] web/native-service/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/index.html
-  [script main] web/native-service/reawebapi-native-service.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/reawebapi-native-service.lua
-  [script nomain] web/native-service/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/style.css
-  [script nomain] web/native-stream/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/README.md
-  [script nomain] web/native-stream/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.js
-  [script nomain] web/native-stream/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.json
-  [script nomain] web/native-stream/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/index.html
-  [script main] web/native-stream/reawebapi-native-stream.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/reawebapi-native-stream.lua
-  [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
-  [script nomain] web/transparent/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/README.md
-  [script nomain] web/transparent/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/app.js
-  [script nomain] web/transparent/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/app.json
-  [script nomain] web/transparent/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/index.html
-  [script main] web/transparent/reawebapi-transparent.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/reawebapi-transparent.lua
-  [script nomain] web/transparent/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/transparent/style.css
 @changelog
-  Fix Lua/EEL2 message starvation across multiple WebView windows by improving scheduling fairness.
-  Reduce multi-window message and frame latency with independent, bounded updates while preserving message ordering.
+  Add shared App and JSFX WebUI health probes, host tick delay and slow completion diagnostics, enabled by matching App or Runtime debug settings.
+  Record bridge queue context, browser error and stream counters, failed API/service names and WebView process failures without persisting payloads.
