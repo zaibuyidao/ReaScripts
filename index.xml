@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a4de79d5de4d08c94b1cd6f78815005c84b009a7">
+<index version="1" name="zaibuyidao Scripts" commit="7a7af206135691287c97541c2d3fcf8ff37a1410">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9838,6 +9838,27 @@ Record bridge queue context, browser error and stream counters, failed API/servi
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a4de79d5de4d08c94b1cd6f78815005c84b009a7/ReaWebAPI/web/index.html</source>
         <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a4de79d5de4d08c94b1cd6f78815005c84b009a7/ReaWebAPI/web/logo.svg</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a4de79d5de4d08c94b1cd6f78815005c84b009a7/ReaWebAPI/web/style.css</source>
+      </version>
+      <version name="0.3.9.21" author="zaibuyidao" time="2026-11-02T13:00:41Z">
+        <changelog><![CDATA[Recover stale App bindings when the previous root or recorded HTML entry is missing, preserving App identity and user data.
+Extend schema 2 with an optional entry path, retain legacy records and normalize root comparisons across platforms.
+Protect active bindings and concurrent opens, preserve metadata during atomic updates, and report actionable conflict and path-check errors.
+Persist random IDs for ordinary WebUIs without app.json.id in a private .reawebapi/identity.json marker, independent of launcher names.
+Preserve automatic identity across moves and restarts, and assign separate identities to copied Apps when the original binding remains valid, with serialized initialization and updates.
+Replace launcher-derived fallback identities without migrating their storage. Existing data is retained, and explicit IDs, JSFX identity derivation and window instance rules remain unchanged.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/app.json</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/style.css</source>
       </version>
     </reapack>
   </category>
