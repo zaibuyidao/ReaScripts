@@ -1,7 +1,7 @@
 import {g as translate, yt as h} from './constants.js';
 
 const general = [
-  ['save', ['Ctrl+Enter', 'Ctrl+S']],
+  ['save', ['Ctrl+Enter']],
   ['newNote', ['Ctrl+N']],
   ['shortcutSearch', ['/']],
   ['options', ['Ctrl+,']],
@@ -12,6 +12,7 @@ const general = [
 const markdown = [
   ['shortcutBold', ['Ctrl+B']],
   ['shortcutItalic', ['Ctrl+I']],
+  ['shortcutStrike', ['Ctrl+S']],
   ['shortcutInlineCode', ['Ctrl+Shift+C']],
   ['shortcutCodeBlock', ['Ctrl+Shift+P']],
   ['shortcutBulletList', ['Ctrl+U']],

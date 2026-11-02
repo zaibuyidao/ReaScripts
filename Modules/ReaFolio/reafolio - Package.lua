@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.2
+-- @version 0.1.3
 -- @changelog
 --   Initial release.
 -- @links
@@ -27,6 +27,7 @@
 --   [nomain] assets/js/Home.js
 --   [nomain] assets/js/LoadingIndicator.js
 --   [nomain] assets/js/Note.js
+--   [nomain] assets/js/NoteInteractions.js
 --   [nomain] assets/js/SearchResults.js
 --   [nomain] assets/js/Tags.js
 --   [nomain] assets/js/constants.js
