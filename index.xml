@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b1948bf1fd4d421a378d47aceada107b812f27ee">
+<index version="1" name="zaibuyidao Scripts" commit="4bd7bd782729bf95f6489e16a272b5f62d5e4581">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -10824,6 +10824,10 @@ Replace launcher-derived fallback identities without migrating their storage. Ex
         <changelog><![CDATA[Brand new REAPER: 7.83, SWS: 2.14.0.7]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/212c8adad148327839caecfc64280ce575a1f3ce/Translations/Chinese%20(Simplified).ReaperLangPack</source>
       </version>
+      <version name="7.84" author="zaibuyidao (再補一刀)" time="2026-11-03T03:51:41Z">
+        <changelog><![CDATA[Brand new REAPER: 7.84, SWS: 2.14.0.7]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/4bd7bd782729bf95f6489e16a272b5f62d5e4581/Translations/Chinese%20(Simplified).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese (Traditional).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -10944,6 +10948,10 @@ Replace launcher-derived fallback identities without migrating their storage. Ex
       <version name="7.83" author="zaibuyidao (再補一刀)" time="2026-10-29T05:43:40Z">
         <changelog><![CDATA[Brand new REAPER: 7.83, SWS: 2.14.0.7]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/212c8adad148327839caecfc64280ce575a1f3ce/Translations/Chinese%20(Traditional).ReaperLangPack</source>
+      </version>
+      <version name="7.84" author="zaibuyidao (再補一刀)" time="2026-11-03T03:51:41Z">
+        <changelog><![CDATA[Brand new REAPER: 7.84, SWS: 2.14.0.7]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/4bd7bd782729bf95f6489e16a272b5f62d5e4581/Translations/Chinese%20(Traditional).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
