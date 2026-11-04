@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.4
+-- @version 0.1.5
 -- @changelog
 --   Added Project Notes that follow the active project, with a configurable folder defaulting to .reafolio/.
 --   Added a top-left Global / Project switch that remembers the last selection.
@@ -31,6 +31,7 @@
 --   [nomain] assets/js/LoadingIndicator.js
 --   [nomain] assets/js/Note.js
 --   [nomain] assets/js/NoteInteractions.js
+--   [nomain] assets/js/ProjectNotes.js
 --   [nomain] assets/js/SearchResults.js
 --   [nomain] assets/js/Tags.js
 --   [nomain] assets/js/constants.js

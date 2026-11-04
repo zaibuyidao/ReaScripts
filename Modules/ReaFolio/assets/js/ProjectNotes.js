@@ -61,7 +61,12 @@ export class ProjectNotes {
   }
 
   async target(config, scope, project) {
-    if (scope === 'global') return this.directory(config.root);
+    if (scope === 'global') {
+      // The default folder may be absent on a fresh install or after reinstalling.
+      // Recreate it automatically, while keeping custom-folder errors explicit.
+      const isDefault = this.repo.pathKey(config.root) === this.repo.pathKey(this.defaultRoot);
+      return this.directory(config.root, isDefault, isDefault);
+    }
     const root = projectNotesRoot(project.filename, config.projectFolder);
     if (!root) return '';
     const file = await this.repo.host.fs.stat(project.filename);
