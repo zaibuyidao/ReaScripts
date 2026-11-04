@@ -56,7 +56,44 @@ function valid_filename(filename)
   end
 end
 
-function M.begin(request, dataPath, windows)
+local function project_folder(config)
+  local folder = config.projectFolder or '.reafolio'
+  if type(folder) ~= 'string' or folder == '' or folder == '.' or folder == '..'
+    or folder:find('[%z\1-\31\127<>:"/\\|?*]') or folder:match('^%s')
+    or folder:match('[. %s]$') then
+    fail('UNSAFE_PATH')
+  end
+  local stem = folder:match('^[^.]+')
+  stem = stem and stem:lower() or ''
+  if stem == 'con' or stem == 'prn' or stem == 'aux' or stem == 'nul'
+    or stem:match('^com[1-9]$') or stem:match('^lpt[1-9]$') then
+    fail('UNSAFE_PATH')
+  end
+  return folder
+end
+
+local function allowed_root(config, root, windows, host)
+  if type(config.root) == 'string'
+    and normalize(config.root, windows) == normalize(root, windows) then
+    return true
+  end
+  local folder = project_folder(config)
+  if not host then return false end
+  local index = 0
+  while true do
+    local project, filename = host.EnumProjects(index, '')
+    if not project then return false end
+    local path = filename:gsub('\\', '/')
+    local directory = path:match('^(.*)/[^/]+$')
+    if directory and (path:match('^%a:/') or path:match('^/'))
+      and normalize(directory .. '/' .. folder, windows) == normalize(root, windows) then
+      return true
+    end
+    index = index + 1
+  end
+end
+
+function M.begin(request, dataPath, windows, host)
   if type(request) ~= 'table'
     or (request.action ~= 'delete-note' and request.action ~= 'rename-note') then
     fail('INVALID_REQUEST')
@@ -91,12 +128,11 @@ function M.begin(request, dataPath, windows)
 
   local config = json.decode(read(dataPath .. '/settings.json', 65536))
 
-  if type(config.root) ~= 'string'
-    or normalize(config.root, windows) ~= normalize(request.root, windows) then
+  if not allowed_root(config, request.root, windows, host) then
     fail('UNSAFE_PATH')
   end
 
-  local root = config.root:gsub('\\', '/'):gsub('/+$', '')
+  local root = request.root:gsub('\\', '/'):gsub('/+$', '')
   local source = root .. '/' .. filename
   local target = root .. '/.reafolio-trash/' .. request.token .. '.md'
   local destination = request.action == 'rename-note' and root .. '/' .. request.destination or nil
@@ -279,7 +315,8 @@ function M.run(reaper, id, key, dataPath)
             M.begin,
             request,
             dataPath,
-            reaper.GetOS():match('Win') ~= nil
+            reaper.GetOS():match('Win') ~= nil,
+            reaper
           )
 
           if started then
