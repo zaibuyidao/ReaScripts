@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="47d04bf34eecb9ab75755fbf37afa524f725c504">
+<index version="1" name="zaibuyidao Scripts" commit="fd35bee4dc37775cea631d1d1d2872def1191d61">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9962,6 +9962,22 @@ Replace launcher-derived fallback identities without migrating their storage. Ex
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/index.html</source>
         <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/logo.svg</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/7a7af206135691287c97541c2d3fcf8ff37a1410/ReaWebAPI/web/style.css</source>
+      </version>
+      <version name="0.3.9.26" author="zaibuyidao" time="2026-11-05T17:07:25Z">
+        <changelog><![CDATA[Hide and lock the pointer during SVG parameter dragging, restoring its starting position on release. Authorize Pointer Lock for standalone overlays on macOS and Linux.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/app.json</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/fd35bee4dc37775cea631d1d1d2872def1191d61/ReaWebAPI/web/style.css</source>
       </version>
     </reapack>
   </category>
