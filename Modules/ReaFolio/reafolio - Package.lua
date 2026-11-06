@@ -1,9 +1,9 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.1
+-- @version 0.2.2
 -- @changelog
---   Fixed ResizeObserver loop errors when resizing the editor window.
---   Kept the toolbar responsive and cancelled pending layout updates when closing the editor.
+--   Kept the editor toolbar on one row while resizing, with extra buttons in the More menu.
+--   Removed toolbar wrapping flicker while retaining the ResizeObserver fix.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
