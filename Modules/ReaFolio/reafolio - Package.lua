@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.8
+-- @version 0.1.9
 -- @changelog
 --   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
 --   Preserved Markdown source when switching editor modes and unchanged blocks after visual edits.
@@ -11,7 +11,6 @@
 --   Upstream source https://github.com/dullage/flatnotes
 -- @metapackage
 -- @provides
---   [nomain] app.json
 --   [nomain] assets/css/LoadingIndicator.css
 --   [nomain] assets/css/Note.css
 --   [nomain] assets/css/SearchResults.css
