@@ -1,11 +1,8 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.5
+-- @version 0.1.6
 -- @changelog
---   Added Project Notes that follow the active project, with a configurable folder defaulting to .reafolio/.
---   Added a top-left Global / Project switch that remembers the last selection.
---   Added unsaved-project guidance and draft protection when switching projects.
---   Unified Settings styling and updated translations.
+--   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
