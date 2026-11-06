@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.7
+-- @version 0.1.8
 -- @changelog
 --   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
 --   Preserved Markdown source when switching editor modes and unchanged blocks after visual edits.
