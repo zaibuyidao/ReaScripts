@@ -2,6 +2,7 @@
 local directory = debug.getinfo(1, 'S').source:sub(2):match('^(.*[/\\])')
 local json = dofile(directory .. 'json.lua')
 local M = {}
+local integration = dofile(directory .. 'integration.lua')
 
 function fail(code) error(code, 0) end
 
@@ -302,7 +303,14 @@ function M.run(reaper, id, key, dataPath)
 
       local ok, request = pcall(json.decode, text)
 
-      if ok
+      if ok and type(request) == 'table' and request.type == 'reafolio-link'
+        and type(request.id) == 'string' then
+        local success, value = pcall(integration.handle, reaper, request)
+        reaper.ReaWeb_Send(id, json.encode({
+          type = 'reafolio-link-reply', id = request.id,
+          value = success and value or nil, error = not success and tostring(value) or nil
+        }))
+      elseif ok
         and type(request) == 'table'
         and request.type == 'reafolio'
         and type(request.id) == 'string' then

@@ -46,3 +46,33 @@
 .shortcuts-keys{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:.35rem}
 .shortcuts-keys kbd{padding:.125rem .375rem;border-radius:.25rem;background:rgb(var(--theme-background-elevated));font-family:ui-monospace,monospace;font-size:.75rem;white-space:nowrap}
 .shortcuts-key-separator{color:rgb(var(--theme-text-muted));font-size:.75rem}
+
+/* Native-link menu: use the same theme and controls as Settings. */
+.reafolio-link-dialog{box-sizing:border-box;width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid rgb(var(--theme-border) / .6);border-radius:8px;padding:20px 24px;background:rgb(var(--theme-background));color:rgb(var(--theme-text));margin:auto;font-size:.875rem;line-height:1.5;box-shadow:0 12px 36px rgb(0 0 0 / .18)}
+.reafolio-link-dialog::backdrop{background:rgb(0 0 0 / .4);backdrop-filter:blur(4px)}
+.reafolio-link-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.reafolio-link-header h2{margin:0;font-size:1.25rem;font-weight:400}
+.reafolio-link-dialog form,.reafolio-link-details{display:flex;flex-direction:column;gap:16px;min-width:0}
+.reafolio-link-dialog label{display:flex;flex-direction:column;gap:8px;color:rgb(var(--theme-text-muted))}
+.reafolio-link-dialog input:not([type=checkbox]),.reafolio-link-dialog select{box-sizing:border-box;width:100%;min-width:0;padding:8px 12px;border:1px solid rgb(var(--theme-border));border-radius:4px;background:rgb(var(--theme-background-elevated));color:rgb(var(--theme-text));transition:background-color .15s,border-color .15s;user-select:text}
+.reafolio-link-dialog select option{background:rgb(var(--theme-background-elevated));color:rgb(var(--theme-text))}
+.reafolio-link-dialog input::placeholder{color:rgb(var(--theme-text-muted))}
+.reafolio-link-dialog button{padding:4px 8px;border:0;border-radius:6px;background:transparent;color:rgb(var(--theme-text));cursor:pointer;transition:background-color .15s,color .15s,opacity .15s}
+.reafolio-link-dialog button:not(:disabled):hover{background:rgb(var(--theme-background-elevated))}
+.reafolio-link-dialog button:not(:disabled):active{background:rgb(var(--theme-brand) / .22)}
+.reafolio-link-dialog .reafolio-link-close{flex-shrink:0;width:28px;height:28px;padding:0;font-size:24px;line-height:1;color:rgb(var(--theme-text-muted))}
+.reafolio-link-dialog .reafolio-link-primary{background:rgb(var(--theme-brand) / .1)}
+.reafolio-link-dialog .reafolio-link-primary:not(:disabled):hover{background:rgb(var(--theme-brand) / .18)}
+.reafolio-link-dialog .reafolio-link-browse{flex-shrink:0;border:1px solid rgb(var(--theme-border));padding:6px 12px}
+.reafolio-link-dialog .reafolio-link-browse:not(:disabled):hover,.reafolio-link-dialog select:not(:disabled):hover{border-color:rgb(var(--theme-brand));background:rgb(var(--theme-brand) / .12)}
+.reafolio-link-dialog button:disabled{opacity:.45;cursor:default}
+.reafolio-link-dialog button:focus-visible,.reafolio-link-dialog input:focus-visible,.reafolio-link-dialog select:focus-visible{outline:2px solid rgb(var(--theme-brand));outline-offset:2px}
+.reafolio-link-controls{position:sticky;bottom:-20px;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:4px;padding:16px 0 4px;border-top:1px solid rgb(var(--theme-border));background:rgb(var(--theme-background))}
+.reafolio-link-dialog .reafolio-link-checkbox{flex-direction:row;align-items:center;gap:10px;color:rgb(var(--theme-text));cursor:pointer}
+.reafolio-link-checkbox input{width:16px;height:16px;flex-shrink:0;accent-color:rgb(var(--theme-brand))}
+.reafolio-link-hint{font-size:.75rem;line-height:1.7;color:rgb(var(--theme-text-muted))}
+.reafolio-link-target{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgb(var(--theme-border));border-radius:4px}
+.reafolio-link-path{min-width:0;flex:1;overflow-wrap:anywhere;white-space:pre-wrap;font-size:.8125rem;user-select:text}
+.reafolio-link-error{color:rgb(225 29 72);font-size:.8125rem}
+.reafolio-link-error:empty,.reafolio-link-details:empty{display:none}
+@media(max-width:420px){.reafolio-link-dialog{padding:16px}.reafolio-link-header h2{font-size:1.05rem}.reafolio-link-controls{bottom:-16px}}

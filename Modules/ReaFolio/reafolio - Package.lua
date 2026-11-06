@@ -1,22 +1,17 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.9
+-- @version 0.2.0
 -- @changelog
---   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
---   Preserved Markdown source when switching editor modes and unchanged blocks after visual edits.
---   Fixed the Shortcuts page scrolling in small windows.
---   Hid the manual disk refresh menu item while retaining automatic refresh.
+--   Added Quick Links for local files, folders, REAPER projects, Actions and project locations.
+--   Added project-aware navigation and shorter, readable links with Chinese path support.
+--   Improved Quick Links styling, icons and small-window scrolling.
+--   Enabled single-click activation in reading and preview modes.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
 -- @metapackage
 -- @provides
---   [nomain] assets/css/LoadingIndicator.css
---   [nomain] assets/css/Note.css
---   [nomain] assets/css/SearchResults.css
---   [nomain] assets/css/Tags.css
---   [nomain] assets/css/constants.css
---   [nomain] assets/css/style.css
+--   [nomain] assets/css/*.css
 --   [nomain] assets/fonts/Poppins/Poppins-Italic.ttf
 --   [nomain] assets/fonts/Poppins/Poppins-Regular.ttf
 --   [nomain] assets/fonts/Poppins/Poppins-SemiBold.ttf
@@ -28,8 +23,7 @@
 --   [nomain] assets/icons/safari-pinned-tab.svg
 --   [nomain] assets/js/*.js
 --   [nomain] index.html
---   [nomain] lua/backend.lua
---   [nomain] lua/json.lua
+--   [nomain] lua/*.lua
 --   [main=main] zaibuyidao_ReaFolio.lua
 
 -- @about
