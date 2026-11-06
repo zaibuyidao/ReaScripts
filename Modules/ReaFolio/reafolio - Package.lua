@@ -1,6 +1,6 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.1.6
+-- @version 0.1.7
 -- @changelog
 --   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
 -- @links
@@ -24,16 +24,7 @@
 --   [nomain] assets/icons/favicon-32x32.png
 --   [nomain] assets/icons/favicon.ico
 --   [nomain] assets/icons/safari-pinned-tab.svg
---   [nomain] assets/js/Home.js
---   [nomain] assets/js/LoadingIndicator.js
---   [nomain] assets/js/Note.js
---   [nomain] assets/js/NoteInteractions.js
---   [nomain] assets/js/ProjectNotes.js
---   [nomain] assets/js/SearchResults.js
---   [nomain] assets/js/Tags.js
---   [nomain] assets/js/constants.js
---   [nomain] assets/js/index.js
---   [nomain] assets/js/Shortcuts.js
+--   [nomain] assets/js/*.js
 --   [nomain] index.html
 --   [nomain] lua/backend.lua
 --   [nomain] lua/json.lua
