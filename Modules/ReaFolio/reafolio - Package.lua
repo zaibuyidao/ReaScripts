@@ -1,11 +1,9 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.0
+-- @version 0.2.1
 -- @changelog
---   Added Quick Links for local files, folders, REAPER projects, Actions and project locations.
---   Added project-aware navigation and shorter, readable links with Chinese path support.
---   Improved Quick Links styling, icons and small-window scrolling.
---   Enabled single-click activation in reading and preview modes.
+--   Fixed ResizeObserver loop errors when resizing the editor window.
+--   Kept the toolbar responsive and cancelled pending layout updates when closing the editor.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
