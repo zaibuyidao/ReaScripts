@@ -3,6 +3,9 @@
 -- @version 0.1.7
 -- @changelog
 --   Added support for pasting text and images from Word/WPS, thanks to @noiZ's contribution.
+--   Preserved Markdown source when switching editor modes and unchanged blocks after visual edits.
+--   Fixed the Shortcuts page scrolling in small windows.
+--   Hid the manual disk refresh menu item while retaining automatic refresh.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
