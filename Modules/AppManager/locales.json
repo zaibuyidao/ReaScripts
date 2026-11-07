@@ -1,0 +1,838 @@
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English"
+    },
+    {
+      "code": "zh-CN",
+      "name": "简体中文"
+    },
+    {
+      "code": "zh-TW",
+      "name": "正體中文"
+    },
+    {
+      "code": "ja",
+      "name": "日本語"
+    },
+    {
+      "code": "ko",
+      "name": "한국어"
+    }
+  ],
+  "strings": {
+    "registered": [
+      "Registered Apps",
+      "已登记应用",
+      "已登記應用",
+      "登録済みアプリ",
+      "등록된 앱"
+    ],
+    "collection": [
+      "THE COLLECTION",
+      "应用集",
+      "應用集",
+      "コレクション",
+      "컬렉션"
+    ],
+    "scope": [
+      "Only apps registered with ReaWebAPI are listed.",
+      "仅显示已在 ReaWebAPI 登记的应用。",
+      "僅顯示已在 ReaWebAPI 登記的應用。",
+      "ReaWebAPI に登録済みのアプリのみ表示します。",
+      "ReaWebAPI에 등록된 앱만 표시합니다."
+    ],
+    "refresh": [
+      "Refresh",
+      "刷新",
+      "重新整理",
+      "更新",
+      "새로 고침"
+    ],
+    "settings": [
+      "Settings",
+      "设置",
+      "設定",
+      "設定",
+      "설정"
+    ],
+    "preferences": [
+      "PREFERENCES",
+      "偏好设置",
+      "偏好設定",
+      "環境設定",
+      "환경설정"
+    ],
+    "settingsHint": [
+      "Make this space feel like yours.",
+      "选择适合你的语言与外观。",
+      "選擇適合你的語言與外觀。",
+      "使いやすい言語と外観に。",
+      "편안한 언어와 화면을 선택하세요."
+    ],
+    "language": [
+      "Language",
+      "语言",
+      "語言",
+      "言語",
+      "언어"
+    ],
+    "languageHint": [
+      "English by default. Changes apply after saving.",
+      "默认英语，保存后生效。",
+      "預設英語，儲存後生效。",
+      "初期設定は英語です。保存すると反映されます。",
+      "기본 언어는 영어입니다. 저장하면 적용됩니다."
+    ],
+    "appearance": [
+      "Appearance",
+      "外观",
+      "外觀",
+      "外観",
+      "화면"
+    ],
+    "paper": [
+      "Light",
+      "浅色",
+      "淺色",
+      "ライト",
+      "라이트"
+    ],
+    "ink": [
+      "Dark",
+      "深色",
+      "深色",
+      "ダーク",
+      "다크"
+    ],
+    "save": [
+      "Save changes",
+      "保存设置",
+      "儲存設定",
+      "変更を保存",
+      "변경 사항 저장"
+    ],
+    "saved": [
+      "Preferences saved.",
+      "设置已保存。",
+      "設定已儲存。",
+      "設定を保存しました。",
+      "설정을 저장했습니다."
+    ],
+    "cancel": [
+      "Cancel",
+      "取消",
+      "取消",
+      "キャンセル",
+      "취소"
+    ],
+    "connected": [
+      "Lua backend connected",
+      "Lua 后端已连接",
+      "Lua 後端已連線",
+      "Lua バックエンド接続済み",
+      "Lua 백엔드 연결됨"
+    ],
+    "waiting": [
+      "Waiting for Lua backend",
+      "等待 Lua 后端",
+      "等待 Lua 後端",
+      "Lua バックエンドを待機中",
+      "Lua 백엔드 대기 중"
+    ],
+    "search": [
+      "Search name, App ID, Root or Entry",
+      "搜索名称、App ID、Root 或 Entry",
+      "搜尋名稱、App ID、Root 或 Entry",
+      "名前、App ID、Root、Entry を検索",
+      "이름, App ID, Root 또는 Entry 검색"
+    ],
+    "allTypes": [
+      "All types",
+      "所有类型",
+      "所有類型",
+      "すべての種類",
+      "모든 유형"
+    ],
+    "allStatuses": [
+      "All statuses",
+      "所有状态",
+      "所有狀態",
+      "すべての状態",
+      "모든 상태"
+    ],
+    "ordinary": [
+      "Ordinary WebUI",
+      "普通 WebUI",
+      "一般 WebUI",
+      "通常の WebUI",
+      "일반 WebUI"
+    ],
+    "jsfx": [
+      "JSFX WebUI",
+      "JSFX WebUI",
+      "JSFX WebUI",
+      "JSFX WebUI",
+      "JSFX WebUI"
+    ],
+    "unknown": [
+      "Unknown",
+      "未知",
+      "未知",
+      "不明",
+      "알 수 없음"
+    ],
+    "unavailable": [
+      "Unavailable",
+      "不可用",
+      "無法取得",
+      "取得不可",
+      "사용 불가"
+    ],
+    "available": [
+      "Available",
+      "可用",
+      "可用",
+      "利用可能",
+      "사용 가능"
+    ],
+    "missing": [
+      "Missing",
+      "缺失",
+      "遺失",
+      "見つかりません",
+      "없음"
+    ],
+    "unverified": [
+      "Unverified",
+      "未验证",
+      "未驗證",
+      "未検証",
+      "미확인"
+    ],
+    "sortName": [
+      "Sort by name",
+      "按名称排序",
+      "依名稱排序",
+      "名前順",
+      "이름순"
+    ],
+    "sortType": [
+      "Sort by type",
+      "按类型排序",
+      "依類型排序",
+      "種類順",
+      "유형순"
+    ],
+    "sortStatus": [
+      "Sort by status",
+      "按状态排序",
+      "依狀態排序",
+      "状態順",
+      "상태순"
+    ],
+    "nameID": [
+      "Name / App ID",
+      "名称 / App ID",
+      "名稱 / App ID",
+      "名前 / App ID",
+      "이름 / App ID"
+    ],
+    "type": [
+      "Type",
+      "类型",
+      "類型",
+      "種類",
+      "유형"
+    ],
+    "status": [
+      "Status",
+      "状态",
+      "狀態",
+      "状態",
+      "상태"
+    ],
+    "windows": [
+      "Windows",
+      "窗口",
+      "視窗",
+      "ウィンドウ",
+      "창"
+    ],
+    "windowsHint": [
+      "Windows in this Runtime, including initialization and closing.",
+      "当前 Runtime 的窗口数，包含初始化和关闭中的窗口。",
+      "目前 Runtime 的視窗數，包含初始化與關閉中的視窗。",
+      "初期化中・終了中を含む、この Runtime のウィンドウ数。",
+      "초기화 및 종료 중인 창을 포함한 현재 Runtime의 창 수입니다."
+    ],
+    "sort": [
+      "Sort",
+      "排序",
+      "排序",
+      "並べ替え",
+      "정렬"
+    ],
+    "shown": [
+      "{shown} of {total} registrations",
+      "{shown} / {total} 条登记",
+      "{shown} / {total} 筆登記",
+      "{total} 件中 {shown} 件",
+      "등록 {total}개 중 {shown}개"
+    ],
+    "partial": [
+      "Partial results",
+      "部分结果",
+      "部分結果",
+      "一部の結果",
+      "일부 결과"
+    ],
+    "details": [
+      "App details",
+      "应用详情",
+      "應用詳情",
+      "アプリの詳細",
+      "앱 상세 정보"
+    ],
+    "detailsEyebrow": [
+      "APP DETAILS",
+      "应用详情",
+      "應用詳情",
+      "アプリの詳細",
+      "앱 상세 정보"
+    ],
+    "selectApp": [
+      "Select an app",
+      "选择一个应用",
+      "選擇應用",
+      "アプリを選択",
+      "앱을 선택하세요"
+    ],
+    "selectHint": [
+      "Choose an app from the list to view its binding and data locations.",
+      "选择列表中的应用，查看绑定信息和数据位置。",
+      "選擇列表中的應用，查看繫結資訊與資料位置。",
+      "一覧からアプリを選ぶと、登録情報とデータの場所を確認できます。",
+      "목록에서 앱을 선택하면 등록 정보와 데이터 위치를 볼 수 있습니다."
+    ],
+    "copy": [
+      "Copy",
+      "复制",
+      "複製",
+      "コピー",
+      "복사"
+    ],
+    "copied": [
+      "Copied to clipboard.",
+      "已复制到剪贴板。",
+      "已複製到剪貼簿。",
+      "クリップボードにコピーしました。",
+      "클립보드에 복사했습니다."
+    ],
+    "copyFailed": [
+      "Could not copy. Select the full text in details and copy it manually.",
+      "复制失败，请在详情中选择完整文本后手动复制。",
+      "複製失敗，請在詳情中選取完整文字後手動複製。",
+      "コピーできませんでした。詳細のテキストを選択してコピーしてください。",
+      "복사할 수 없습니다. 상세 정보의 전체 텍스트를 선택하여 직접 복사하세요."
+    ],
+    "typeSource": [
+      "Type source",
+      "类型来源",
+      "類型來源",
+      "種類の判定元",
+      "유형 판단 근거"
+    ],
+    "versionAuthor": [
+      "Version / Author",
+      "版本 / 作者",
+      "版本 / 作者",
+      "バージョン / 作者",
+      "버전 / 작성자"
+    ],
+    "validation": [
+      "Binding validation",
+      "绑定验证结果",
+      "繫結驗證結果",
+      "登録の検証結果",
+      "등록 검증 결과"
+    ],
+    "metadataWarning": [
+      "Metadata note",
+      "元数据提示",
+      "中繼資料提示",
+      "メタデータの注意",
+      "메타데이터 안내"
+    ],
+    "registrationPath": [
+      "origin.json path",
+      "origin.json 路径",
+      "origin.json 路徑",
+      "origin.json の場所",
+      "origin.json 경로"
+    ],
+    "identityPath": [
+      "identity.json path",
+      "identity.json 路径",
+      "identity.json 路徑",
+      "identity.json の場所",
+      "identity.json 경로"
+    ],
+    "dataPath": [
+      "Data folder",
+      "Data 目录",
+      "Data 目錄",
+      "Data フォルダー",
+      "Data 폴더"
+    ],
+    "statePath": [
+      "WindowState folder",
+      "WindowState 目录",
+      "WindowState 目錄",
+      "WindowState フォルダー",
+      "WindowState 폴더"
+    ],
+    "activeWindows": [
+      "Windows in this Runtime",
+      "当前 Runtime 窗口数",
+      "目前 Runtime 視窗數",
+      "この Runtime のウィンドウ数",
+      "현재 Runtime의 창 수"
+    ],
+    "reveal": [
+      "Open App Folder",
+      "打开安装目录",
+      "開啟安裝目錄",
+      "アプリフォルダーを開く",
+      "앱 폴더 열기"
+    ],
+    "openData": [
+      "Open Data Folder",
+      "打开 Data 目录",
+      "開啟 Data 目錄",
+      "Data フォルダーを開く",
+      "Data 폴더 열기"
+    ],
+    "revealHint": [
+      "Open this folder in your file manager",
+      "在文件管理器中打开此目录",
+      "在檔案管理員中開啟此目錄",
+      "ファイルマネージャーでこのフォルダーを開く",
+      "파일 관리자에서 이 폴더 열기"
+    ],
+    "folderUnavailable": [
+      "Folder is missing or cannot be verified. No folder will be created.",
+      "目录不存在或无法验证；不会自动创建。",
+      "目錄不存在或無法驗證；不會自動建立。",
+      "フォルダーが存在しないか、確認できません。作成は行いません。",
+      "폴더가 없거나 확인할 수 없습니다. 새 폴더를 만들지 않습니다."
+    ],
+    "remove": [
+      "Remove Registration",
+      "移除登记",
+      "移除登記",
+      "登録を解除",
+      "등록 해제"
+    ],
+    "registrationOnly": [
+      "REGISTRATION ONLY",
+      "仅移除登记",
+      "僅移除登記",
+      "登録のみ解除",
+      "등록만 해제"
+    ],
+    "removeIntro": [
+      "This removes the app registration. Please check the details below.",
+      "将移除此应用的登记。请核对以下信息：",
+      "將移除此應用的登記。請核對以下資訊：",
+      "アプリの登録を解除します。以下の情報をご確認ください。",
+      "앱 등록을 해제합니다. 아래 정보를 확인하세요."
+    ],
+    "removeFile": [
+      "Registration file to remove",
+      "将移除的登记文件",
+      "將移除的登記檔案",
+      "解除する登録ファイル",
+      "삭제할 등록 파일"
+    ],
+    "preserve": [
+      "App files, Data, WindowState, identity.json and browser storage are kept. Launching the app again can register it again.",
+      "应用文件、Data、WindowState、identity.json 和浏览器存储全部保留。再次启动应用时可重新登记。",
+      "應用檔案、Data、WindowState、identity.json 與瀏覽器儲存空間全部保留。再次啟動應用時可重新登記。",
+      "アプリ本体、Data、WindowState、identity.json、ブラウザーストレージは保持されます。次回起動時に再登録できます。",
+      "앱 파일, Data, WindowState, identity.json 및 브라우저 저장소는 유지됩니다. 앱을 다시 실행하면 재등록할 수 있습니다."
+    ],
+    "continueRemove": [
+      "Continue to confirmation",
+      "继续确认移除",
+      "繼續確認移除",
+      "確認に進む",
+      "확인 계속"
+    ],
+    "confirmQuestion": [
+      "Remove this registration?",
+      "确认移除登记？",
+      "確認移除登記？",
+      "この登録を解除しますか？",
+      "이 등록을 해제할까요?"
+    ],
+    "closeWindows": [
+      "Close all active or initializing windows, then refresh.",
+      "请先关闭所有活动或初始化中的窗口，然后刷新。",
+      "請先關閉所有使用中或初始化中的視窗，再重新整理。",
+      "使用中・初期化中のウィンドウをすべて閉じてから更新してください。",
+      "사용 중이거나 초기화 중인 창을 모두 닫은 후 새로 고침하세요."
+    ],
+    "invalidBinding": [
+      "The binding identity could not be verified. Removal is disabled.",
+      "绑定身份无法确认，暂不允许移除。",
+      "繫結身分無法確認，暫不允許移除。",
+      "登録の識別情報を確認できないため、解除できません。",
+      "등록 식별 정보를 확인할 수 없어 해제할 수 없습니다."
+    ],
+    "removeHint": [
+      "Only origin.json is removed. REAPER will ask for confirmation next.",
+      "仅移除 origin.json；下一步仍需在 REAPER 中确认。",
+      "僅移除 origin.json；下一步仍需在 REAPER 中確認。",
+      "origin.json のみ解除します。次に REAPER で確認が表示されます。",
+      "origin.json만 삭제합니다. 다음 단계에서 REAPER가 확인을 요청합니다."
+    ],
+    "nativeConfirm": [
+      "Review the registration in the REAPER confirmation dialog.",
+      "请在 REAPER 确认窗口中核对登记信息。",
+      "請在 REAPER 確認視窗中核對登記資訊。",
+      "REAPER の確認ダイアログで登録情報をご確認ください。",
+      "REAPER 확인 창에서 등록 정보를 확인하세요."
+    ],
+    "cancelled": [
+      "Registration removal cancelled.",
+      "已取消移除登记。",
+      "已取消移除登記。",
+      "登録解除をキャンセルしました。",
+      "등록 해제를 취소했습니다."
+    ],
+    "removed": [
+      "Registration removed. App files and user data were kept.",
+      "登记已移除；应用及用户数据已保留。",
+      "登記已移除；應用與使用者資料已保留。",
+      "登録を解除しました。アプリとユーザーデータは保持されています。",
+      "등록을 해제했습니다. 앱 파일과 사용자 데이터는 유지됩니다."
+    ],
+    "revealing": [
+      "Locating folder…",
+      "正在定位文件夹…",
+      "正在尋找資料夾…",
+      "フォルダーを表示中…",
+      "폴더 위치를 여는 중…"
+    ],
+    "revealed": [
+      "Folder opened.",
+      "已打开目录。",
+      "已開啟目錄。",
+      "フォルダーを開きました。",
+      "폴더를 열었습니다."
+    ],
+    "loading": [
+      "Reading registered apps…",
+      "正在读取已登记应用…",
+      "正在讀取已登記應用…",
+      "登録済みアプリを読み込み中…",
+      "등록된 앱을 읽는 중…"
+    ],
+    "verifying": [
+      "Checking Root, Entry and window status.",
+      "正在验证 Root、Entry 与窗口状态。",
+      "正在驗證 Root、Entry 與視窗狀態。",
+      "Root、Entry、ウィンドウの状態を確認しています。",
+      "Root, Entry 및 창 상태를 확인하고 있습니다."
+    ],
+    "noMatches": [
+      "No matching apps",
+      "没有匹配的应用",
+      "沒有符合的應用",
+      "一致するアプリがありません",
+      "일치하는 앱이 없습니다"
+    ],
+    "adjustSearch": [
+      "Try another search or adjust the filters.",
+      "调整搜索词或筛选条件后重试。",
+      "調整搜尋詞或篩選條件後重試。",
+      "検索語や絞り込み条件を変更してください。",
+      "검색어나 필터를 변경해 보세요."
+    ],
+    "noApps": [
+      "No registered apps yet",
+      "尚无已登记应用",
+      "尚無已登記應用",
+      "登録済みアプリはありません",
+      "아직 등록된 앱이 없습니다"
+    ],
+    "firstLaunch": [
+      "Apps appear here after their first successful launch through ReaWebAPI.",
+      "首次成功打开 ReaWebAPI App 后，会出现在这里。",
+      "首次成功開啟 ReaWebAPI App 後，會顯示在這裡。",
+      "ReaWebAPI で初めて正常に起動したアプリがここに表示されます。",
+      "ReaWebAPI에서 처음 실행에 성공한 앱이 여기에 표시됩니다."
+    ],
+    "launch": [
+      "Run ReaWebAPI_AppManager.lua in REAPER to connect the Lua backend.",
+      "请在 REAPER 中运行 ReaWebAPI_AppManager.lua，以连接 Lua 后端。",
+      "請在 REAPER 中執行 ReaWebAPI_AppManager.lua，以連線 Lua 後端。",
+      "REAPER で ReaWebAPI_AppManager.lua を実行して Lua バックエンドに接続してください。",
+      "REAPER에서 ReaWebAPI_AppManager.lua를 실행하여 Lua 백엔드에 연결하세요."
+    ],
+    "loaded": [
+      "Loaded {count} registrations. Window counts reflect this refresh.",
+      "已读取 {count} 条登记。窗口数量为本次刷新的快照。",
+      "已讀取 {count} 筆登記。視窗數量為本次重新整理的快照。",
+      "{count} 件の登録を読み込みました。ウィンドウ数は更新時点の値です。",
+      "등록 {count}개를 읽었습니다. 창 수는 새로 고침 시점의 값입니다."
+    ],
+    "truncated": [
+      "More than 8192 directory entries. Showing partial results.",
+      "登记目录超过本次枚举上限（8192 个目录项）；当前显示部分结果。",
+      "登記目錄超過本次列舉上限（8192 個目錄項）；目前顯示部分結果。",
+      "ディレクトリー項目数が 8192 を超えたため、一部の結果を表示しています。",
+      "디렉터리 항목이 8192개를 초과하여 일부 결과만 표시합니다."
+    ],
+    "storageTitle": [
+      "Data locations & scope",
+      "数据位置与管理范围",
+      "資料位置與管理範圍",
+      "データの場所と管理範囲",
+      "데이터 위치 및 관리 범위"
+    ],
+    "storageProfile": [
+      "All apps share the {path} browser profile. localStorage and IndexedDB are isolated by reaweb://<appId> Origin. Cookie behavior depends on the platform WebView engine.",
+      "所有 App 共用 {path} 浏览器 Profile。localStorage / IndexedDB 按 reaweb://<appId> Origin 隔离。Cookie 行为由各平台 WebView 引擎决定。",
+      "所有 App 共用 {path} 瀏覽器 Profile。localStorage / IndexedDB 依 reaweb://<appId> Origin 隔離。Cookie 行為由各平台 WebView 引擎決定。",
+      "すべてのアプリは {path} ブラウザープロファイルを共有します。localStorage と IndexedDB は reaweb://<appId> Origin ごとに分離されます。Cookie の動作は各プラットフォームの WebView に依存します。",
+      "모든 앱은 {path} 브라우저 프로필을 공유합니다. localStorage와 IndexedDB는 reaweb://<appId> Origin별로 분리됩니다. Cookie 동작은 플랫폼의 WebView 엔진에 따라 다릅니다."
+    ],
+    "storageScope": [
+      "Data and WindowState live under each Apps/<appId>/ folder. Removing a registration preserves apps and user data. Type comes from Runtime records or an explicit JSFX source/entry association, even when HTML is missing. Without reliable evidence the type remains Unknown; folder names and ID prefixes are never used.",
+      "Data 与 WindowState 位于各自的 Apps/<appId>/ 目录。移除登记会保留应用与用户数据。类型来自 Runtime 记录或明确匹配的 JSFX 源文件与入口关联，HTML 缺失时也可保留分类。没有可靠证据时显示“未知”，不根据目录名或 ID 前缀判断。",
+      "Data 與 WindowState 位於各自的 Apps/<appId>/ 目錄。移除登記會保留應用與使用者資料。類型來自 Runtime 記錄或明確相符的 JSFX 原始碼與入口關聯，HTML 缺失時也可保留分類。沒有可靠證據時顯示「未知」，不依目錄名稱或 ID 前綴判斷。",
+      "Data と WindowState は各 Apps/<appId>/ 内に保存されます。登録解除後もアプリとユーザーデータは保持されます。種類は Runtime の記録、または JSFX ソースと入口の明確な関連付けから判定し、HTML がなくても分類できます。根拠がなければ「不明」と表示し、フォルダー名や ID の接頭辞では判定しません。",
+      "Data와 WindowState는 각 Apps/<appId>/에 저장됩니다. 등록 해제 후에도 앱과 사용자 데이터는 유지됩니다. Runtime 기록 또는 JSFX 소스와 진입점의 명확한 연결로 유형을 판단하며 HTML이 없어도 분류를 유지할 수 있습니다. 근거가 없으면 알 수 없음으로 표시하고 폴더 이름이나 ID 접두사로 판단하지 않습니다."
+    ],
+    "busy": [
+      "Please wait for the current operation to finish.",
+      "请等待当前操作完成。",
+      "請等待目前操作完成。",
+      "現在の処理が完了するまでお待ちください。",
+      "현재 작업이 끝날 때까지 기다려 주세요."
+    ],
+    "stale": [
+      "Registration changed. Refresh and confirm again.",
+      "登记已变化，请刷新后重新确认。",
+      "登記已變更，請重新整理後再次確認。",
+      "登録が変更されています。更新して再度確認してください。",
+      "등록 정보가 변경되었습니다. 새로 고침 후 다시 확인하세요."
+    ],
+    "folderTimeout": [
+      "The file manager has not responded yet. Please try again later.",
+      "文件管理器尚未响应，请稍后重试。",
+      "檔案管理員尚未回應，請稍後重試。",
+      "ファイルマネージャーが応答していません。後でもう一度お試しください。",
+      "파일 관리자가 응답하지 않습니다. 잠시 후 다시 시도하세요."
+    ],
+    "hostError": [
+      "The host could not complete this operation.",
+      "后端未能完成操作。",
+      "後端無法完成操作。",
+      "ホストで処理を完了できませんでした。",
+      "호스트가 작업을 완료하지 못했습니다."
+    ],
+    "badMessage": [
+      "Could not read the backend message.",
+      "无法读取后端消息。",
+      "無法讀取後端訊息。",
+      "バックエンドのメッセージを読み取れませんでした。",
+      "백엔드 메시지를 읽을 수 없습니다."
+    ],
+    "invalidRequest": [
+      "Invalid manager request.",
+      "管理器请求无效。",
+      "管理器請求無效。",
+      "管理ツールへの要求が無効です。",
+      "관리자 요청이 올바르지 않습니다."
+    ],
+    "sourceRuntime": [
+      "Current Runtime window association",
+      "当前 Runtime 窗口关联",
+      "目前 Runtime 視窗關聯",
+      "現在の Runtime のウィンドウ関連付け",
+      "현재 Runtime의 창 연결 정보"
+    ],
+    "sourceIdentity": [
+      "Matching persistent ordinary WebUI identity marker",
+      "匹配的普通 WebUI 持久身份标记",
+      "符合的一般 WebUI 持久身分標記",
+      "一致する通常 WebUI の永続識別マーカー",
+      "일치하는 일반 WebUI 영구 식별 표시"
+    ],
+    "sourceMixed": [
+      "Mixed ordinary and JSFX Runtime windows",
+      "同时存在普通与 JSFX Runtime 窗口",
+      "同時存在一般與 JSFX Runtime 視窗",
+      "通常と JSFX の両方のウィンドウが存在",
+      "일반 및 JSFX Runtime 창이 함께 존재함"
+    ],
+    "validEntry": [
+      "Root is accessible and Entry is a valid local HTML file",
+      "Root 可访问，Entry 是有效的本地 HTML 文件",
+      "Root 可存取，Entry 是有效的本機 HTML 檔案",
+      "Root にアクセスでき、Entry は有効なローカル HTML ファイルです",
+      "Root에 접근할 수 있으며 Entry는 유효한 로컬 HTML 파일입니다"
+    ],
+    "missingRoot": [
+      "Root does not exist or is not a directory",
+      "Root 不存在或不是目录",
+      "Root 不存在或不是目錄",
+      "Root が存在しないか、ディレクトリーではありません",
+      "Root가 없거나 디렉터리가 아닙니다"
+    ],
+    "missingEntry": [
+      "Entry is missing or is not a regular HTML file",
+      "Entry 缺失或不是有效的 HTML 文件",
+      "Entry 遺失或不是有效的 HTML 檔案",
+      "Entry が見つからないか、有効な HTML ファイルではありません",
+      "Entry가 없거나 유효한 HTML 파일이 아닙니다"
+    ],
+    "unknownEntry": [
+      "Entry metadata is unavailable",
+      "无法取得 Entry 元数据",
+      "無法取得 Entry 中繼資料",
+      "Entry のメタデータを取得できません",
+      "Entry 메타데이터를 사용할 수 없습니다"
+    ],
+    "invalidEntry": [
+      "Recorded Entry is not a valid relative HTML path",
+      "记录的 Entry 不是有效的相对 HTML 路径",
+      "記錄的 Entry 不是有效的相對 HTML 路徑",
+      "記録された Entry は有効な相対 HTML パスではありません",
+      "기록된 Entry가 유효한 상대 HTML 경로가 아닙니다"
+    ],
+    "unverifiedBinding": [
+      "Binding has not been verified",
+      "绑定尚未验证",
+      "繫結尚未驗證",
+      "登録は未検証です",
+      "등록이 검증되지 않았습니다"
+    ],
+    "sourcePersistent": [
+      "Type recorded by Runtime when binding the app",
+      "Runtime 建立绑定时记录的类型",
+      "Runtime 建立綁定時記錄的類型",
+      "Runtime がアプリの関連付け時に記録した種類",
+      "Runtime이 앱 연결 시 기록한 유형"
+    ],
+    "sourcePersistentMixed": [
+      "Binding used by both ordinary and JSFX WebUI; type is ambiguous",
+      "此绑定曾用于普通与 JSFX WebUI，类型不唯一",
+      "此綁定曾用於一般與 JSFX WebUI，類型不唯一",
+      "通常の WebUI と JSFX WebUI の両方で使用されたため種類を特定できません",
+      "일반 WebUI와 JSFX WebUI 모두 사용한 연결로 유형이 명확하지 않음"
+    ],
+    "columnHint": [
+      "Click to sort; right-click to choose columns or reset layout; drag to reorder (Alt + Left/Right also works)",
+      "点击排序；右键选择显示列或重置布局；拖动调整列顺序（Alt + 左右方向键也可移动）",
+      "點擊排序；右鍵選擇顯示欄或重設配置；拖曳調整欄順序（Alt + 左右方向鍵也可移動）",
+      "クリックで並べ替え、右クリックで表示列を選択・配置をリセット。ドラッグまたは Alt + 左右キーで列を移動",
+      "클릭하여 정렬, 오른쪽 클릭으로 표시 열 선택 또는 배치 초기화. 드래그 또는 Alt + 왼쪽/오른쪽 키로 열 이동"
+    ],
+    "resetColumns": [
+      "Reset columns",
+      "重置列布局",
+      "重設欄配置",
+      "列の配置をリセット",
+      "열 배치 초기화"
+    ],
+    "rootEntry": [
+      "Root / Entry",
+      "Root / Entry",
+      "Root / Entry",
+      "Root / Entry",
+      "Root / Entry"
+    ],
+    "version": [
+      "Version",
+      "版本",
+      "版本",
+      "バージョン",
+      "버전"
+    ],
+    "sortColumn": [
+      "Sort by {column}",
+      "按{column}排序",
+      "依{column}排序",
+      "{column}で並べ替え",
+      "{column} 기준 정렬"
+    ],
+    "resizeColumn": [
+      "Resize {column} column",
+      "调整{column}列宽",
+      "調整{column}欄寬",
+      "{column}列の幅を変更",
+      "{column} 열 너비 조절"
+    ],
+    "resizeHint": [
+      "Drag to resize; Left/Right keys adjust width",
+      "拖动调整列宽；左右方向键微调",
+      "拖曳調整欄寬；左右方向鍵微調",
+      "ドラッグで幅を変更、左右キーで微調整",
+      "드래그하여 너비 조절, 왼쪽/오른쪽 키로 미세 조절"
+    ],
+    "resizeDetails": [
+      "Resize details panel",
+      "调整详情栏宽度",
+      "調整詳細資料欄寬度",
+      "詳細パネルの幅を変更",
+      "상세 패널 너비 조절"
+    ],
+    "resizeDetailsHint": [
+      "Drag to resize; use arrow keys; double-click to reset",
+      "左右拖动调整宽度；方向键微调；双击恢复默认",
+      "左右拖曳調整寬度；方向鍵微調；按兩下還原預設",
+      "左右にドラッグして幅を変更。矢印キーで微調整、ダブルクリックで初期化",
+      "좌우 드래그로 너비 조절, 방향키로 미세 조절, 두 번 클릭하여 초기화"
+    ],
+    "columnMenu": [
+      "Columns & layout",
+      "显示列与布局",
+      "顯示欄與配置",
+      "表示列とレイアウト",
+      "표시 열 및 배치"
+    ],
+    "chooseColumns": [
+      "Choose columns",
+      "选择显示列",
+      "選擇顯示欄",
+      "表示する列を選択",
+      "표시할 열 선택"
+    ],
+    "resizeDetailFields": [
+      "Resize detail columns",
+      "调整详情列宽",
+      "調整詳細資料欄寬",
+      "詳細欄の幅を調整",
+      "상세 정보 열 너비 조절"
+    ],
+    "resizeDetailFieldsHint": [
+      "Drag to resize; use arrow keys to adjust; double-click to reset",
+      "左右拖动调整列宽，方向键微调，双击恢复默认",
+      "左右拖曳調整欄寬，方向鍵微調，按兩下恢復預設",
+      "ドラッグで幅を変更、矢印キーで微調整、ダブルクリックでリセット",
+      "드래그로 너비 조절, 방향키로 미세 조절, 두 번 클릭하여 초기화"
+    ],
+    "sourceAssociation": [
+      "Matching JSFX source and WebUI association entry",
+      "JSFX 源文件及 WebUI 关联入口与登记匹配",
+      "JSFX 原始碼及 WebUI 關聯入口與登記相符",
+      "JSFX ソースと WebUI の関連付け先が登録の入口と一致",
+      "JSFX 소스와 WebUI 연결 진입점이 등록 정보와 일치"
+    ]
+  }
+}

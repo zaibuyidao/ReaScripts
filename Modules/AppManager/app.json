@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "reawebapi-app-manager",
+  "name": "ReaWebAPI_AppManager",
+  "version": "0.1.0",
+  "author": "ReaWebAPI",
+  "entry": "index.html"
+}

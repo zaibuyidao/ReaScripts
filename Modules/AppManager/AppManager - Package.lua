@@ -1,0 +1,20 @@
+-- @description ReaWebAPI App Manager
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
+-- @metapackage
+-- @provides
+--   [nomain] app.json
+--   [nomain] index.html
+--   [nomain] locales.json
+--   [nomain] lua/*.lua
+--   [main=main] ReaWebAPI_AppManager.lua
+-- @about
+--   Lightweight manager for registered ReaWebAPI apps and JSFX WebUIs in REAPER.
+--   Browse and search registrations, inspect details, open folders and remove registrations
+--   without deleting application files or user data.
+--   Requires the separately installed ReaWebAPI extension with the ReaWeb_AppManager Lua interface.
+--   Run ReaWebAPI_AppManager.lua from the REAPER Action List.

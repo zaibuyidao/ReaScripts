@@ -1,0 +1,2643 @@
+<!doctype html>
+<!-- ReaWebAPI_AppManager - editable frontend in one file.
+     1. STYLE: colors and layout; 2. BODY: interface markup; 3. SCRIPT: behavior.
+     No build step. Keep locales.json and the Lua launcher beside this file. -->
+<html lang="en" data-appearance="paper">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>ReaWebAPI_AppManager</title>
+    <!-- 样式 / Styles: theme tokens, compact layout, table and dialogs. -->
+    <style id="app-styles">
+      /* 01 · 配色与字体 / Theme tokens — edit these values to customize colors */
+      :root {
+        color-scheme: light;
+        --page-gutter: 18px;
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --panel: #f9fafb;
+        --text: #191f28;
+        --muted: #6b7684;
+        --line: #e5e8eb;
+        --column-line: #d8dde5;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --on-primary: #ffffff;
+        --accent: #2563eb;
+        --accent-soft: #edf4ff;
+        --focus: #7aa7fb;
+        --danger: #c94350;
+        --good: #18794e;
+        --good-bg: #eaf7f0;
+        --warn: #996419;
+        --warn-bg: #fff5e5;
+        --unknown: #667085;
+        --unknown-bg: #f0f2f5;
+        font-family:
+          "Segoe UI Variable", "Segoe UI", "Yu Gothic UI", "Microsoft YaHei",
+          sans-serif;
+        font-size: 13px;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+      }
+      /* 02 · 深色配色 / Dark theme overrides */
+      :root[data-appearance="ink"] {
+        color-scheme: dark;
+        --column-line: #343d4a;
+        --primary: #3567db;
+        --primary-hover: #4074ed;
+        --bg: #101216;
+        --surface: #181b21;
+        --panel: #1d2129;
+        --text: #eceff4;
+        --muted: #a2adbd;
+        --line: #2d333e;
+        --accent: #8aafff;
+        --accent-soft: #25334c;
+        --focus: #82aaff;
+        --danger: #f0a5ae;
+        --good: #80d8ac;
+        --good-bg: #203b31;
+        --warn: #f2cd85;
+        --warn-bg: #403421;
+        --unknown: #acb6c7;
+        --unknown-bg: #2b323e;
+      }
+      /* 03 · 基础控件与页头 / Base controls and compact header */
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-width: 620px;
+        min-height: 320px;
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      select {
+        cursor: pointer;
+      }
+      button {
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 6px 10px;
+        white-space: nowrap;
+      }
+      button:hover:not(:disabled) {
+        border-color: var(--focus);
+        background: var(--accent-soft);
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+      header {
+        position: relative;
+        width: 100%;
+        flex: none;
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 11px var(--page-gutter);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      /* Match the header rule to the same content edges as the heading and table. */
+      header::after {
+        content: "";
+        position: absolute;
+        left: var(--page-gutter);
+        right: var(--page-gutter);
+        bottom: 0;
+        height: 1px;
+        background: var(--line);
+        pointer-events: none;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-mark {
+        display: grid;
+        grid-template-columns: 10px 10px;
+        gap: 3px;
+        transform: rotate(-6deg);
+        margin-right: 4px;
+      }
+      .brand-mark i {
+        width: 10px;
+        height: 10px;
+        border: 1.5px solid var(--accent);
+        border-radius: 3px;
+      }
+      .brand-mark i:first-child,
+      .brand-mark i:last-child {
+        background: var(--accent);
+      }
+      .eyebrow {
+        font-size: 9px;
+        letter-spacing: 1.65px;
+        font-weight: 600;
+        color: var(--muted);
+        margin: 0 0 3px;
+      }
+      h1 {
+        font-family:
+          "Segoe UI Variable Display", "Aptos Display", "Segoe UI", sans-serif;
+        font-size: 24px;
+        letter-spacing: -0.85px;
+        margin: 0;
+        font-weight: 500;
+        line-height: 1.12;
+      }
+      .title-app {
+        font-weight: 700;
+        letter-spacing: -1px;
+      }
+      h2 {
+        font-size: 15px;
+        letter-spacing: -0.4px;
+        margin: 0;
+        font-weight: 550;
+      }
+      h3 {
+        font-size: 15px;
+        font-weight: 550;
+      }
+      p {
+        line-height: 1.5;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .settings-button {
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .settings-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      .settings-icon {
+        flex: none;
+      }
+      .settings-row {
+        display: grid;
+        grid-template-columns: 1fr 190px;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .settings-row:has(+ .settings-row) {
+        border-bottom: 0;
+      }
+      .settings-row label {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .settings-row select {
+        max-width: none;
+        width: 100%;
+        padding: 7px 10px;
+        font-size: 12px;
+      }
+      .settings-row p {
+        grid-column: 1 / -1;
+        margin: -2px 0 0;
+        font-size: 11px;
+      }
+      .primary {
+        color: var(--on-primary);
+        background: var(--primary);
+        border-color: var(--primary);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 6px 12px;
+      }
+      .primary:hover:not(:disabled) {
+        background: var(--primary-hover);
+        color: var(--on-primary);
+        border-color: var(--primary-hover);
+      }
+      .primary > span[aria-hidden] {
+        font-size: 15px;
+        margin-right: 5px;
+        vertical-align: -1px;
+      }
+      /* 04 · 主布局与筛选栏 / Workspace and filters */
+      main {
+        width: 100%;
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 10px var(--page-gutter) 6px;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .intro {
+        flex: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .intro-heading {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        min-width: 0;
+      }
+      .intro h2 {
+        white-space: nowrap;
+      }
+      .total {
+        display: inline-block;
+        vertical-align: 2px;
+        min-width: 23px;
+        text-align: center;
+        font-size: 11px;
+        padding: 2px 6px;
+        margin-left: 7px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-radius: 5px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0;
+      }
+      .counts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .counts > span + span {
+        border-left: 1px solid var(--line);
+        padding-left: 10px;
+      }
+      .counts strong {
+        color: var(--text);
+        font-weight: 500;
+        font-size: 12px;
+        margin-right: 5px;
+        font-variant-numeric: tabular-nums;
+      }
+      .workspace {
+        flex: 1;
+        min-height: 0;
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 5px var(--details-width, 306px);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        overflow: hidden;
+        background: var(--surface);
+        align-items: stretch;
+      }
+      .catalog {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .search {
+        flex: 1 1 180px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 0 8px;
+        background: var(--panel);
+      }
+      /* Highlight the entire search field, including its icon, on focus. */
+      .search:focus-within {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 1px var(--focus);
+      }
+      .search input:focus {
+        outline: none;
+      }
+      .search-icon {
+        display: block;
+        flex: 0 0 16px;
+        width: 16px;
+        height: 16px;
+        align-self: center;
+        color: var(--muted);
+      }
+      input {
+        width: 100%;
+        background: transparent;
+        border: 0;
+        padding: 6px 0;
+        color: var(--text);
+        min-width: 80px;
+        font-size: 12px;
+      }
+      input::placeholder {
+        color: var(--muted);
+      }
+      select {
+        border: 1px solid var(--line);
+        color: var(--text);
+        background: var(--surface);
+        border-radius: 5px;
+        font-size: 11px;
+        padding: 6px 20px 6px 7px;
+        max-width: 150px;
+      }
+      /* 05 · 列表、排序与列分割线 / Table, sorting and continuous separators */
+      .table-viewport {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #column-lines {
+        position: absolute;
+        left: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 2;
+      }
+      #column-lines > rect {
+        fill: var(--column-line);
+        shape-rendering: crispEdges;
+      }
+      .table-scroll {
+        overflow: auto;
+        height: 100%;
+        max-height: none;
+        min-height: 0;
+        scrollbar-width: thin;
+        scrollbar-color: var(--line) transparent;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+        font-size: 12px;
+        min-width: 680px;
+      }
+      th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--muted);
+        background: var(--panel);
+        padding: 0;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        font-size: 10px;
+        letter-spacing: 0.3px;
+      }
+      th {
+        user-select: none;
+      }
+      .column-sort {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
+        border: 0;
+        border-radius: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding: 8px var(--cell-inset, 10px);
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        touch-action: none;
+      }
+      .column-sort > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .sort-indicator {
+        margin-left: auto;
+        width: 13px;
+        height: 13px;
+        color: var(--accent);
+        flex: none;
+      }
+      th[aria-sort]:not([aria-sort="none"]) {
+        color: var(--text);
+      }
+      .column-resize {
+        outline: none;
+        box-shadow: none;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: min(8px, 100%);
+        cursor: col-resize;
+        z-index: 3;
+        touch-action: none;
+      }
+      .column-resize:focus,
+      .column-resize:focus-visible {
+        outline: none;
+        box-shadow: none;
+      }
+      .column-resize::after {
+        transform: translateX(var(--line-snap, 0px));
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 7px;
+        bottom: 7px;
+        width: 1px;
+        background: var(--line);
+      }
+      .column-resize:hover::after,
+      .column-resize:focus-visible::after {
+        background: var(--accent);
+        width: 2px;
+      }
+      th.drop-before {
+        box-shadow: inset 3px 0 var(--accent);
+      }
+      th.drop-after {
+        box-shadow: inset -3px 0 var(--accent);
+      }
+      th.column-dragging {
+        opacity: 0.5;
+      }
+      .reordering-columns,
+      .reordering-columns * {
+        cursor: grabbing !important;
+        user-select: none !important;
+      }
+      .resizing-columns,
+      .resizing-columns * {
+        cursor: col-resize !important;
+        user-select: none !important;
+      }
+
+      td {
+        border: 0;
+        box-shadow: inset 0 -1px var(--line);
+        padding: 8px var(--cell-inset, 10px);
+        vertical-align: middle;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: var(--panel);
+      }
+      tbody tr.selected {
+        background: var(--accent-soft);
+        box-shadow: inset 2px 0 var(--accent);
+      }
+      .cell-main,
+      .cell-sub {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cell-main {
+        font-size: 12px;
+        font-weight: 400;
+      }
+      .cell-sub {
+        font:
+          10px/1.6 Consolas,
+          "SFMono-Regular",
+          monospace;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .row-name {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border: 0;
+        padding: 0;
+        border-radius: 1px;
+        background: none !important;
+        font-weight: 600;
+        font-size: 12px;
+        text-align: left;
+      }
+      .mono {
+        font-family: Consolas, "SFMono-Regular", monospace;
+        font-size: 11px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 5px;
+        padding: 3px 6px;
+        font-size: 10px;
+        background: var(--panel);
+        color: var(--muted);
+        white-space: nowrap;
+        font-weight: 500;
+      }
+      .badge.available {
+        color: var(--good);
+        background: var(--good-bg);
+      }
+      .badge.missing {
+        color: var(--warn);
+        background: var(--warn-bg);
+      }
+      .badge.unverified {
+        color: var(--unknown);
+        background: var(--unknown-bg);
+      }
+      .window-count {
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+        text-align: center;
+      }
+      /* 紧凑状态栏 / Status on the left, registration count on the right. */
+      .catalog-footer {
+        flex: none;
+        align-items: center;
+        padding: 7px 10px;
+        font-size: 10px;
+        color: var(--muted);
+        display: flex;
+        justify-content: flex-end;
+        text-align: right;
+        border-top: 1px solid var(--line);
+        gap: 10px;
+      }
+      #shown {
+        flex: none;
+        white-space: nowrap;
+      }
+      /* 06 · 应用详情与操作 / Details panel and actions */
+      aside {
+        padding: 12px;
+        background: var(--panel);
+        min-width: 0;
+        min-height: 0;
+        contain: size;
+        overflow: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--line) transparent;
+      }
+      #details:has(> .detail-placeholder) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .detail-placeholder {
+        padding: 16px 8px;
+        text-align: center;
+        color: var(--muted);
+        width: 100%;
+      }
+      .detail-placeholder h3 {
+        margin: 0 0 8px;
+      }
+      .detail-placeholder p {
+        font-size: 12px;
+        max-width: 190px;
+        margin: 0 auto;
+      }
+      .detail-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 9px;
+        align-items: start;
+        margin: 6px 0 3px;
+      }
+      .detail-heading h2 {
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+        font-size: 16px;
+        font-weight: 550;
+      }
+      .detail-type {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 3px 0 8px;
+      }
+      .detail-fields {
+        margin: 0;
+      }
+      .detail-field {
+        position: relative;
+        --label-width: clamp(
+          32px,
+          var(--detail-label-width, 78px),
+          calc(100% - 72px)
+        );
+        display: grid;
+        grid-template-columns: var(--label-width) minmax(0, 1fr);
+        align-items: start;
+        gap: 8px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      /* Quiet shared divider: each row uses the same saved label width. */
+      .detail-field-resize {
+        position: absolute;
+        top: 0;
+        bottom: -1px;
+        left: calc(var(--label-width) + 1px);
+        width: 6px;
+        cursor: col-resize;
+        touch-action: none;
+        outline: none;
+      }
+      .detail-field-resize::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 3px;
+        width: 1px;
+        background: var(--line);
+        opacity: 0.7;
+      }
+      .detail-field-resize:hover::after,
+      .detail-field-resize:focus-visible::after,
+      .resizing-detail-fields .detail-field-resize::after {
+        background: var(--muted);
+        opacity: 0.45;
+      }
+      .resizing-detail-fields,
+      .resizing-detail-fields * {
+        cursor: col-resize !important;
+        user-select: none !important;
+      }
+      .detail-fields dt {
+        margin: 0;
+        padding-top: 2px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+      dt {
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.15px;
+        margin-bottom: 4px;
+      }
+      dd {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        user-select: text;
+      }
+      .field-value {
+        min-width: 0;
+        display: flex;
+        gap: 4px;
+        align-items: start;
+      }
+      .field-value > span {
+        flex: 1;
+        min-width: 0;
+      }
+      .copy {
+        font-size: 10px;
+        padding: 2px 5px;
+        color: var(--muted);
+        background: transparent;
+        border-color: transparent;
+      }
+      .copy:hover:not(:disabled) {
+        color: var(--text);
+        border-color: var(--line);
+      }
+      .detail-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin: 10px 0;
+      }
+      .detail-actions button {
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+      .danger {
+        color: var(--danger);
+        border-color: color-mix(in srgb, var(--danger) 24%, var(--line));
+        background: transparent;
+      }
+      .danger:hover:not(:disabled) {
+        border-color: var(--danger);
+        background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+      }
+      .danger-text {
+        color: var(--danger);
+      }
+      .remove-area {
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      .remove-area > button {
+        width: 100%;
+        font-size: 12px;
+      }
+      .hint {
+        font-size: 10px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 6px 0 0;
+      }
+      .empty {
+        padding: 26px 16px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .empty h3 {
+        color: var(--text);
+        margin: 8px 0 5px;
+      }
+      .empty p {
+        font-size: 12px;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .message {
+        flex: 1;
+        min-width: 0;
+        line-height: 14px;
+        text-align: left;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .message.error {
+        color: var(--danger);
+      }
+      /* 07 · 对话框与辅助样式 / Dialogs and accessibility */
+      dialog {
+        max-width: 570px;
+        width: calc(100vw - 48px);
+        padding: 20px;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 20px 90px #172b4d18;
+      }
+      dialog::backdrop {
+        background: #11182766;
+        backdrop-filter: blur(3px);
+      }
+      dialog h2 {
+        font-size: 20px;
+        letter-spacing: -0.8px;
+        margin-top: 8px;
+      }
+      dialog p {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      dialog dl {
+        padding: 10px 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        max-height: 35vh;
+        overflow: auto;
+      }
+      dialog dt:not(:first-child) {
+        margin-top: 10px;
+      }
+      .preserve {
+        border-left: 2px solid var(--focus);
+        padding-left: 12px;
+      }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* 08 · 窄窗口布局 / Responsive layout */
+      @media (max-width: 1050px) {
+        .workspace {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: minmax(0, 1fr) auto;
+        }
+        #panel-divider {
+          display: none;
+        }
+        aside {
+          contain: none;
+          border-left: 0;
+          border-top: 1px solid var(--line);
+          max-height: min(270px, 40vh);
+          padding: 10px 12px;
+        }
+        #details:has(> .detail-placeholder) {
+          min-height: 110px;
+        }
+        .detail-placeholder {
+          padding: 12px 0;
+          text-align: center;
+        }
+        .detail-placeholder h3 {
+          margin: 0 0 4px;
+          font-size: 12px;
+        }
+        .detail-placeholder p {
+          max-width: none;
+          font-size: 11px;
+        }
+        .detail-fields {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          column-gap: 20px;
+        }
+        .detail-actions {
+          margin: 8px 0;
+        }
+      }
+      @media (max-width: 720px) {
+        :root {
+          --page-gutter: 12px;
+        }
+        header {
+          padding: 10px var(--page-gutter);
+        }
+        .intro {
+          align-items: start;
+        }
+        .intro-heading {
+          gap: 6px 12px;
+        }
+        .filters {
+          gap: 5px;
+        }
+        .search {
+          flex-basis: 100%;
+        }
+        .detail-fields {
+          column-gap: 12px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        button {
+          transition:
+            background 0.14s,
+            border-color 0.14s,
+            color 0.14s;
+        }
+      }
+
+      /* 09 · 可拖动侧栏与列菜单 / Panel divider and column menu */
+      #panel-divider {
+        position: relative;
+        cursor: col-resize;
+        touch-action: none;
+        background: var(--panel);
+        outline-offset: -1px;
+      }
+      #panel-divider::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 2px;
+        width: 1px;
+        background: var(--line);
+      }
+      #panel-divider:hover::after,
+      #panel-divider:focus-visible::after,
+      .resizing-details #panel-divider::after {
+        background: var(--accent);
+        width: 2px;
+      }
+      .resizing-details,
+      .resizing-details * {
+        cursor: col-resize !important;
+        user-select: none !important;
+      }
+
+      .column-context-menu {
+        position: fixed;
+        z-index: 40;
+        min-width: 190px;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 16px);
+        overflow: auto;
+        padding: 5px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        box-shadow: 0 8px 28px #0002;
+      }
+      .column-context-menu button {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 7px 9px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        text-align: left;
+        font-size: 12px;
+        color: var(--text);
+      }
+      .column-context-menu button:hover,
+      .column-context-menu button:focus-visible {
+        background: var(--accent-soft);
+      }
+      .column-check {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 15px;
+        height: 15px;
+        color: var(--accent);
+      }
+      .menu-separator {
+        height: 1px;
+        background: var(--line);
+        margin: 5px 3px;
+      }
+
+      #refresh {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      .refresh-icon {
+        flex: none;
+      }
+
+      /* Keep physical column width independent of cell contents, down to 10 px. */
+      [data-column="name"] {
+        --cell-width: var(--width-name, 100px);
+      }
+      [data-column="type"] {
+        --cell-width: var(--width-type, 100px);
+      }
+      [data-column="root"] {
+        --cell-width: var(--width-root, 100px);
+      }
+      [data-column="version"] {
+        --cell-width: var(--width-version, 100px);
+      }
+      [data-column="status"] {
+        --cell-width: var(--width-status, 100px);
+      }
+      [data-column="activeWindowCount"] {
+        --cell-width: var(--width-activeWindowCount, 100px);
+      }
+      th[data-column],
+      td[data-column] {
+        --cell-inset: clamp(0px, calc((var(--cell-width) - 10px) / 2), 10px);
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 页头 / Branding and primary actions -->
+    <header>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"
+          ><i></i><i></i><i></i><i></i
+        ></span>
+        <div>
+          <p class="eyebrow">REAWEBAPI</p>
+          <h1><span class="title-app">App</span> Manager</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="settings" class="settings-button" disabled>
+          <svg
+            class="settings-icon"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.65"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="m9 3 .5-1h5l.5 3 2 1.2 2.8-1 2.5 4.3-2.3 2v2.3l2.3 2-2.5 4.3-2.8-1L15 20l-.5 2h-5L9 20l-2-1.2-2.8 1-2.5-4.3 2.3-2v-2.3l-2.3-2 2.5-4.3 2.8 1L9 5V3Z"
+            />
+            <circle cx="12" cy="12" r="4" /></svg
+          ><span data-i18n="settings">Settings</span></button
+        ><button id="refresh" class="primary" disabled>
+          <svg
+            class="refresh-icon"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.65"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M20 7a9 9 0 0 0-15-2L2 8 M2 2v6h6 M4 17a9 9 0 0 0 15 2l3-3 M22 22v-6h-6"
+            /></svg
+          ><span data-i18n="refresh">Refresh</span>
+        </button>
+      </div>
+    </header>
+    <!-- 主界面 / Registered apps, filters, table and details -->
+    <main>
+      <section class="intro">
+        <div class="intro-heading">
+          <h2>
+            <span data-i18n="registered">Registered Apps</span>
+            <span id="total" class="total">—</span>
+          </h2>
+          <div id="counts" class="counts"></div>
+        </div>
+      </section>
+      <section class="workspace">
+        <div class="catalog">
+          <div class="filters">
+            <label class="search"
+              ><svg
+                class="search-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.65"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m15.5 15.5 4.5 4.5" /></svg
+              ><input
+                id="search"
+                type="search"
+                placeholder="Search name, App ID, Root or Entry"
+                data-i18n-placeholder="search"
+                data-i18n-label="search"
+                autocomplete="off"
+            /></label>
+            <label
+              ><span class="sr-only" data-i18n="type">Type</span
+              ><select id="type">
+                <option value="all" data-i18n="allTypes">All types</option>
+                <option value="ordinary" data-i18n="ordinary">
+                  Ordinary WebUI
+                </option>
+                <option value="jsfx" data-i18n="jsfx">JSFX WebUI</option>
+                <option value="unknown" data-i18n="unknown">Unknown</option>
+              </select></label
+            >
+            <label
+              ><span class="sr-only" data-i18n="status">Status</span
+              ><select id="status">
+                <option value="all" data-i18n="allStatuses">
+                  All statuses
+                </option>
+                <option value="available" data-i18n="available">
+                  Available
+                </option>
+                <option value="missing" data-i18n="missing">Missing</option>
+                <option value="unverified" data-i18n="unverified">
+                  Unverified
+                </option>
+              </select></label
+            >
+          </div>
+          <div class="table-viewport">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr id="column-headers"></tr>
+                </thead>
+                <tbody id="rows"></tbody>
+              </table>
+              <div id="empty" class="empty">
+                <h3 data-i18n="waiting">Waiting for Lua backend</h3>
+                <p data-i18n="launch">
+                  Run ReaWebAPI_AppManager.lua in REAPER to connect the Lua
+                  backend.
+                </p>
+              </div>
+            </div>
+            <svg
+              id="column-lines"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              focusable="false"
+            ></svg>
+          </div>
+          <footer class="catalog-footer">
+            <span
+              id="message"
+              class="message"
+              role="status"
+              aria-live="polite"
+              data-i18n="waiting"
+            >
+              Waiting for Lua backend
+            </span>
+            <span id="shown">—</span>
+          </footer>
+        </div>
+        <div
+          id="panel-divider"
+          role="separator"
+          tabindex="0"
+          aria-orientation="vertical"
+          aria-controls="details"
+          data-i18n-label="resizeDetails"
+          data-i18n-title="resizeDetailsHint"
+        ></div>
+        <aside id="details" data-i18n-label="details">
+          <div class="detail-placeholder">
+            <h3 data-i18n="selectApp">Select an app</h3>
+            <p data-i18n="selectHint">
+              Choose an app from the list to view its binding and data
+              locations.
+            </p>
+          </div>
+        </aside>
+      </section>
+    </main>
+    <!-- 设置 / Language and Light/Dark appearance; changes apply on Save -->
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <form method="dialog">
+        <p class="eyebrow" data-i18n="preferences">PREFERENCES</p>
+        <h2 id="settings-title" data-i18n="settings">Settings</h2>
+        <div class="settings-row">
+          <label for="language" data-i18n="language">Language</label
+          ><select id="language"></select>
+        </div>
+        <div class="settings-row">
+          <label for="appearance" data-i18n="appearance">Appearance</label
+          ><select id="appearance">
+            <option value="paper" data-i18n="paper">Light</option>
+            <option value="ink" data-i18n="ink">Dark</option>
+          </select>
+        </div>
+        <div class="dialog-actions">
+          <button value="cancel" data-i18n="cancel">Cancel</button
+          ><button
+            id="save-settings"
+            type="button"
+            class="primary"
+            data-i18n="save"
+          >
+            Save changes
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <!-- 移除登记 / Summary only; final confirmation is handled by Lua -->
+    <dialog id="remove-dialog" aria-labelledby="remove-title">
+      <form method="dialog">
+        <p class="eyebrow danger-text" data-i18n="registrationOnly">
+          REGISTRATION ONLY
+        </p>
+        <h2 id="remove-title" data-i18n="remove">Remove Registration</h2>
+        <p data-i18n="removeIntro">
+          This removes the app registration. Please check the details below.
+        </p>
+        <dl id="remove-summary"></dl>
+        <p class="preserve" data-i18n="preserve"></p>
+        <div class="dialog-actions">
+          <button value="cancel" autofocus data-i18n="cancel">Cancel</button
+          ><button
+            id="confirm-remove"
+            type="button"
+            class="danger"
+            data-i18n="continueRemove"
+          >
+            Continue to confirmation
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <!-- 交互 / Application logic: runs after the markup above is available.
+       Translations remain in locales.json, shared with the Lua backend. -->
+    <script id="app-script">
+      "use strict";
+      (async () => {
+        // 01 · 宿主窗口 / Native title-bar setup (no mirrored REAPER API)
+        if (window.reaper?.window?.setIconVisible) {
+          try {
+            await window.reaper.lifecycle?.ready;
+            await window.reaper.window.setIconVisible(false);
+          } catch (error) {
+            console.warn(
+              "[ReaWebAPI_AppManager] Could not hide the title-bar icon:",
+              error,
+            );
+          }
+        }
+        const $ = (id) => document.getElementById(id);
+
+        // 02 · 多语言与偏好 / Shared translations and saved preferences
+        let catalog;
+        try {
+          const response = await fetch("locales.json");
+          if (!response.ok) throw new Error("Language resources unavailable");
+          catalog = await response.json();
+        } catch (error) {
+          $("message").textContent = error.message;
+          $("message").classList.add("error");
+          return;
+        }
+        let language = "en",
+          appearance = "paper";
+        try {
+          const saved = localStorage.getItem("manager.language");
+          if (catalog.languages.some((item) => item.code === saved))
+            language = saved;
+          const mode = localStorage.getItem("manager.appearance");
+          // Keep existing paper/ink preferences; retired system mode falls back to Light.
+          if (["paper", "ink"].includes(mode)) appearance = mode;
+          else if (mode === "system")
+            localStorage.setItem("manager.appearance", "paper");
+        } catch (_) {
+          /* Preferences are optional. */
+        }
+        let apps = [],
+          selected = null,
+          busy = true,
+          connected = false,
+          removing = null,
+          incomplete = false;
+        let lastReport = { key: "waiting", args: {}, error: false };
+        const t = (key, args = {}) => {
+          const index = catalog.languages.findIndex(
+            (item) => item.code === language,
+          );
+          const source =
+            catalog.strings[key]?.[index] || catalog.strings[key]?.[0] || key;
+          return source.replace(/\{(\w+)\}/g, (_, name) =>
+            String(args[name] ?? `{${name}}`),
+          );
+        };
+        const text = (value) =>
+          value === null || value === undefined || value === ""
+            ? t("unknown")
+            : String(value);
+        const nativeKeys = {
+          "Matching JSFX source and WebUI association entry":
+            "sourceAssociation",
+          "Persistent Runtime binding type": "sourcePersistent",
+          "Persistent mixed ordinary and JSFX binding": "sourcePersistentMixed",
+          "Current Runtime window association": "sourceRuntime",
+          "Matching persistent ordinary WebUI identity marker":
+            "sourceIdentity",
+          "Mixed ordinary and JSFX Runtime windows": "sourceMixed",
+          "Root is accessible and Entry is a valid local HTML file":
+            "validEntry",
+          "Root does not exist or is not a directory": "missingRoot",
+          "Entry is missing or is not a regular HTML file": "missingEntry",
+          "Entry metadata is unavailable": "unknownEntry",
+          "Recorded Entry is not a valid relative HTML path": "invalidEntry",
+          "Binding has not been verified": "unverifiedBinding",
+          "Identity entry must be a relative HTML path": "invalidEntry",
+          "Identity entry escapes App root": "invalidEntry",
+        };
+        const nativeText = (value) =>
+          nativeKeys[value] ? t(nativeKeys[value]) : text(value);
+
+        // 03 · 安全渲染与 Lua 通信 / Plain-text DOM helpers and Lua messaging
+        function node(tag, content, className) {
+          const el = document.createElement(tag);
+          if (content !== undefined) el.textContent = content;
+          if (className) el.className = className;
+          return el;
+        }
+        function report(key, args = {}, error = false, diagnostic = "") {
+          lastReport = { key, args, error, diagnostic };
+          $("message").textContent =
+            t(key, args) + (diagnostic ? ` ${diagnostic}` : "");
+          $("message").title = $("message").textContent;
+          $("message").classList.toggle("error", error);
+        }
+        function setBusy(value) {
+          busy = value;
+          $("refresh").disabled = value || !connected;
+          $("settings").disabled = value && connected;
+          renderDetails();
+        }
+        async function send(command) {
+          try {
+            await window.reaper.host.send(
+              JSON.stringify({ ...command, language }),
+            );
+            return true;
+          } catch (error) {
+            setBusy(false);
+            report("hostError", {}, true, error.message);
+            return false;
+          }
+        }
+        async function copy(value) {
+          try {
+            try {
+              await navigator.clipboard.writeText(value);
+            } catch (_) {
+              const input = node("textarea");
+              input.value = value;
+              input.style.cssText = "position:fixed;left:-9999px";
+              document.body.append(input);
+              input.select();
+              const success = document.execCommand("copy");
+              input.remove();
+              if (!success) throw new Error("copy");
+            }
+            report("copied");
+          } catch (_) {
+            report("copyFailed", {}, true);
+          }
+        }
+        function badge(status) {
+          return node("span", t(status), `badge ${status}`);
+        }
+        // 详情字段列宽 / Shared label width; drag, arrow keys, or double-click to reset.
+        let detailLabelWidth = 78,
+          finishFieldResize = null;
+        try {
+          const saved = Number(
+            localStorage.getItem("manager.detailLabelWidth"),
+          );
+          if (Number.isFinite(saved) && saved >= 32 && saved <= 10000)
+            detailLabelWidth = saved;
+        } catch (_) {
+          /* Optional preference. */
+        }
+        function applyFieldWidth() {
+          $("details").style.setProperty(
+            "--detail-label-width",
+            detailLabelWidth + "px",
+          );
+          for (const handle of $("details").querySelectorAll(
+            ".detail-field-resize",
+          )) {
+            const row = handle.closest(".detail-field");
+            handle.setAttribute(
+              "aria-valuenow",
+              String(
+                Math.round(
+                  row.querySelector("dt").getBoundingClientRect().width,
+                ),
+              ),
+            );
+            handle.setAttribute(
+              "aria-valuemax",
+              String(Math.max(32, Math.round(row.clientWidth - 72))),
+            );
+          }
+        }
+        function saveFieldWidth() {
+          try {
+            localStorage.setItem(
+              "manager.detailLabelWidth",
+              String(detailLabelWidth),
+            );
+          } catch (_) {
+            /* Keep the current layout even if storage is unavailable. */
+          }
+        }
+        const fieldWidthObserver = new ResizeObserver(applyFieldWidth);
+        fieldWidthObserver.observe($("details"));
+        function fieldResizeHandle(row, focusable) {
+          const handle = node("span", undefined, "detail-field-resize");
+          handle.tabIndex = focusable ? 0 : -1;
+          handle.setAttribute("role", "separator");
+          handle.setAttribute("aria-orientation", "vertical");
+          handle.setAttribute("aria-label", t("resizeDetailFields"));
+          handle.setAttribute("aria-valuemin", "32");
+          handle.title = t("resizeDetailFieldsHint");
+          const clampWidth = (width) =>
+            Math.max(32, Math.min(Math.max(32, row.clientWidth - 72), width));
+          handle.onpointerdown = (event) => {
+            if (event.button !== 0 || !event.isPrimary) return;
+            event.preventDefault();
+            finishFieldResize?.();
+            const original = detailLabelWidth;
+            const base = row.querySelector("dt").getBoundingClientRect().width;
+            const startX = event.clientX;
+            handle.setPointerCapture(event.pointerId);
+            document.body.classList.add("resizing-detail-fields");
+            const move = (e) => {
+              detailLabelWidth = clampWidth(base + e.clientX - startX);
+              applyFieldWidth();
+            };
+            const key = (e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                finish();
+              }
+            };
+            const finish = (e) => {
+              handle.removeEventListener("pointermove", move);
+              for (const name of [
+                "pointerup",
+                "pointercancel",
+                "lostpointercapture",
+              ])
+                handle.removeEventListener(name, finish);
+              document.removeEventListener("keydown", key);
+              window.removeEventListener("blur", finish);
+              finishFieldResize = null;
+              if (handle.hasPointerCapture(event.pointerId))
+                handle.releasePointerCapture(event.pointerId);
+              document.body.classList.remove("resizing-detail-fields");
+              if (e?.type === "pointerup") saveFieldWidth();
+              else detailLabelWidth = original;
+              applyFieldWidth();
+            };
+            finishFieldResize = finish;
+            handle.addEventListener("pointermove", move);
+            for (const name of [
+              "pointerup",
+              "pointercancel",
+              "lostpointercapture",
+            ])
+              handle.addEventListener(name, finish);
+            document.addEventListener("keydown", key);
+            window.addEventListener("blur", finish);
+          };
+          handle.onkeydown = (event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home"].includes(event.key))
+              return;
+            event.preventDefault();
+            finishFieldResize?.();
+            const current = row
+              .querySelector("dt")
+              .getBoundingClientRect().width;
+            detailLabelWidth =
+              event.key === "Home"
+                ? 78
+                : clampWidth(
+                    current +
+                      (event.key === "ArrowLeft" ? -1 : 1) *
+                        (event.shiftKey ? 20 : 4),
+                  );
+            applyFieldWidth();
+            saveFieldWidth();
+          };
+          handle.ondblclick = () => {
+            detailLabelWidth = 78;
+            applyFieldWidth();
+            saveFieldWidth();
+          };
+          return handle;
+        }
+        function field(container, title, value, canCopy = false, mono = false) {
+          const wrap = node("div", undefined, "detail-field");
+          const dd = node("dd", undefined, "field-value");
+          const content = node("span", text(value), mono ? "mono" : undefined);
+          dd.append(content);
+          if (canCopy && value) {
+            const button = node("button", t("copy"), "copy");
+            button.title = `${t("copy")} ${title}`;
+            button.onclick = () => copy(value);
+            dd.append(button);
+          }
+          const label = node("dt", title);
+          label.append(
+            fieldResizeHandle(wrap, container.children.length === 0),
+          );
+          wrap.append(label, dd);
+          container.append(wrap);
+        }
+        function current() {
+          return apps.find((app) => app.registrationId === selected);
+        }
+
+        // 04 · 详情与移除确认 / App details and registration removal dialog
+        function renderDetails() {
+          finishFieldResize?.();
+          const app = current();
+          if (!app) {
+            $("details").replaceChildren();
+            const empty = node("div", undefined, "detail-placeholder");
+            empty.append(
+              node("h3", t("selectApp")),
+              node("p", t("selectHint")),
+            );
+            $("details").append(empty);
+            return;
+          }
+          const panel = $("details");
+          panel.replaceChildren();
+          const heading = node("div", undefined, "detail-heading");
+          heading.append(
+            node("h2", app.name || app.registrationId),
+            badge(app.status),
+          );
+          panel.append(
+            node("p", t("detailsEyebrow"), "eyebrow"),
+            heading,
+            node("p", t(app.type), "detail-type"),
+          );
+          const fields = node("dl", undefined, "detail-fields");
+          field(fields, "App ID", app.appId, true, true);
+          field(fields, "Origin", app.origin, true, true);
+          field(fields, "Root", app.root, true, true);
+          field(fields, "Entry", app.entry, false, true);
+          field(fields, t("typeSource"), nativeText(app.typeSource));
+          field(
+            fields,
+            t("versionAuthor"),
+            `${app.version || "—"} / ${app.author || "—"}`,
+          );
+          field(fields, t("validation"), nativeText(app.validation));
+          if (app.metadataWarning)
+            field(fields, t("metadataWarning"), app.metadataWarning);
+          field(
+            fields,
+            t("registrationPath"),
+            app.registrationPath,
+            true,
+            true,
+          );
+          field(
+            fields,
+            t("identityPath"),
+            app.identityPath || t("unavailable"),
+            false,
+            true,
+          );
+          field(fields, t("dataPath"), app.dataPath, true, true);
+          field(fields, t("statePath"), app.windowStatePath, true, true);
+          field(fields, t("activeWindows"), app.activeWindowCount);
+          panel.append(fields);
+          applyFieldWidth();
+          const actions = node("div", undefined, "detail-actions");
+          for (const [folder, key, exists] of [
+            ["root", "reveal", app.rootExists],
+            ["data", "openData", app.dataExists],
+          ]) {
+            const button = node("button", t(key));
+            button.disabled = busy || !exists || !app.token;
+            button.title = t(exists ? "revealHint" : "folderUnavailable");
+            button.onclick = () => {
+              setBusy(true);
+              report("revealing");
+              send({
+                action: "reveal",
+                appId: app.appId,
+                token: app.token,
+                folder,
+              });
+            };
+            actions.append(button);
+          }
+          panel.append(actions);
+          const danger = node("div", undefined, "remove-area"),
+            remove = node("button", t("remove"), "danger");
+          remove.disabled = busy || !app.removable || !app.token;
+          remove.onclick = () => {
+            removing = app;
+            const summary = $("remove-summary");
+            summary.replaceChildren();
+            for (const [key, value] of [
+              ["App ID", app.appId],
+              ["Root", app.root],
+              [t("removeFile"), app.registrationPath],
+            ])
+              summary.append(node("dt", key), node("dd", value, "mono"));
+            $("remove-dialog").showModal();
+          };
+          danger.append(remove);
+          if (app.activeWindowCount > 0 || !app.removable)
+            danger.append(
+              node(
+                "p",
+                t(
+                  app.activeWindowCount > 0 ? "closeWindows" : "invalidBinding",
+                ),
+                "hint",
+              ),
+            );
+          panel.append(danger);
+        }
+
+        // 05 · 列配置与持久化 / Columns, widths, visibility and saved order
+        const columns = [
+          { id: "name", label: "nameID", width: 23, min: 10 },
+          { id: "type", label: "type", width: 15, min: 10 },
+          { id: "root", label: "rootEntry", width: 25, min: 10 },
+          { id: "version", label: "version", width: 10, min: 10 },
+          { id: "status", label: "status", width: 17, min: 10 },
+          { id: "activeWindowCount", label: "windows", width: 10, min: 10 },
+        ];
+        let columnOrder = columns.map((c) => c.id),
+          columnWidths = Object.fromEntries(
+            columns.map((c) => [c.id, c.width]),
+          );
+        let hiddenColumns = [];
+        const visibleColumns = () =>
+          columnOrder.filter((id) => !hiddenColumns.includes(id));
+        let sortColumn = "name",
+          sortDescending = false,
+          ignoreSortUntil = 0,
+          cancelGesture = null;
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem("manager.columns") || "null",
+          );
+          if (saved?.version === 1) {
+            if (Array.isArray(saved.order))
+              columnOrder = [
+                ...new Set(
+                  saved.order.filter((id) => columns.some((c) => c.id === id)),
+                ),
+                ...columnOrder.filter((id) => !saved.order.includes(id)),
+              ];
+            if (Array.isArray(saved.hidden))
+              hiddenColumns = [
+                ...new Set(
+                  saved.hidden.filter((id) => columns.some((c) => c.id === id)),
+                ),
+              ];
+            if (
+              columns.every(
+                (c) =>
+                  Number.isFinite(saved.widths?.[c.id]) &&
+                  saved.widths[c.id] > 0 &&
+                  saved.widths[c.id] <= 100,
+              )
+            ) {
+              const total = columns.reduce(
+                (sum, c) => sum + saved.widths[c.id],
+                0,
+              );
+              columnWidths = Object.fromEntries(
+                columns.map((c) => [c.id, (saved.widths[c.id] * 100) / total]),
+              );
+            }
+            if (columns.some((c) => c.id === saved.sort)) {
+              sortColumn = saved.sort;
+              sortDescending = saved.desc === true;
+            }
+          }
+        } catch (_) {
+          /* Ignore invalid/older layout preferences. */
+        }
+        function saveColumns() {
+          try {
+            localStorage.setItem(
+              "manager.columns",
+              JSON.stringify({
+                version: 1,
+                order: columnOrder,
+                widths: columnWidths,
+                hidden: hiddenColumns,
+                sort: sortColumn,
+                desc: sortDescending,
+              }),
+            );
+          } catch (_) {}
+        }
+        function columnIcon(path, className = "") {
+          const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+          );
+          for (const [key, value] of Object.entries({
+            width: "13",
+            height: "13",
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            "stroke-width": "1.65",
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round",
+            "aria-hidden": "true",
+            focusable: "false",
+          }))
+            svg.setAttribute(key, value);
+          if (className) svg.setAttribute("class", className);
+          const shape = document.createElementNS(svg.namespaceURI, "path");
+          shape.setAttribute("d", path);
+          svg.append(shape);
+          return svg;
+        }
+
+        // 06 · 列标题右键菜单 / Column visibility menu
+        const columnMenu = node("div", undefined, "column-context-menu");
+        columnMenu.id = "column-menu";
+        columnMenu.hidden = true;
+        columnMenu.setAttribute("role", "menu");
+        document.body.append(columnMenu);
+        let menuPosition = { x: 8, y: 8 },
+          menuTrigger = null;
+        function closeColumnMenu(restore = false) {
+          if (columnMenu.hidden) return;
+          columnMenu.hidden = true;
+          if (restore)
+            (
+              document.querySelector(
+                `#column-headers th[data-column="${menuTrigger}"] button`,
+              ) || $("column-headers").querySelector("button")
+            )?.focus({ preventScroll: true });
+        }
+        function renderColumnMenu(focusId) {
+          columnMenu.replaceChildren();
+          columnMenu.setAttribute("aria-label", t("columnMenu"));
+          for (const column of columns) {
+            const shown = !hiddenColumns.includes(column.id),
+              button = node("button");
+            button.dataset.column = column.id;
+            button.setAttribute("role", "menuitemcheckbox");
+            button.setAttribute("aria-checked", String(shown));
+            const check = node("span", undefined, "column-check");
+            if (shown) check.append(columnIcon("m5 12 4 4L19 6"));
+            button.append(check, node("span", t(column.label)));
+            button.onclick = () => {
+              hiddenColumns = shown
+                ? [...hiddenColumns, column.id]
+                : hiddenColumns.filter((id) => id !== column.id);
+              saveColumns();
+              render();
+              renderColumnMenu(column.id);
+            };
+            columnMenu.append(button);
+          }
+          const separator = node("div", undefined, "menu-separator");
+          separator.setAttribute("role", "separator");
+          const reset = node("button", t("resetColumns"));
+          reset.setAttribute("role", "menuitem");
+          reset.onclick = () => {
+            resetColumns();
+            closeColumnMenu(true);
+          };
+          columnMenu.append(separator, reset);
+          const box = columnMenu.getBoundingClientRect();
+          columnMenu.style.left =
+            Math.max(8, Math.min(menuPosition.x, innerWidth - box.width - 8)) +
+            "px";
+          columnMenu.style.top =
+            Math.max(
+              8,
+              Math.min(menuPosition.y, innerHeight - box.height - 8),
+            ) + "px";
+          (focusId
+            ? columnMenu.querySelector(`[data-column="${focusId}"]`)
+            : columnMenu.querySelector('[aria-checked="true"]') ||
+              columnMenu.querySelector("button")
+          )?.focus({ preventScroll: true });
+        }
+        function openColumnMenu(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          cancelGesture?.();
+          const header = event.target.closest("th"),
+            rect = header?.getBoundingClientRect();
+          menuTrigger = header?.dataset.column || null;
+          menuPosition = {
+            x: event.clientX || rect?.left || 8,
+            y: event.clientY || rect?.bottom || 8,
+          };
+          columnMenu.hidden = false;
+          renderColumnMenu();
+        }
+        $("column-headers").oncontextmenu = openColumnMenu;
+        $("column-headers").addEventListener("keydown", (event) => {
+          if (
+            event.key === "ContextMenu" ||
+            (event.shiftKey && event.key === "F10")
+          )
+            openColumnMenu(event);
+        });
+        columnMenu.oncontextmenu = (event) => event.preventDefault();
+        columnMenu.onkeydown = (event) => {
+          event.stopPropagation();
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeColumnMenu(true);
+          } else if (event.key === "Tab") closeColumnMenu(true);
+          else if (
+            ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+          ) {
+            event.preventDefault();
+            const buttons = [...columnMenu.querySelectorAll("button")],
+              index = buttons.indexOf(document.activeElement);
+            const next =
+              event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? buttons.length - 1
+                  : (index +
+                      (event.key === "ArrowDown" ? 1 : -1) +
+                      buttons.length) %
+                    buttons.length;
+            buttons[next]?.focus();
+          }
+        };
+        document.addEventListener("pointerdown", (event) => {
+          if (!columnMenu.contains(event.target)) closeColumnMenu();
+        });
+        document.addEventListener(
+          "scroll",
+          (event) => {
+            if (!columnMenu.contains(event.target)) closeColumnMenu();
+          },
+          true,
+        );
+        window.addEventListener("resize", () => closeColumnMenu());
+        window.addEventListener("blur", () => closeColumnMenu());
+
+        // 07 · 排序与重排 / Sorting and column order
+        function compareApps(a, b) {
+          const value = (app) =>
+            ["type", "status"].includes(sortColumn)
+              ? t(app[sortColumn])
+              : sortColumn === "name"
+                ? app.name || app.registrationId
+                : app[sortColumn];
+          const av = value(a),
+            bv = value(b),
+            absent = (x) => x === null || x === undefined || x === "";
+          if (absent(av) !== absent(bv)) return absent(av) ? 1 : -1;
+          const delta =
+            sortColumn === "activeWindowCount"
+              ? (Number(av) || 0) - (Number(bv) || 0)
+              : String(av ?? "").localeCompare(String(bv ?? ""), language, {
+                  numeric: true,
+                  sensitivity: "base",
+                });
+          return (
+            delta * (sortDescending ? -1 : 1) ||
+            String(a.name || a.registrationId).localeCompare(
+              String(b.name || b.registrationId),
+              language,
+              { numeric: true },
+            ) ||
+            a.registrationId.localeCompare(b.registrationId)
+          );
+        }
+        function focusColumn(id, resize = false) {
+          $("column-headers")
+            .querySelector(
+              `[data-column="${id}"] .${resize ? "column-resize" : "column-sort"}`,
+            )
+            ?.focus({ preventScroll: true });
+        }
+        function sortBy(id) {
+          if (performance.now() < ignoreSortUntil || cancelGesture) return;
+          sortDescending = sortColumn === id ? !sortDescending : false;
+          sortColumn = id;
+          saveColumns();
+          render();
+          focusColumn(id);
+        }
+        function moveColumn(id, step) {
+          const visible = visibleColumns(),
+            target = visible[visible.indexOf(id) + step];
+          if (!target) return;
+          const from = columnOrder.indexOf(id),
+            to = columnOrder.indexOf(target);
+          [columnOrder[from], columnOrder[to]] = [
+            columnOrder[to],
+            columnOrder[from],
+          ];
+          saveColumns();
+          render();
+          focusColumn(id);
+        }
+        // One continuous paint layer for rows and unused space. Header resize marks
+        // remain separate and short; fractional cell edges never paint partial lines.
+        const listScroller = $("rows").closest(".table-scroll"),
+          lineLayer = $("column-lines");
+
+        // 08 · 列分割线 / Align SVG separators to physical pixels at fractional DPI
+        let lineFrame = 0;
+        function drawColumnLines() {
+          const headers = [
+            ...$("column-headers").querySelectorAll("th[data-column]"),
+          ];
+          const viewport = listScroller.parentElement.getBoundingClientRect();
+          const boundaries = headers.map((header) =>
+            header.getBoundingClientRect(),
+          );
+          const table = listScroller.querySelector("table");
+          headers.forEach((header, index) =>
+            table.style.setProperty(
+              "--width-" + header.dataset.column,
+              boundaries[index].width + "px",
+            ),
+          );
+          const top = boundaries.length
+            ? Math.max(0, boundaries[0].bottom - viewport.top)
+            : 0;
+          const ratio = window.devicePixelRatio || 1;
+          const origin = Math.round(viewport.left * ratio) / ratio,
+            stroke = Math.max(1, Math.round(ratio)) / ratio;
+          lineLayer.style.left = origin - viewport.left + "px";
+          lineLayer.style.top = top + "px";
+          lineLayer.style.width = listScroller.clientWidth + "px";
+          lineLayer.style.height =
+            Math.max(0, listScroller.clientHeight - top) + "px";
+          lineLayer.toggleAttribute(
+            "hidden",
+            headers.length < 2 || !listScroller.querySelector("#rows tr"),
+          );
+          const lines = boundaries.slice(0, -1).map((boundary, index) => {
+            const line = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "rect",
+            );
+            line.dataset.column = headers[index].dataset.column;
+            const edge = Math.round(boundary.right * ratio) / ratio;
+            line.setAttribute("x", String(edge - origin - stroke));
+            line.setAttribute("y", "0");
+            line.setAttribute("width", String(stroke));
+            line.setAttribute("height", "100%");
+            headers[index]
+              .querySelector(".column-resize")
+              ?.style.setProperty("--line-snap", edge - boundary.right + "px");
+            return line;
+          });
+          lineLayer.replaceChildren(...lines);
+        }
+        function scheduleColumnLines() {
+          if (!lineFrame)
+            lineFrame = requestAnimationFrame(() => {
+              lineFrame = 0;
+              drawColumnLines();
+            });
+        }
+        const lineObserver = new ResizeObserver(scheduleColumnLines);
+        lineObserver.observe(listScroller);
+        lineObserver.observe(listScroller.querySelector("table"));
+        listScroller.addEventListener("scroll", drawColumnLines, {
+          passive: true,
+        });
+        window.addEventListener("resize", scheduleColumnLines);
+        function applyWidths() {
+          const total = visibleColumns().reduce(
+            (sum, id) => sum + columnWidths[id],
+            0,
+          );
+          for (const th of $("column-headers").children)
+            th.style.width =
+              (total ? (columnWidths[th.dataset.column] / total) * 100 : 100) +
+              "%";
+          scheduleColumnLines();
+        }
+
+        // 09 · 列宽与拖动 / Resizing down to 10 px and pointer gestures
+        function resizedWidths(id, delta, base) {
+          const visible = visibleColumns(),
+            next = visible[visible.indexOf(id) + 1];
+          if (!next) return base;
+          const total = visible.reduce((sum, key) => sum + base[key], 0);
+          const width = $("column-headers")
+            .closest("table")
+            .getBoundingClientRect().width;
+          const min = (key) =>
+            (columns.find((c) => c.id === key).min / width) * total;
+          const shift = Math.max(
+            Math.min(0, min(id) - base[id]),
+            Math.min(
+              Math.max(0, base[next] - min(next)),
+              (delta / width) * total,
+            ),
+          );
+          return {
+            ...base,
+            [id]: base[id] + shift,
+            [next]: base[next] - shift,
+          };
+        }
+        function resizeBy(id, delta) {
+          columnWidths = resizedWidths(id, delta, columnWidths);
+          saveColumns();
+          render();
+          focusColumn(id, true);
+        }
+        function startGesture(event, id, resizing) {
+          if (event.button !== 0 || !event.isPrimary) return;
+          closeColumnMenu();
+          cancelGesture?.();
+          const handle = event.currentTarget,
+            startX = event.clientX,
+            startY = event.clientY;
+          const scroller = $("rows").closest(".table-scroll"),
+            scrollTop = scroller.scrollTop;
+          const base = { ...columnWidths };
+          let moved = resizing,
+            target = null,
+            after = false;
+          if (resizing) event.preventDefault();
+          handle.setPointerCapture(event.pointerId);
+          function clearMarkers() {
+            for (const th of $("column-headers").children)
+              th.classList.remove(
+                "drop-before",
+                "drop-after",
+                "column-dragging",
+              );
+          }
+          const wheel = (e) => {
+            if (moved) e.preventDefault();
+          };
+          const move = (e) => {
+            if (
+              !moved &&
+              Math.hypot(e.clientX - startX, e.clientY - startY) < 5
+            )
+              return;
+            moved = true;
+            e.preventDefault();
+            scroller.scrollTop = scrollTop;
+            document.body.classList.add(
+              resizing ? "resizing-columns" : "reordering-columns",
+            );
+            if (resizing) {
+              columnWidths = resizedWidths(id, e.clientX - startX, base);
+              applyWidths();
+              return;
+            }
+            clearMarkers();
+            handle.closest("th").classList.add("column-dragging");
+            target = null;
+            const viewport = scroller.getBoundingClientRect();
+            if (
+              e.clientY < viewport.top - 30 ||
+              e.clientY > viewport.bottom + 30
+            )
+              return;
+            if (e.clientX < viewport.left + 24) scroller.scrollLeft -= 14;
+            else if (e.clientX > viewport.right - 24) scroller.scrollLeft += 14;
+            const th = [...$("column-headers").children].find((h) => {
+              const r = h.getBoundingClientRect();
+              return e.clientX >= r.left && e.clientX <= r.right;
+            });
+            if (th && th.dataset.column !== id) {
+              target = th.dataset.column;
+              const r = th.getBoundingClientRect();
+              after = e.clientX > r.left + r.width / 2;
+              th.classList.add(after ? "drop-after" : "drop-before");
+            }
+          };
+          const key = (e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              finish();
+            }
+          };
+          const finish = (e) => {
+            handle.removeEventListener("pointermove", move);
+            handle.removeEventListener("pointerup", finish);
+            handle.removeEventListener("pointercancel", finish);
+            handle.removeEventListener("lostpointercapture", finish);
+            window.removeEventListener("blur", finish);
+            document.removeEventListener("keydown", key);
+            scroller.removeEventListener("wheel", wheel);
+            cancelGesture = null;
+            if (handle.hasPointerCapture(event.pointerId))
+              handle.releasePointerCapture(event.pointerId);
+            document.body.classList.remove(
+              "resizing-columns",
+              "reordering-columns",
+            );
+            clearMarkers();
+            if (!moved) return;
+            const commit = e?.type === "pointerup";
+            if (resizing && !commit) columnWidths = base;
+            if (!resizing && commit && target) {
+              columnOrder = columnOrder.filter((c) => c !== id);
+              columnOrder.splice(
+                columnOrder.indexOf(target) + (after ? 1 : 0),
+                0,
+                id,
+              );
+            }
+            ignoreSortUntil = performance.now() + 250;
+            if (commit) saveColumns();
+            render();
+            scroller.scrollTop = scrollTop;
+            focusColumn(id, resizing);
+          };
+          cancelGesture = finish;
+          handle.addEventListener("pointermove", move);
+          handle.addEventListener("pointerup", finish);
+          handle.addEventListener("pointercancel", finish);
+          handle.addEventListener("lostpointercapture", finish);
+          window.addEventListener("blur", finish);
+          document.addEventListener("keydown", key);
+          scroller.addEventListener("wheel", wheel, { passive: false });
+        }
+
+        // 10 · 列标题 / Header buttons, sort icons and resize handles
+        function renderHeaders() {
+          cancelGesture?.();
+          $("column-headers").replaceChildren();
+          const visible = visibleColumns();
+          if (!visible.length) {
+            const th = node("th"),
+              button = node("button", t("chooseColumns"), "column-sort");
+            button.onclick = openColumnMenu;
+            th.append(button);
+            $("column-headers").append(th);
+          }
+          for (const id of visible) {
+            const column = columns.find((c) => c.id === id),
+              th = node("th");
+            th.scope = "col";
+            th.dataset.column = id;
+            th.setAttribute(
+              "aria-sort",
+              sortColumn === id
+                ? sortDescending
+                  ? "descending"
+                  : "ascending"
+                : "none",
+            );
+            const button = node("button", undefined, "column-sort");
+            button.title = t("columnHint");
+            button.append(node("span", t(column.label)));
+            if (sortColumn === id)
+              button.append(
+                columnIcon(
+                  sortDescending ? "m6 9 6 6 6-6" : "m6 15 6-6 6 6",
+                  "sort-indicator",
+                ),
+              );
+            button.setAttribute(
+              "aria-label",
+              t("sortColumn", { column: t(column.label) }),
+            );
+            button.onclick = () => sortBy(id);
+            button.onpointerdown = (e) => startGesture(e, id, false);
+            button.ondragstart = (e) => e.preventDefault();
+            button.onkeydown = (e) => {
+              if (e.altKey && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+                moveColumn(id, e.key === "ArrowLeft" ? -1 : 1);
+              }
+            };
+            th.append(button);
+            if (id !== visible.at(-1)) {
+              const handle = node("span", undefined, "column-resize");
+              handle.tabIndex = 0;
+              handle.setAttribute("role", "separator");
+              handle.setAttribute("aria-orientation", "vertical");
+              handle.setAttribute(
+                "aria-label",
+                t("resizeColumn", { column: t(column.label) }),
+              );
+              handle.setAttribute(
+                "aria-valuenow",
+                String(Math.round(columnWidths[id])),
+              );
+              handle.setAttribute("aria-valuemin", "0");
+              handle.setAttribute("aria-valuemax", "100");
+              handle.title = t("resizeHint");
+              handle.onpointerdown = (e) => startGesture(e, id, true);
+              handle.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              };
+              handle.onkeydown = (e) => {
+                if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
+                  e.preventDefault();
+                  resizeBy(id, e.key === "ArrowLeft" ? -10 : 10);
+                }
+              };
+              th.append(handle);
+            }
+            $("column-headers").append(th);
+          }
+          applyWidths();
+        }
+
+        // 11 · 侧栏分割线 / Details width, capped at 60% of the workspace
+        let preferredDetailsWidth = 306,
+          finishPanelResize = null;
+        try {
+          const saved = Number(localStorage.getItem("manager.detailsWidth"));
+          if (Number.isFinite(saved) && saved >= 220 && saved <= 10000)
+            preferredDetailsWidth = saved;
+        } catch (_) {}
+        const workspace = $("details").closest(".workspace"),
+          divider = $("panel-divider");
+        function applyPanelWidth() {
+          const max = Math.max(220, workspace.clientWidth * 0.6);
+          const width = Math.min(max, Math.max(220, preferredDetailsWidth));
+          workspace.style.setProperty("--details-width", width + "px");
+          divider.setAttribute("aria-valuemin", "220");
+          divider.setAttribute("aria-valuemax", String(Math.round(max)));
+          divider.setAttribute("aria-valuenow", String(Math.round(width)));
+          return width;
+        }
+        function savePanelWidth() {
+          try {
+            localStorage.setItem(
+              "manager.detailsWidth",
+              String(preferredDetailsWidth),
+            );
+          } catch (_) {}
+        }
+        divider.onpointerdown = (event) => {
+          if (event.button !== 0 || !event.isPrimary) return;
+          event.preventDefault();
+          cancelGesture?.();
+          finishPanelResize?.();
+          const oldWidth = preferredDetailsWidth,
+            base = applyPanelWidth(),
+            startX = event.clientX;
+          divider.setPointerCapture(event.pointerId);
+          document.body.classList.add("resizing-details");
+          const move = (e) => {
+            preferredDetailsWidth = base + startX - e.clientX;
+            preferredDetailsWidth = applyPanelWidth();
+          };
+          const key = (e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              finish();
+            }
+          };
+          const finish = (e) => {
+            divider.removeEventListener("pointermove", move);
+            divider.removeEventListener("pointerup", finish);
+            divider.removeEventListener("pointercancel", finish);
+            divider.removeEventListener("lostpointercapture", finish);
+            document.removeEventListener("keydown", key);
+            window.removeEventListener("blur", finish);
+            finishPanelResize = null;
+            if (divider.hasPointerCapture(event.pointerId))
+              divider.releasePointerCapture(event.pointerId);
+            document.body.classList.remove("resizing-details");
+            if (e?.type === "pointerup") savePanelWidth();
+            else preferredDetailsWidth = oldWidth;
+            applyPanelWidth();
+          };
+          finishPanelResize = finish;
+          divider.addEventListener("pointermove", move);
+          divider.addEventListener("pointerup", finish);
+          divider.addEventListener("pointercancel", finish);
+          divider.addEventListener("lostpointercapture", finish);
+          document.addEventListener("keydown", key);
+          window.addEventListener("blur", finish);
+        };
+        divider.onkeydown = (e) => {
+          if (!["ArrowLeft", "ArrowRight", "Home"].includes(e.key)) return;
+          e.preventDefault();
+          finishPanelResize?.();
+          preferredDetailsWidth =
+            e.key === "Home"
+              ? 306
+              : applyPanelWidth() +
+                (e.key === "ArrowLeft" ? 1 : -1) * (e.shiftKey ? 30 : 10);
+          preferredDetailsWidth = applyPanelWidth();
+          savePanelWidth();
+        };
+        divider.ondblclick = () => {
+          preferredDetailsWidth = 306;
+          applyPanelWidth();
+          savePanelWidth();
+        };
+        window.addEventListener("resize", () => {
+          finishPanelResize?.();
+          applyPanelWidth();
+        });
+        applyPanelWidth();
+        function resetColumns() {
+          cancelGesture?.();
+          hiddenColumns = [];
+          columnOrder = columns.map((c) => c.id);
+          columnWidths = Object.fromEntries(
+            columns.map((c) => [c.id, c.width]),
+          );
+          saveColumns();
+          render();
+        }
+
+        // 12 · 列表渲染 / Filtering, rows and right-aligned registration count
+        function render() {
+          const query = $("search").value.trim().toLocaleLowerCase(language);
+          const visible = apps.filter(
+            (app) =>
+              ($("type").value === "all" || app.type === $("type").value) &&
+              ($("status").value === "all" ||
+                app.status === $("status").value) &&
+              [app.name, app.appId, app.root, app.entry].some(
+                (value) =>
+                  value && value.toLocaleLowerCase(language).includes(query),
+              ),
+          );
+          visible.sort(compareApps);
+          renderHeaders();
+          $("rows").replaceChildren();
+          for (const app of visibleColumns().length ? visible : []) {
+            const tr = node("tr");
+            tr.dataset.registrationId = app.registrationId;
+            tr.classList.toggle("selected", selected === app.registrationId);
+            tr.setAttribute(
+              "aria-selected",
+              String(selected === app.registrationId),
+            );
+            const name = node("td"),
+              button = node(
+                "button",
+                app.name || app.registrationId,
+                "row-name",
+              );
+            button.title = app.name || app.registrationId;
+            name.append(button, node("span", text(app.appId), "cell-sub"));
+            name.title = text(app.appId);
+            const type = node("td", t(app.type));
+            const root = node("td");
+            root.title = `${text(app.root)}\n${text(app.entry)}`;
+            root.append(
+              node("span", text(app.root), "cell-main mono"),
+              node("span", text(app.entry), "cell-sub"),
+            );
+            const version = node("td");
+            version.append(node("span", app.version || "—", "cell-main"));
+            version.title = app.version || t("unavailable");
+            const status = node("td");
+            status.append(badge(app.status));
+            const cells = {
+              name,
+              type,
+              root,
+              version,
+              status,
+              activeWindowCount: node(
+                "td",
+                String(app.activeWindowCount),
+                "window-count",
+              ),
+            };
+            for (const id of visibleColumns()) {
+              cells[id].dataset.column = id;
+              tr.append(cells[id]);
+            }
+            tr.onclick = () => {
+              selected = app.registrationId;
+              for (const row of $("rows").children) {
+                row.classList.toggle("selected", row === tr);
+                row.setAttribute("aria-selected", String(row === tr));
+              }
+              renderDetails();
+              $("details").scrollTop = 0;
+            };
+            $("rows").append(tr);
+          }
+          $("total").textContent = apps.length;
+          $("counts").replaceChildren();
+          for (const type of ["ordinary", "jsfx", "unknown"]) {
+            const count = apps.filter((app) => app.type === type).length;
+            if (type === "unknown" && !count) continue;
+            const item = node("span");
+            item.append(
+              node("strong", String(count)),
+              document.createTextNode(t(type)),
+            );
+            $("counts").append(item);
+          }
+          $("shown").textContent =
+            t("shown", { shown: visible.length, total: apps.length }) +
+            (incomplete ? ` · ${t("partial")}` : "");
+          $("empty").hidden = visible.length > 0;
+          if (!visible.length) {
+            $("empty").querySelector("h3").textContent = t(
+              !connected
+                ? "waiting"
+                : busy
+                  ? "loading"
+                  : apps.length
+                    ? "noMatches"
+                    : "noApps",
+            );
+            $("empty").querySelector("p").textContent = t(
+              !connected
+                ? "launch"
+                : busy
+                  ? "verifying"
+                  : apps.length
+                    ? "adjustSearch"
+                    : "firstLaunch",
+            );
+          }
+          renderDetails();
+          scheduleColumnLines();
+        }
+
+        // 13 · 设置与界面事件 / Language, Light/Dark appearance and actions
+        function applyLocale() {
+          closeColumnMenu();
+          document.documentElement.lang = language;
+          document.documentElement.dataset.appearance = appearance;
+          for (const el of document.querySelectorAll("[data-i18n]"))
+            el.textContent = t(el.dataset.i18n);
+          for (const [attribute, data] of [
+            ["placeholder", "i18nPlaceholder"],
+            ["aria-label", "i18nLabel"],
+            ["title", "i18nTitle"],
+          ])
+            for (const el of document.querySelectorAll(
+              `[data-${data.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}]`,
+            ))
+              el.setAttribute(attribute, t(el.dataset[data]));
+          render();
+          report(
+            lastReport.key,
+            lastReport.args,
+            lastReport.error,
+            lastReport.diagnostic,
+          );
+        }
+        for (const item of catalog.languages) {
+          const option = node("option", item.name);
+          option.value = item.code;
+          $("language").append(option);
+        }
+        $("settings").disabled = false;
+        $("settings").onclick = () => {
+          $("language").value = language;
+          $("appearance").value = appearance;
+          $("settings-dialog").showModal();
+        };
+        $("save-settings").onclick = async () => {
+          const nextLanguage = $("language").value,
+            nextAppearance = $("appearance").value;
+          if (
+            !catalog.languages.some((item) => item.code === nextLanguage) ||
+            !["paper", "ink"].includes(nextAppearance)
+          )
+            return;
+          try {
+            localStorage.setItem("manager.language", nextLanguage);
+            localStorage.setItem("manager.appearance", nextAppearance);
+          } catch (error) {
+            report("hostError", {}, true, error.message);
+            return;
+          }
+          language = nextLanguage;
+          appearance = nextAppearance;
+          $("settings-dialog").close();
+          applyLocale();
+          report("saved");
+          if (connected) await send({ action: "language" });
+        };
+        for (const id of ["search", "type", "status"])
+          $(id).addEventListener(id === "search" ? "input" : "change", render);
+        $("refresh").onclick = () => {
+          setBusy(true);
+          send({ action: "refresh" });
+        };
+        $("confirm-remove").onclick = () => {
+          const app = removing;
+          $("remove-dialog").close();
+          if (!app) return;
+          setBusy(true);
+          report("nativeConfirm");
+          send({ action: "remove", appId: app.appId, token: app.token });
+        };
+
+        // 14 · Lua 后端消息 / Receive paged data and operation results
+        applyLocale();
+        try {
+          if (!window.reaper?.host || !window.reaper?.events)
+            throw new Error("NO_HOST");
+          await window.reaper.events.on("message", (message) => {
+            try {
+              const event = JSON.parse(message);
+              if (event.type === "loading") {
+                apps = [];
+                incomplete = false;
+                setBusy(true);
+                render();
+                report("loading");
+              } else if (event.type === "page") {
+                const data = event.data;
+                apps.push(...data.apps);
+                incomplete = data.truncated;
+                if (data.nextOffset === null) {
+                  setBusy(false);
+                  report(
+                    data.truncated ? "truncated" : "loaded",
+                    { count: apps.length },
+                    data.truncated,
+                  );
+                }
+                render();
+              } else if (event.type === "error") {
+                if (busy && !current()) incomplete = true;
+                setBusy(false);
+                render();
+                const codes = {
+                  APP_ID_CONFLICT: "closeWindows",
+                  APP_REGISTRATION_CHANGED: "stale",
+                  PATH_UNAVAILABLE: "folderUnavailable",
+                  BUSY: "busy",
+                  INVALID_ARGUMENT: "invalidRequest",
+                };
+                report(
+                  codes[event.code] || event.key || "hostError",
+                  {},
+                  true,
+                  event.diagnostic || event.message || "",
+                );
+              } else if (event.type === "cancelled") {
+                setBusy(false);
+                report("cancelled");
+              } else if (event.type === "notice") {
+                setBusy(false);
+                report(event.key || "saved");
+              }
+            } catch (error) {
+              setBusy(false);
+              report("badMessage", {}, true, error.message);
+            }
+          });
+          connected = true;
+          await send({ action: "ready" });
+        } catch (error) {
+          report(
+            "launch",
+            {},
+            true,
+            error.message === "NO_HOST" ? "" : error.message,
+          );
+        }
+      })();
+    </script>
+  </body>
+</html>
