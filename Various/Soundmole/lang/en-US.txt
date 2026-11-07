@@ -1,2 +1,3 @@
 # @noindex
 # English Language Pack
+Reverse horizontal trackpad scrolling direction in file table=Reverse horizontal trackpad scrolling direction in file table
