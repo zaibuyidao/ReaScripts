@@ -1,14 +1,17 @@
 -- @noindex
 local r = reaper
-if not r.APIExists('ReaWeb_AppManager') then
-  r.MB('This manager requires a ReaWebAPI build with the ReaWeb_AppManager Lua interface.\nInstall the accompanying Runtime update, then restart REAPER.', 'ReaWebAPI_AppManager', 0)
-  return
+for _, name in ipairs({'ReaWeb_Open','ReaWeb_Close','ReaWeb_IsOpen','ReaWeb_IsReady','ReaWeb_Send','ReaWeb_Receive'}) do
+  if not r.APIExists(name) then
+    r.MB('Requires ReaWebAPI v0.3.9.28 or later. Install the extension separately.', 'ReaWebAPI_AppManager', 0)
+    return
+  end
 end
 local source = debug.getinfo(1, 'S').source
 local directory = source:sub(2):match('^(.*[/\\])')
 local json = dofile(directory .. 'lua/json.lua')
 local folders = dofile(directory .. 'lua/folders.lua')
 local association = dofile(directory .. 'lua/association.lua')
+local Registry = dofile(directory .. 'lua/registry.lua')
 local locale_file = assert(io.open(directory .. 'locales.json', 'rb'))
 local locales = json.decode(locale_file:read('*a')); locale_file:close()
 local language_index = 1
@@ -28,22 +31,15 @@ r.atexit(function()
   r.ReaWeb_Close(id)
   if r.GetExtState(section, source) == tostring(id) then r.DeleteExtState(section, source, false) end
 end)
-local rows, scan, pending, outbox, scan_notice = {}, nil, nil, {}, nil
-local classify
+local registry, scanning, scan_notice
+local outbox = {}
 local function send(value) outbox[#outbox + 1] = json.encode(value) end
-local function native(request) return json.decode(r.ReaWeb_AppManager(json.encode(request))) end
-local function problem(key, diagnostic) send({ type='error', key=key, diagnostic=diagnostic }) end
-local function failure(result)
-  local err = result.error
-  local code = type(err) == 'table' and err.code or nil
-  local known = { APP_ID_CONFLICT=true, APP_REGISTRATION_CHANGED=true, PATH_UNAVAILABLE=true, BUSY=true, INVALID_ARGUMENT=true }
-  send({type='error', key='hostError', code=code, diagnostic=not known[code] and (type(err)=='table' and err.message or tostring(err)) or nil})
-end
+local function problem(key, diagnostic) send({type='error', key=key, diagnostic=diagnostic}) end
 local function refresh(notice)
-  classify = association.new(r, json)
-  rows = {}; outbox = {}; scan = { action='list', offset=0 }
-  scan_notice = notice
-  send({ type='loading' })
+  registry = Registry.new(r, json, association.new(r,json))
+  registry.begin()
+  scanning, scan_notice, outbox = true, notice, {}
+  send({type='loading'})
 end
 local function handle(message)
   if #message > 8192 then error('invalidRequest',0) end
@@ -51,62 +47,50 @@ local function handle(message)
   if type(req) ~= 'table' then error('invalidRequest',0) end
   if req.language and not set_language(req.language) then error('invalidRequest',0) end
   if req.action == 'language' then send({type='notice',key='saved'}); return end
-  if req.action == 'ready' or req.action == 'refresh' then
-    if pending then error('busy',0) end
-    refresh(); return
-  end
-  if scan or pending then error('busy',0) end
-  local row = rows[req.appId]
-  if not row or row.token ~= req.token then error('stale',0) end
+  if req.action == 'ready' or req.action == 'refresh' then refresh(); return end
+  if scanning then error('busy',0) end
+  if not registry then error('stale',0) end
+  local row, err = registry.validate(req.appId,req.token)
+  if not row then error(err,0) end
   if req.action == 'remove' then
-    if not row.removable or row.activeWindowCount ~= 0 then error('closeWindows',0) end
+    if not row.removable then error('invalidBinding',0) end
     local warning = t('remove') .. '\n\nApp ID: ' .. row.appId .. '\nRoot: ' .. row.root
       .. '\n\n' .. t('removeFile') .. ':\n' .. row.registrationPath
-      .. '\n\n' .. t('preserve') .. '\n\n' .. t('confirmQuestion')
-    if r.MB(warning, 'ReaWebAPI — ' .. t('remove'), 4) ~= 6 then send({type='cancelled'}); return end
-    local result = native({action='remove', appId=row.appId, token=row.token})
-    if not result.ok then failure(result); return end
+      .. '\n\n' .. t('preserve') .. '\n\n' .. t('closeBeforeRemove') .. '\n\n' .. t('confirmQuestion')
+    if r.MB(warning, 'ReaWebAPI — ' .. t('remove'), 4) ~= 6 then
+      send({type='cancelled'}); return
+    end
+    local ok, failure = registry.remove(req.appId,req.token)
+    if not ok then error(failure,0) end
     refresh('removed')
   elseif req.action == 'reveal' then
-    if req.folder ~= 'root' and req.folder ~= 'data' then error('invalidRequest',0) end
-    local result = native({action='reveal', appId=row.appId, token=row.token, folder=req.folder})
-    if not result.ok then
-      if folders.open_legacy(r, result, row, req.folder) then send({type='notice',key='revealed'})
-      else failure(result) end
-      return
-    end
-    pending = r.time_precise()
+    local path, failure = registry.folder(req.appId,req.token,req.folder)
+    if not path then error(failure,0) end
+    if not folders.open(r,path) then error('folderOpenFailed',0) end
+    send({type='notice',key='revealRequested'})
   else error('invalidRequest',0) end
 end
 local loop
 local function step()
   if not r.ReaWeb_IsOpen(id) then return end
-  -- Bound work per defer: one input, one metadata page, and one output message.
+  -- One incoming command, one directory page and one outgoing message per defer.
   local message = r.ReaWeb_Receive(id)
-  if message ~= '' then local ok, err = pcall(handle, message); if not ok then
-    if locales.strings[err] then problem(err) else problem('invalidRequest',tostring(err)) end
-  end end
-  if #outbox == 0 and scan then
-    local result = native(scan)
-    if not result.ok then scan = nil; failure(result)
-    else
-      for _, row in ipairs(result.apps) do
-        classify(row)
-        if row.appId ~= json.null then rows[row.appId] = row end
-      end
-      send({type='page', data=result})
-      scan = result.nextOffset ~= json.null and {action='list', offset=result.nextOffset, scanId=result.scanId} or nil
-      if not scan and scan_notice then send({type='notice',key=scan_notice}); scan_notice = nil end
+  if message ~= '' then
+    local ok, err = pcall(handle,message)
+    if not ok then
+      if locales.strings[err] then problem(err) else problem('invalidRequest',tostring(err)) end
     end
-  elseif #outbox == 0 and pending then
-    local result = native({action='poll'})
-    if not result.ok then pending = nil; failure(result)
-    elseif not result.pending then pending = nil; send({type='notice',key='revealed'})
-    elseif r.time_precise() - pending > 15 then pending = nil; problem('folderTimeout') end
   end
-  if #outbox > 0 and r.ReaWeb_IsReady(id) then
-    if r.ReaWeb_Send(id, outbox[1]) then table.remove(outbox, 1) end
+  if #outbox == 0 and scanning then
+    local ok, page, complete = pcall(registry.page)
+    if not ok then scanning = false; problem('hostError',tostring(page))
+    else
+      send({type='page',data=page})
+      scanning = not complete
+      if complete and scan_notice then send({type='notice',key=scan_notice}); scan_notice = nil end
+    end
   end
+  if #outbox > 0 and r.ReaWeb_IsReady(id) and r.ReaWeb_Send(id,outbox[1]) then table.remove(outbox,1) end
   r.defer(loop)
 end
 loop = function()

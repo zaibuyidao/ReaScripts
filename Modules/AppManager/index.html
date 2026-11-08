@@ -596,11 +596,6 @@
         color: var(--unknown);
         background: var(--unknown-bg);
       }
-      .window-count {
-        font-variant-numeric: tabular-nums;
-        color: var(--muted);
-        text-align: center;
-      }
       /* 紧凑状态栏 / Status on the left, registration count on the right. */
       .catalog-footer {
         flex: none;
@@ -1049,9 +1044,6 @@
       [data-column="status"] {
         --cell-width: var(--width-status, 100px);
       }
-      [data-column="activeWindowCount"] {
-        --cell-width: var(--width-activeWindowCount, 100px);
-      }
       th[data-column],
       td[data-column] {
         --cell-inset: clamp(0px, calc((var(--cell-width) - 10px) / 2), 10px);
@@ -1357,14 +1349,9 @@
         const nativeKeys = {
           "Matching JSFX source and WebUI association entry":
             "sourceAssociation",
-          "Persistent Runtime binding type": "sourcePersistent",
-          "Persistent mixed ordinary and JSFX binding": "sourcePersistentMixed",
-          "Current Runtime window association": "sourceRuntime",
           "Matching persistent ordinary WebUI identity marker":
             "sourceIdentity",
-          "Mixed ordinary and JSFX Runtime windows": "sourceMixed",
-          "Root is accessible and Entry is a valid local HTML file":
-            "validEntry",
+          "Root is accessible and Entry is a readable HTML file": "validEntry",
           "Root does not exist or is not a directory": "missingRoot",
           "Entry is missing or is not a regular HTML file": "missingEntry",
           "Entry metadata is unavailable": "unknownEntry",
@@ -1639,7 +1626,6 @@
           );
           field(fields, t("dataPath"), app.dataPath, true, true);
           field(fields, t("statePath"), app.windowStatePath, true, true);
-          field(fields, t("activeWindows"), app.activeWindowCount);
           panel.append(fields);
           applyFieldWidth();
           const actions = node("div", undefined, "detail-actions");
@@ -1679,27 +1665,18 @@
             $("remove-dialog").showModal();
           };
           danger.append(remove);
-          if (app.activeWindowCount > 0 || !app.removable)
-            danger.append(
-              node(
-                "p",
-                t(
-                  app.activeWindowCount > 0 ? "closeWindows" : "invalidBinding",
-                ),
-                "hint",
-              ),
-            );
+          if (!app.removable)
+            danger.append(node("p", t("invalidBinding"), "hint"));
           panel.append(danger);
         }
 
         // 05 · 列配置与持久化 / Columns, widths, visibility and saved order
         const columns = [
-          { id: "name", label: "nameID", width: 23, min: 10 },
-          { id: "type", label: "type", width: 15, min: 10 },
-          { id: "root", label: "rootEntry", width: 25, min: 10 },
-          { id: "version", label: "version", width: 10, min: 10 },
-          { id: "status", label: "status", width: 17, min: 10 },
-          { id: "activeWindowCount", label: "windows", width: 10, min: 10 },
+          { id: "name", label: "nameID", width: 25, min: 10 },
+          { id: "type", label: "type", width: 17, min: 10 },
+          { id: "root", label: "rootEntry", width: 28, min: 10 },
+          { id: "version", label: "version", width: 12, min: 10 },
+          { id: "status", label: "status", width: 18, min: 10 },
         ];
         let columnOrder = columns.map((c) => c.id),
           columnWidths = Object.fromEntries(
@@ -1930,13 +1907,14 @@
             bv = value(b),
             absent = (x) => x === null || x === undefined || x === "";
           if (absent(av) !== absent(bv)) return absent(av) ? 1 : -1;
-          const delta =
-            sortColumn === "activeWindowCount"
-              ? (Number(av) || 0) - (Number(bv) || 0)
-              : String(av ?? "").localeCompare(String(bv ?? ""), language, {
-                  numeric: true,
-                  sensitivity: "base",
-                });
+          const delta = String(av ?? "").localeCompare(
+            String(bv ?? ""),
+            language,
+            {
+              numeric: true,
+              sensitivity: "base",
+            },
+          );
           return (
             delta * (sortDescending ? -1 : 1) ||
             String(a.name || a.registrationId).localeCompare(
@@ -2438,11 +2416,6 @@
               root,
               version,
               status,
-              activeWindowCount: node(
-                "td",
-                String(app.activeWindowCount),
-                "window-count",
-              ),
             };
             for (const id of visibleColumns()) {
               cells[id].dataset.column = id;
@@ -2603,7 +2576,6 @@
                 setBusy(false);
                 render();
                 const codes = {
-                  APP_ID_CONFLICT: "closeWindows",
                   APP_REGISTRATION_CHANGED: "stale",
                   PATH_UNAVAILABLE: "folderUnavailable",
                   BUSY: "busy",

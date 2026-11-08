@@ -253,13 +253,6 @@
       "状態",
       "상태"
     ],
-    "windows": [
-      "Windows",
-      "窗口",
-      "視窗",
-      "ウィンドウ",
-      "창"
-    ],
     "windowsHint": [
       "Windows in this Runtime, including initialization and closing.",
       "当前 Runtime 的窗口数，包含初始化和关闭中的窗口。",
@@ -393,13 +386,6 @@
       "WindowState フォルダー",
       "WindowState 폴더"
     ],
-    "activeWindows": [
-      "Windows in this Runtime",
-      "当前 Runtime 窗口数",
-      "目前 Runtime 視窗數",
-      "この Runtime のウィンドウ数",
-      "현재 Runtime의 창 수"
-    ],
     "reveal": [
       "Open App Folder",
       "打开安装目录",
@@ -476,13 +462,6 @@
       "確認移除登記？",
       "この登録を解除しますか？",
       "이 등록을 해제할까요?"
-    ],
-    "closeWindows": [
-      "Close all active or initializing windows, then refresh.",
-      "请先关闭所有活动或初始化中的窗口，然后刷新。",
-      "請先關閉所有使用中或初始化中的視窗，再重新整理。",
-      "使用中・初期化中のウィンドウをすべて閉じてから更新してください。",
-      "사용 중이거나 초기화 중인 창을 모두 닫은 후 새로 고침하세요."
     ],
     "invalidBinding": [
       "The binding identity could not be verified. Removal is disabled.",
@@ -583,11 +562,11 @@
       "REAPER에서 ReaWebAPI_AppManager.lua를 실행하여 Lua 백엔드에 연결하세요."
     ],
     "loaded": [
-      "Loaded {count} registrations. Window counts reflect this refresh.",
-      "已读取 {count} 条登记。窗口数量为本次刷新的快照。",
-      "已讀取 {count} 筆登記。視窗數量為本次重新整理的快照。",
-      "{count} 件の登録を読み込みました。ウィンドウ数は更新時点の値です。",
-      "등록 {count}개를 읽었습니다. 창 수는 새로 고침 시점의 값입니다."
+      "Loaded {count} registrations.",
+      "已读取 {count} 条登记。",
+      "已讀取 {count} 筆登記。",
+      "{count} 件の登録を読み込みました。",
+      "등록 {count}개를 불러왔습니다."
     ],
     "truncated": [
       "More than 8192 directory entries. Showing partial results.",
@@ -631,13 +610,6 @@
       "登録が変更されています。更新して再度確認してください。",
       "등록 정보가 변경되었습니다. 새로 고침 후 다시 확인하세요."
     ],
-    "folderTimeout": [
-      "The file manager has not responded yet. Please try again later.",
-      "文件管理器尚未响应，请稍后重试。",
-      "檔案管理員尚未回應，請稍後重試。",
-      "ファイルマネージャーが応答していません。後でもう一度お試しください。",
-      "파일 관리자가 응답하지 않습니다. 잠시 후 다시 시도하세요."
-    ],
     "hostError": [
       "The host could not complete this operation.",
       "后端未能完成操作。",
@@ -659,13 +631,6 @@
       "管理ツールへの要求が無効です。",
       "관리자 요청이 올바르지 않습니다."
     ],
-    "sourceRuntime": [
-      "Current Runtime window association",
-      "当前 Runtime 窗口关联",
-      "目前 Runtime 視窗關聯",
-      "現在の Runtime のウィンドウ関連付け",
-      "현재 Runtime의 창 연결 정보"
-    ],
     "sourceIdentity": [
       "Matching persistent ordinary WebUI identity marker",
       "匹配的普通 WebUI 持久身份标记",
@@ -673,19 +638,12 @@
       "一致する通常 WebUI の永続識別マーカー",
       "일치하는 일반 WebUI 영구 식별 표시"
     ],
-    "sourceMixed": [
-      "Mixed ordinary and JSFX Runtime windows",
-      "同时存在普通与 JSFX Runtime 窗口",
-      "同時存在一般與 JSFX Runtime 視窗",
-      "通常と JSFX の両方のウィンドウが存在",
-      "일반 및 JSFX Runtime 창이 함께 존재함"
-    ],
     "validEntry": [
-      "Root is accessible and Entry is a valid local HTML file",
-      "Root 可访问，Entry 是有效的本地 HTML 文件",
-      "Root 可存取，Entry 是有效的本機 HTML 檔案",
-      "Root にアクセスでき、Entry は有効なローカル HTML ファイルです",
-      "Root에 접근할 수 있으며 Entry는 유효한 로컬 HTML 파일입니다"
+      "Root is accessible and Entry is a readable HTML file",
+      "Root 可访问，Entry 是可读取的 HTML 文件",
+      "Root 可存取，Entry 是可讀取的 HTML 檔案",
+      "Root にアクセスでき、Entry は読み取り可能な HTML ファイルです",
+      "Root에 접근할 수 있고 Entry는 읽을 수 있는 HTML 파일입니다"
     ],
     "missingRoot": [
       "Root does not exist or is not a directory",
@@ -721,20 +679,6 @@
       "繫結尚未驗證",
       "登録は未検証です",
       "등록이 검증되지 않았습니다"
-    ],
-    "sourcePersistent": [
-      "Type recorded by Runtime when binding the app",
-      "Runtime 建立绑定时记录的类型",
-      "Runtime 建立綁定時記錄的類型",
-      "Runtime がアプリの関連付け時に記録した種類",
-      "Runtime이 앱 연결 시 기록한 유형"
-    ],
-    "sourcePersistentMixed": [
-      "Binding used by both ordinary and JSFX WebUI; type is ambiguous",
-      "此绑定曾用于普通与 JSFX WebUI，类型不唯一",
-      "此綁定曾用於一般與 JSFX WebUI，類型不唯一",
-      "通常の WebUI と JSFX WebUI の両方で使用されたため種類を特定できません",
-      "일반 WebUI와 JSFX WebUI 모두 사용한 연결로 유형이 명확하지 않음"
     ],
     "columnHint": [
       "Click to sort; right-click to choose columns or reset layout; drag to reorder (Alt + Left/Right also works)",
@@ -833,6 +777,34 @@
       "JSFX 原始碼及 WebUI 關聯入口與登記相符",
       "JSFX ソースと WebUI の関連付け先が登録の入口と一致",
       "JSFX 소스와 WebUI 연결 진입점이 등록 정보와 일치"
+    ],
+    "closeBeforeRemove": [
+      "Close this app in all REAPER instances before continuing. Running apps cannot be detected automatically.",
+      "继续前，请在所有 REAPER 实例中关闭此应用。管理器无法自动检测运行状态。",
+      "繼續前，請在所有 REAPER 執行個體中關閉此應用。管理器無法自動偵測執行狀態。",
+      "続行する前に、すべての REAPER インスタンスでこのアプリを閉じてください。実行状態は自動検出できません。",
+      "계속하기 전에 모든 REAPER 인스턴스에서 이 앱을 닫으세요. 실행 상태는 자동으로 감지할 수 없습니다."
+    ],
+    "removeFailed": [
+      "Could not remove the registration file.",
+      "无法移除登记文件。",
+      "無法移除登記檔案。",
+      "登録ファイルを削除できませんでした。",
+      "등록 파일을 삭제할 수 없습니다."
+    ],
+    "folderOpenFailed": [
+      "Could not launch the folder opener.",
+      "无法启动目录打开程序。",
+      "無法啟動目錄開啟程式。",
+      "フォルダーを開くプログラムを起動できませんでした。",
+      "폴더 열기 프로그램을 실행할 수 없습니다."
+    ],
+    "revealRequested": [
+      "Folder open requested.",
+      "已请求打开目录。",
+      "已要求開啟目錄。",
+      "フォルダーを開くよう要求しました。",
+      "폴더 열기를 요청했습니다."
     ]
   }
 }
