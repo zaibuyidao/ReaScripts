@@ -373,6 +373,7 @@ local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
 local auto_play_waveform_when_stopped = false -- 未播放时点击波形位置自动播放
+SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK = SM_GetState(EXT_SECTION, "reset_waveform_cursor_after_playback") == "1"
 local stop_preview_on_collapse = true -- 折叠主窗口时停止预览播放
 local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local recent_audio_files     = {}    -- 最近播放列表
@@ -1558,6 +1559,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   SM_SetState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
   SM_SetState(EXT_SECTION, "auto_play_waveform_when_stopped", tostring(auto_play_waveform_when_stopped and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "reset_waveform_cursor_after_playback", SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK and "1" or "0", true)
   SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
   SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
@@ -2501,6 +2503,12 @@ do
     if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
     end
+    local changed_reset, new_reset = reaper.ImGui_Checkbox(ctx,
+      T("Reset waveform cursor to start when playback ends"), SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK)
+    if changed_reset then
+      SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK = new_reset
+      SM_SetState(EXT_SECTION, "reset_waveform_cursor_after_playback", new_reset and "1" or "0", true)
+    end
     local changed_stop_collapse, new_stop_collapse = reaper.ImGui_Checkbox(ctx, T("Stop preview playback when main window collapses"), stop_preview_on_collapse)
     if changed_stop_collapse then
       stop_preview_on_collapse = new_stop_collapse
@@ -2975,6 +2983,7 @@ do
       table_row_hover_feedback = false
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
+      SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK = false
       preserve_pitch       = true
       bg_alpha             = 1.0
       peak_chans           = 6
@@ -8817,6 +8826,18 @@ function StopPreview()
   -- 下一个小节播放
   if wait_nextbar_cur then wait_nextbar_cur.active = false end
   pending_skip_silence_seek = nil
+end
+
+-- Applies only to natural preview completion, not manual Stop/Space or selection-end stops.
+function SM_RestoreCursorAfterNaturalPreviewEnd(restore_previous)
+  if not Wave then return end
+  if SM_RESET_WAVEFORM_CURSOR_AFTER_PLAYBACK then
+    Wave.play_cursor = 0
+    wf_play_start_cursor = 0
+  elseif restore_previous and last_play_cursor_before_play then
+    Wave.play_cursor = last_play_cursor_before_play
+    wf_play_start_cursor = last_play_cursor_before_play
+  end
 end
 
 function ApplyPreviewReverse(source)
@@ -23878,6 +23899,7 @@ function loop()
           else
             auto_play_next_pending = false
             StopPreview()
+            SM_RestoreCursorAfterNaturalPreviewEnd(false)
           end
           -- 触发后清零，避免尾部抖动再次触发
           prev_preview_pos = nil
@@ -25186,10 +25208,7 @@ function loop()
       end
       if should_stop then -- 距离结尾小于0.01秒
         StopPreview()
-        if last_play_cursor_before_play then
-          Wave.play_cursor = last_play_cursor_before_play
-          wf_play_start_cursor = last_play_cursor_before_play
-        end
+        SM_RestoreCursorAfterNaturalPreviewEnd(true)
       end
     end
 
