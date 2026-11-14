@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.9.29
+@version 0.3.9.46
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -8,8 +8,10 @@
   [darwin64 extension] reaper_reawebapi-x86_64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib
   [linux64 extension] reaper_reawebapi-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x86_64.so
   [linux64 extension] reawebapi-webview-x86_64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-x86_64
+  [linux64 extension] reawebapi-video-x86_64/reawebapi-video-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-video-x86_64/reawebapi-video-x86_64.so
   [linux-aarch64 extension] reaper_reawebapi-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-aarch64.so
   [linux-aarch64 extension] reawebapi-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-aarch64
+  [linux-aarch64 extension] reawebapi-video-aarch64/reawebapi-video-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-video-aarch64/reawebapi-video-aarch64.so
   [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
   [script nomain] web/app.json https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.json
@@ -17,4 +19,6 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Add real-time transport playback rate, position-specific tempo and time signature, and cumulative fractional QN position.
+  Support REAPER 7.86 video modules on Windows x64, macOS ARM64 and Linux x86_64, retaining 7.84 and 7.85 compatibility.
+  Share verified video mappings between the backend and cadence probe, and add a module compatibility check for maintenance.
+  Clarify the video demo's unavailable-backend message.
