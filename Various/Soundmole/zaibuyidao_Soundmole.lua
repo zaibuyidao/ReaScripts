@@ -9421,6 +9421,7 @@ function ForceRescan()
   -- 清空目录/文件缓存
   dir_cache        = {}
   dir_has_subdir_cache = {}
+  SM_GetFolderLinkTargets()
   audio_file_cache = {}
   tree_open        = {}
   files_idx_cache  = nil
@@ -9608,6 +9609,40 @@ local ignored_sys_folders = {
 }
 
 -- 获取目录下所有子文件夹和支持类型的音频文件
+do
+  local link_cache = {}
+  function SM_GetFolderLinkTargets(path, invalidate)
+    if not path then link_cache = {}; return end
+    path = normalize_path(path, true)
+    if invalidate then link_cache[path] = nil; return end
+    if link_cache[path] then return link_cache[path] end
+    local targets = {}
+    link_cache[path] = targets
+    if not reaper.GetOS():find("Win") or not reaper.ExecProcess or path:find('[%z\1-\31"]') then return targets end
+
+    -- 只在含 .lnk 的目录调用 Windows Shell；Google Drive 的虚拟 .lnk 不能直接按二进制读取。
+    local i = 0
+    while true do
+      local file = reaper.EnumerateFiles(path, i)
+      if not file then return targets end
+      if file:lower():match("%.lnk$") then break end
+      i = i + 1
+    end
+    local ps = "[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); " ..
+      "$w = New-Object -ComObject WScript.Shell; " ..
+      "Get-ChildItem -LiteralPath '" .. path:gsub("'", "''") .. "' -Filter '*.lnk' -File -ErrorAction Stop | " ..
+      "ForEach-Object { try { $t = $w.CreateShortcut($_.FullName).TargetPath; " ..
+      "if ($t -and (Test-Path -LiteralPath $t -PathType Container)) { $_.Name + [char]9 + $t } } catch {} }"
+    local output = reaper.ExecProcess('powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -Command "' .. ps .. '"', 5000)
+    if output and output:match("^0[\r\n]") then
+      for name, target in output:gmatch("([^\r\n\t]+)\t([^\r\n]+)") do
+        if not name:match("^[%.$]") then targets[name] = normalize_path(target, true) end
+      end
+    end
+    return targets
+  end
+end
+
 function list_dir(path)
   path = normalize_path(path, true)
   local dirs, audios = {}, {}
@@ -9649,6 +9684,12 @@ function list_dir(path)
     j = j + 1
   end
 
+  -- 数组保留快捷方式文件名作为节点标识，同名键保存真实目标目录。
+  for name, target in pairs(SM_GetFolderLinkTargets(path)) do
+    table.insert(dirs, name)
+    dirs[name] = target
+  end
+
   table.sort(dirs)
   table.sort(audios)
   if dir_has_subdir_cache then dir_has_subdir_cache[path] = #dirs > 0 end
@@ -9677,8 +9718,9 @@ function HasVisibleSubdir(path)
     end
     i = i + 1
   end
-  if dir_has_subdir_cache then dir_has_subdir_cache[path] = false end
-  return false
+  local has_subdir = next(SM_GetFolderLinkTargets(path)) ~= nil
+  if dir_has_subdir_cache then dir_has_subdir_cache[path] = has_subdir end
+  return has_subdir
 end
 
 function IsExistingDirectory(path)
@@ -9792,8 +9834,8 @@ function draw_tree(name, path, depth, parent_path)
     end
 
     for _, sub in ipairs(cache.dirs) do
-      local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_tree(sub, sub_path, depth + 1, path)
+      local sub_path = cache.dirs[sub] or normalize_path(path .. sep .. sub, true)
+      draw_tree(cache.dirs[sub] and sub:sub(1, -5) or sub, sub_path, depth + 1, path)
     end
 
     if pushed then
@@ -10003,8 +10045,8 @@ function draw_shortcut_tree(sc, base_path, depth)
     end
 
     for _, sub in ipairs(cache.dirs) do
-      local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_shortcut_tree({ name = sub, path = sub_path }, path, depth + 1)
+      local sub_path = cache.dirs[sub] or normalize_path(path .. sep .. sub, true)
+      draw_shortcut_tree({ name = cache.dirs[sub] and sub:sub(1, -5) or sub, path = sub_path }, path, depth + 1)
     end
 
     if depth == 0 then
@@ -11352,6 +11394,7 @@ function CommitPreviewFolderRoot(path)
   SM_SetState(EXT_SECTION, "preview_folder_root", root, true)
   dir_cache[root] = nil
   if dir_has_subdir_cache then dir_has_subdir_cache[root] = nil end
+  SM_GetFolderLinkTargets(root, true)
   return true
 end
 
@@ -11386,7 +11429,8 @@ function draw_preview_folder_tree(name, path, depth)
     end
     local cache = dir_cache[path] or { dirs = {}, audios = {}, ok = true }
     for _, subdir in ipairs(cache.dirs) do
-      draw_preview_folder_tree(subdir, normalize_path(path .. sep .. subdir, true), depth + 1)
+      draw_preview_folder_tree(cache.dirs[subdir] and subdir:sub(1, -5) or subdir,
+        cache.dirs[subdir] or normalize_path(path .. sep .. subdir, true), depth + 1)
     end
     reaper.ImGui_TreePop(ctx)
   end
@@ -15792,8 +15836,8 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     end
 
     for idx, sub in ipairs(cache.dirs) do
-      local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path, depth + 1, idx)
+      local sub_path = cache.dirs[sub] or normalize_path(path .. sep .. sub, true)
+      draw_shortcut_tree_mirror({ name = cache.dirs[sub] and sub:sub(1, -5) or sub, path = sub_path }, path, depth + 1, idx)
     end
 
     if pushed then
@@ -17946,6 +17990,7 @@ end
 function SM_RequestCollapseCachedPathBranch(path, node_prefix, root_idx)
   path = normalize_path(path or "", true)
   if path == "" then return end
+  local visited = {}
 
   local function make_node_key(child_path, child_idx)
     if node_prefix == "shortcut_mirror" then
@@ -17955,10 +18000,12 @@ function SM_RequestCollapseCachedPathBranch(path, node_prefix, root_idx)
   end
 
   local function walk(parent_path)
+    if visited[parent_path] then return end
+    visited[parent_path] = true
     local cache = dir_cache and dir_cache[parent_path]
     if not cache then return end
     for idx, sub in ipairs(cache.dirs or {}) do
-      local child_path = normalize_path(parent_path .. sep .. sub, true)
+      local child_path = cache.dirs[sub] or normalize_path(parent_path .. sep .. sub, true)
       SM_RequestClosePeakTreeNode(make_node_key(child_path, idx))
       walk(child_path)
     end

@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.278
+-- @version 1.0.279
 -- @changelog
---   Fixed image format errors and attachment limit errors when loading database covers.
---   Improved cover caching and retry handling for more stable browsing of large databases.
+--   Fixed browsing of Google Drive shared folder shortcuts, including subfolders and audio files.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
