@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-mupen64plus_next",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: mupen64plus_next",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/mupen64plus-libretro-nx.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/mupen64plus-libretro-nx/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

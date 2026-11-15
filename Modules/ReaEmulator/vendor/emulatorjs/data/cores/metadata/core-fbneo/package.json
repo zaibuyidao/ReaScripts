@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-fbneo",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: fbneo",
+    "homepage": "https://emulatorjs.org",
+    "license": "src/license.txt",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/FBNeo.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/FBNeo/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

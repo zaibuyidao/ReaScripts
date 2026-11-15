@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-desmume2015",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: desmume2015",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/desmume2015.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/desmume2015/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

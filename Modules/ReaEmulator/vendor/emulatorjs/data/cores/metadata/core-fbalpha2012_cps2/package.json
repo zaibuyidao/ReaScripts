@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-fbalpha2012_cps2",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: fbalpha2012_cps2",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/fbalpha2012_cps2.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/fbalpha2012_cps2/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

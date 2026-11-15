@@ -1,0 +1,96 @@
+-- @description ReaEmulator
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @metapackage
+-- @provides
+--   [nomain] LICENSE
+--   [nomain] README.md
+--   [nomain] THIRD_PARTY_NOTICES.md
+--   [nomain] app.json
+--   [nomain] assets/Logo-light.png
+--   [nomain] assets/favicon.ico
+--   [nomain] config.json
+--   [nomain] cores.json
+--   [nomain] host.js
+--   [nomain] index.html
+--   [nomain] integration.js
+--   [nomain] licenses/cores/*.txt
+--   [nomain] patches/README.md
+--   [nomain] patches/ppsspp-memory-arena.json
+--   [nomain] patches/ppsspp-memory-arena.patch
+--   [nomain] patches/recording.json
+--   [nomain] recording.js
+--   [nomain] vendor-lock.json
+--   [nomain] vendor/ReaWebAPI-COPYING
+--   [nomain] vendor/ReaWebAPI-COPYING.LESSER
+--   [nomain] vendor/browser-files.mjs
+--   [nomain] vendor/emulatorjs/data/compression/extract7z.js
+--   [nomain] vendor/emulatorjs/data/compression/extractzip.js
+--   [nomain] vendor/emulatorjs/data/compression/libunrar.js
+--   [nomain] vendor/emulatorjs/data/compression/libunrar.wasm
+--   [nomain] vendor/emulatorjs/data/cores/*.data
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-81/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-a5200/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-beetle_vb/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-cap32/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-crocods/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-desmume/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-desmume2015/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-dosbox_pure/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbalpha2012_cps1/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbalpha2012_cps2/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbneo/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-fceumm/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-fuse/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-gambatte/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-gearcoleco/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-genesis_plus_gx/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-handy/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mame2003/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mame2003_plus/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_ngp/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_pce/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_pcfx/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_psx_hw/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_wswan/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-melonds/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mgba/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-mupen64plus_next/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-nestopia/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-opera/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-parallel_n64/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-pcsx_rearmed/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-picodrive/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-ppsspp/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-prboom/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-prosystem/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-puae/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-smsplus/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-snes9x/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-stella2014/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x128/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x64/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x64sc/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xpet/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xplus4/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xvic/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-virtualjaguar/package.json
+--   [nomain] vendor/emulatorjs/data/cores/metadata/core-yabause/package.json
+--   [nomain] vendor/emulatorjs/data/cores/ppsspp-assets.zip
+--   [nomain] vendor/emulatorjs/data/cores/reports/*.json
+--   [nomain] vendor/emulatorjs/data/emulator.css
+--   [nomain] vendor/emulatorjs/data/emulator.min.css
+--   [nomain] vendor/emulatorjs/data/emulator.min.js
+--   [nomain] vendor/emulatorjs/data/loader.js
+--   [nomain] vendor/emulatorjs/data/localization/*.json
+--   [nomain] vendor/emulatorjs/data/src/*.js
+--   [nomain] vendor/emulatorjs/data/version.json
+--   [main=main] zaibuyidao_ReaEmulator.lua
+--   [nomain] SHA256SUMS.json
+-- @about
+--   EmulatorJS 4.2.3 inside REAPER. Requires ReaWebAPI 0.3.9.44 or later.
+--   Run zaibuyidao_ReaEmulator.lua from the Main Action List.
+--   Includes all 47 pinned cores. ROMs and BIOS are not included.
+--   Recording requires an available MediaRecorder encoder. See README.md.

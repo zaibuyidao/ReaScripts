@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-crocods",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: crocods",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-crocods.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-crocods/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

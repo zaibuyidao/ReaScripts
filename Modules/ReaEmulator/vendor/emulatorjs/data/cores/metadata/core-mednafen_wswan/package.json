@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-mednafen_wswan",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: mednafen_wswan",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/beetle-wswan-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/beetle-wswan-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

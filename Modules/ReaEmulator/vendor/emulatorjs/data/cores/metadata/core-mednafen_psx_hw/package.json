@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-mednafen_psx_hw",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: mednafen_psx_hw",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/beetle-psx-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/beetle-psx-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

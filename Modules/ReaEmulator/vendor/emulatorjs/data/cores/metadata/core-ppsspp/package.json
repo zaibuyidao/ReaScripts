@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-ppsspp",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: ppsspp",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE.TXT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/ppsspp.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/ppsspp/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

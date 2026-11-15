@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-mgba",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: mgba",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/mgba.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/mgba/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

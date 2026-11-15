@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-prboom",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: prboom",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-prboom.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-prboom/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

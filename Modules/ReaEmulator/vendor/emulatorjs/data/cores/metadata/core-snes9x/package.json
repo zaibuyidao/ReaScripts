@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-snes9x",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: snes9x",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/snes9x.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/snes9x/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

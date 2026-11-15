@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-picodrive",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: picodrive",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/picodrive.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/picodrive/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-a5200",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: a5200",
+    "homepage": "https://emulatorjs.org",
+    "license": "License.txt",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/a5200.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/a5200/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

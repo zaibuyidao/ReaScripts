@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-fuse",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: fuse",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/fuse-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/fuse-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-cap32",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: cap32",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-cap32.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-cap32/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

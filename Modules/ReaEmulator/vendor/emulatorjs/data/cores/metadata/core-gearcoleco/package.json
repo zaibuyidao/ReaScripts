@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-gearcoleco",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: gearcoleco",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/Gearcoleco.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/Gearcoleco/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

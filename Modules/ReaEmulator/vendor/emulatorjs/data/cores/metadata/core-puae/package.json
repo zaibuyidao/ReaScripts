@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-puae",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: puae",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-uae.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-uae/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

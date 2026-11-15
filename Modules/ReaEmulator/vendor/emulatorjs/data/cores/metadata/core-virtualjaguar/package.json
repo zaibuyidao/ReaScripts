@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-virtualjaguar",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: virtualjaguar",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/virtualjaguar-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/virtualjaguar-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

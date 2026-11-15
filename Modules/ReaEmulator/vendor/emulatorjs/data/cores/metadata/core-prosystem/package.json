@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-prosystem",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: prosystem",
+    "homepage": "https://emulatorjs.org",
+    "license": "License.txt",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/prosystem-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/prosystem-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

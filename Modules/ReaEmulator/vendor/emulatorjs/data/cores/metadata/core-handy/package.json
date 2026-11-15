@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-handy",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: handy",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-handy.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-handy/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

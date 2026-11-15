@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-fceumm",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: fceumm",
+    "homepage": "https://emulatorjs.org",
+    "license": "Copying",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/libretro-fceumm.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/libretro-fceumm/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

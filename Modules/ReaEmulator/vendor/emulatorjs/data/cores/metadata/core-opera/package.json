@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-opera",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: opera",
+    "homepage": "https://emulatorjs.org",
+    "license": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/opera-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/opera-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

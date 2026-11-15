@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-dosbox_pure",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: dosbox_pure",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/dosbox-pure.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/dosbox-pure/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

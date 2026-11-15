@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-mame2003",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: mame2003",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/mame2003-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/mame2003-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

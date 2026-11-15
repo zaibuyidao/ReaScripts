@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-pcsx_rearmed",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: pcsx_rearmed",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/pcsx_rearmed.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/pcsx_rearmed/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

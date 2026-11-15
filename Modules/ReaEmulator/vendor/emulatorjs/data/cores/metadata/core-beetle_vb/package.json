@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-beetle_vb",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: beetle_vb",
+    "homepage": "https://emulatorjs.org",
+    "license": "COPYING",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/beetle-vb-libretro.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/beetle-vb-libretro/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

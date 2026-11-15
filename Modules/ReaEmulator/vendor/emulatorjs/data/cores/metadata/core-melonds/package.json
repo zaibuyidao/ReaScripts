@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-melonds",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: melonds",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/melonDS.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/melonDS/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

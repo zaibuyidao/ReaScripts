@@ -1,0 +1,19 @@
+{
+    "name": "@emulatorjs/core-genesis_plus_gx",
+    "version": "4.2.3",
+    "type": "module",
+    "description": "EmulatorJS Core: genesis_plus_gx",
+    "homepage": "https://emulatorjs.org",
+    "license": "LICENSE.txt",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EmulatorJS/Genesis-Plus-GX.git"
+    },
+    "bugs": {
+        "url": "https://github.com/EmulatorJS/Genesis-Plus-GX/issues"
+    },
+    "sideEffects": true,
+    "dependencies": {
+        "@emulatorjs/emulatorjs": "latest"
+    }
+}

@@ -1,0 +1,1 @@
+{ "core": "ppsspp", "buildStart": "2025-06-14T19:28:55+00:00", "buildEnd": "2025-06-14T19:46:14+00:00", "options": { "defaultWebGL2": true, "requireThreads": true } }
