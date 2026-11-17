@@ -1,9 +1,8 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.2
+-- @version 0.2.3
 -- @changelog
---   Kept the editor toolbar on one row while resizing, with extra buttons in the More menu.
---   Removed toolbar wrapping flicker while retaining the ResizeObserver fix.
+--   Fix a selection out-of-range error when switching editor modes with an empty paragraph at the end of the document.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
