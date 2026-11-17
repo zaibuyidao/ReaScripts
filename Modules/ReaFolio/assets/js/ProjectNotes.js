@@ -108,7 +108,7 @@ export class ProjectNotes {
     // Stop readers/watchers and drain drafts/attachments before rebinding the
     // shared repository. Even failure must not leave the old editor writable.
     await this.repo.clearRoot();
-    if (root) await this.repo.setRoot(root, false);
+    if (root) await this.repo.setRoot(root, false, {backgroundScan: true});
     this.state.root = this.repo.root;
     this.state.revision++;
   }
@@ -151,6 +151,7 @@ export class ProjectNotes {
         (this.repo.busy && !this.repo.images.syncTask) || this.repo.images.pending || this.isBlocked?.(false))
       return Promise.resolve(false);
     const request = {scope, config: {...this.repo.config, notesScope: scope}};
+    this.state.scopeVersion = (this.state.scopeVersion || 0) + 1;
     this.scopeRequest = request;
     this.state.busy = true;
     this.previewSelection(request, scope === 'project' ? this.projectHint : undefined);
@@ -205,7 +206,21 @@ export class ProjectNotes {
     return result;
   }
 
-  async change(scope, changes = {}, automatic = false, observedProject, selecting = false) {
+  change(...args) {
+    if (this.blocked(args[2], args[4])) return Promise.resolve(false);
+    const task = this.performChange(...args);
+    this.changeTask = task;
+    return task.finally(() => { if (this.changeTask === task) this.changeTask = null; });
+  }
+
+  async whenReady(expectedKey, scopeVersion) {
+    await (this.selectionTask || this.changeTask);
+    return !this.stopped && !this.state.switching && !this.state.scopeSelection && !!this.repo.root &&
+      (!expectedKey || expectedKey === this.state.homeCacheKey) &&
+      (scopeVersion === undefined || scopeVersion === this.state.scopeVersion);
+  }
+
+  async performChange(scope, changes = {}, automatic = false, observedProject, selecting = false) {
     if (this.blocked(automatic, selecting)) return false;
     this.state.busy = true;
     const previous = {...this.repo.config}, previousRoot = this.repo.root;

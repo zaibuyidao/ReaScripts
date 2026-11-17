@@ -18,6 +18,7 @@ import {
   n as useGlobalStore,
   o as getNotes,
   r as preferences,
+  openNotesRoute,
 } from './index.js';
 import {t as LoadingIndicator} from './LoadingIndicator.js';
 import {readHomeCache, writeHomeCache} from './HomeCache.js';
@@ -34,7 +35,8 @@ const Home = {
     const defaultSort = () => preferences.homeSort || store.config.quickAccessSort || 'lastModified';
     const cacheView = () => JSON.stringify([defaultTerm(), defaultSort(), preferences.recentNotesLimit]);
     const cacheKey = () => workspaceState.scopeSelection?.homeCacheKey ?? workspaceState.homeCacheKey;
-    const pending = () => !workspaceState.initialized || workspaceState.switching || !!workspaceState.scopeSelection;
+    const pending = () => !workspaceState.initialized || workspaceState.switching ||
+      !!workspaceState.scopeSelection || workspaceState.indexing;
     let activeCacheKey = cacheKey();
     const ready = () => !pending() && !!workspaceState.root;
 
@@ -81,6 +83,7 @@ const Home = {
       () => workspaceState.initialized,
       () => workspaceState.switching,
       () => workspaceState.scopeSelection,
+      () => workspaceState.indexing,
       () => workspaceState.homeCacheKey,
       searchTerm,
       () => preferences.recentNotesLimit,
@@ -119,14 +122,15 @@ const Home = {
             }, heading) : null,
             ...visibleNotes.map(note => h(RouterLink, {
               key: note.title,
-              to: ready()
-                ? {name: 'note', params: {title: note.title}} : {name: 'home'},
+              to: {name: 'note', params: {title: note.title}},
+              onClickCapture: event => openNotesRoute(event, {name: 'note', params: {title: note.title}}),
               class: 'mb-1',
             }, {default: () => [h(CustomButton, {label: note.title})]})),
             !searching && notes.value.length > preferences.recentNotesLimit ? h(RouterLink, {
-              to: ready()
-                ? {name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]}}
-                : {name: 'home'},
+              to: {name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]}},
+              onClickCapture: event => openNotesRoute(event, {
+                name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]},
+              }),
               title: translate('showMore'),
             }, {default: () => [h(CustomButton, {iconPath: moreIcon})]}) : null,
           ]}),

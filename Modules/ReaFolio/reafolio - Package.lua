@@ -1,8 +1,8 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.4
+-- @version 0.2.5
 -- @changelog
---   Improve startup and Global/Project switching speed by showing cached note lists immediately and refreshing in the background.
+--   Fix unresponsive note links and New Note after switching between Global and Project scopes, without waiting for a full scan.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes
