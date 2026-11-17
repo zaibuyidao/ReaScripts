@@ -1,3 +1,5 @@
+import {writeHomeStartup} from './HomeCache.js';
+
 // Storage scope is independent of the global folder and of REAPER project state.
 const failure = code => Object.assign(new Error(code), {code});
 
@@ -38,12 +40,14 @@ export class ProjectNotes {
   constructor({repo, state, defaultRoot, beforeChange, isBlocked, formatError}) {
     Object.assign(this, {repo, state, defaultRoot, beforeChange, isBlocked, formatError});
     this.projectKey = null;
+    this.scopeRequest = null;
+    this.selectionTask = null;
     this.stopped = false;
   }
 
   async currentProject() {
     const [project, filename] = await this.repo.host.EnumProjects(-1);
-    return {key: JSON.stringify([project, filename]), filename: filename || ''};
+    return this.projectHint = {key: JSON.stringify([project, filename]), filename: filename || ''};
   }
 
   async directory(path, create = false, strict = false) {
@@ -79,11 +83,24 @@ export class ProjectNotes {
     this.repo.config = config;
   }
 
+  presentation(config, project) {
+    const root = config.notesScope === 'project'
+      ? projectNotesRoot(project?.filename, config.projectFolder) : config.root;
+    return {
+      scope: config.notesScope,
+      projectName: project?.filename.replaceAll('\\', '/').split('/').pop() || '',
+      homeCacheKey: root ? JSON.stringify([config.notesScope, this.repo.pathKey(root)]) : '',
+    };
+  }
+
   publish(config, project) {
-    this.state.scope = config.notesScope;
-    this.state.globalRoot = config.root;
-    this.state.projectFolder = config.projectFolder;
-    this.state.projectName = project?.filename.replaceAll('\\', '/').split('/').pop() || '';
+    const view = this.presentation(config, project);
+    Object.assign(this.state, view, {globalRoot: config.root, projectFolder: config.projectFolder});
+    if (this.activeSelection && this.activeSelection === this.scopeRequest)
+      this.state.scopeSelection = view;
+    const visible = this.state.scopeSelection || view;
+    writeHomeStartup(visible.scope, visible.homeCacheKey, visible.projectName);
+    this.project = project;
     this.projectKey = project?.key ?? null;
   }
 
@@ -110,6 +127,7 @@ export class ProjectNotes {
       await this.activate(await this.target(config, config.notesScope, project));
     } catch (error) {
       this.publish(config, project);
+      this.state.homeCacheKey = '';
       this.state.error = this.formatError(error);
     }
     this.timer = setInterval(() => this.refresh().catch(error => this.report(error)), 1000);
@@ -120,18 +138,79 @@ export class ProjectNotes {
     } catch { /* Older hosts still follow tab switches and Save As by polling. */ }
   }
 
-  blocked(automatic = false) {
-    return this.stopped || this.state.busy || this.state.refreshing || this.repo.busy ||
+  blocked(automatic = false, selecting = false) {
+    return this.stopped || ((this.state.busy || this.scopeRequest) && !selecting) || this.state.refreshing || this.repo.busy ||
       this.repo.images.pending || this.isBlocked?.(automatic);
   }
 
   report(error) { if (!this.stopped) this.state.error = this.formatError(error); }
 
-  async change(scope, changes = {}, automatic = false, observedProject) {
-    if (this.blocked(automatic)) return false;
+  select(scope) {
+    if (!['global', 'project'].includes(scope) || this.stopped ||
+        (this.state.busy && !this.scopeRequest) || this.state.refreshing ||
+        (this.repo.busy && !this.repo.images.syncTask) || this.repo.images.pending || this.isBlocked?.(false))
+      return Promise.resolve(false);
+    const request = {scope, config: {...this.repo.config, notesScope: scope}};
+    this.scopeRequest = request;
+    this.state.busy = true;
+    this.previewSelection(request, scope === 'project' ? this.projectHint : undefined);
+    // Resolve project identity independently of the active disk operation. Only
+    // the latest request may update the visible cache; repository work stays serial.
+    request.ready = (scope === 'project' ? this.currentProject() : Promise.resolve(undefined))
+      .then(project => {
+        if (this.scopeRequest === request) this.previewSelection(request, project);
+        return {project};
+      }, error => ({error}));
+    if (!this.selectionTask) {
+      this.selectionTask = this.drainSelections().finally(() => {
+        this.selectionTask = null;
+        this.activeSelection = null;
+        this.scopeRequest = null;
+        this.state.scopeSelection = null;
+        this.state.busy = false;
+        const view = this.presentation(this.repo.config, this.project);
+        writeHomeStartup(view.scope, view.homeCacheKey, view.projectName);
+      });
+    }
+    return this.selectionTask;
+  }
+
+  previewSelection(request, project) {
+    const view = this.presentation(request.config, project);
+    this.state.scopeSelection = view;
+    writeHomeStartup(view.scope, view.homeCacheKey, view.projectName);
+  }
+
+  async drainSelections() {
+    let result = false;
+    while (!this.stopped && this.scopeRequest) {
+      const request = this.scopeRequest;
+      const resolved = await request.ready;
+      if (request !== this.scopeRequest) continue;
+      if (resolved.error) {
+        this.report(resolved.error);
+        return false;
+      }
+      await this.repo.images.syncTask?.catch(() => {});
+      if (request !== this.scopeRequest) continue;
+      this.activeSelection = request;
+      result = await this.change(request.scope, {}, false, undefined, true);
+      this.activeSelection = null;
+      if (request === this.scopeRequest) {
+        this.scopeRequest = null;
+        const view = this.presentation(this.repo.config, this.project);
+        writeHomeStartup(view.scope, view.homeCacheKey, view.projectName);
+      }
+    }
+    return result;
+  }
+
+  async change(scope, changes = {}, automatic = false, observedProject, selecting = false) {
+    if (this.blocked(automatic, selecting)) return false;
     this.state.busy = true;
     const previous = {...this.repo.config}, previousRoot = this.repo.root;
-    let persisted = false, activated = false;
+    const previousProject = this.project;
+    let persisted = false, activated = false, previewed = false;
     try {
       if (!['global', 'project'].includes(scope)) throw failure('INVALID_REQUEST');
       const config = {...previous, ...changes, notesScope: scope};
@@ -143,10 +222,18 @@ export class ProjectNotes {
         (scope === 'project' && project.key !== this.projectKey) ||
         (scope === 'global' ? config.root !== previous.root : config.projectFolder !== previous.projectFolder);
       if (affectsActive && this.beforeChange && !await this.beforeChange(automatic)) return false;
+      if (selecting) await this.repo.images.syncTask?.catch(() => {});
       if (this.repo.busy || this.repo.images.pending) return false;
       this.state.switching = affectsActive;
       // Re-read after a save/discard dialog: the user may have changed tabs.
       if (scope === 'project') project = await this.currentProject();
+      if (affectsActive) {
+        // Publish presentation state before directory checks, recovery and scanning.
+        // The repository remains unavailable to readers until switching finishes.
+        this.publish(config, project);
+        previewed = true;
+        this.state.error = '';
+      }
       const root = affectsActive ? await this.target(config, scope, project) : previousRoot;
       if (!automatic) { await this.persist(config); persisted = true; }
       if (affectsActive) { activated = true; await this.activate(root); }
@@ -161,6 +248,7 @@ export class ProjectNotes {
         // Retry unavailable storage on the next event/poll.
         this.projectKey = null;
       } else {
+        if (previewed) this.publish(previous, previousProject);
         if (persisted) await this.persist(previous).catch(restoreError => this.report(restoreError));
         if (activated) await this.activate(previousRoot).catch(() => {});
       }
@@ -168,7 +256,7 @@ export class ProjectNotes {
       return false;
     } finally {
       this.state.switching = false;
-      this.state.busy = false;
+      this.state.busy = !!this.scopeRequest;
     }
   }
 
@@ -186,5 +274,6 @@ export class ProjectNotes {
     this.stopped = true;
     clearInterval(this.timer);
     await this.unsubscribe?.();
+    await this.selectionTask;
   }
 }

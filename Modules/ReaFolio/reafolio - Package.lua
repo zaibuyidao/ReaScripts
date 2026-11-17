@@ -1,8 +1,8 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.3
+-- @version 0.2.4
 -- @changelog
---   Fix a selection out-of-range error when switching editor modes with an empty paragraph at the end of the document.
+--   Improve startup and Global/Project switching speed by showing cached note lists immediately and refreshing in the background.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes

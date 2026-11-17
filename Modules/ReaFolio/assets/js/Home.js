@@ -20,6 +20,7 @@ import {
   r as preferences,
 } from './index.js';
 import {t as LoadingIndicator} from './LoadingIndicator.js';
+import {readHomeCache, writeHomeCache} from './HomeCache.js';
 
 const Home = {
   __name: 'Home',
@@ -31,12 +32,29 @@ const Home = {
     const toast = useToast();
     const defaultTerm = () => preferences.homeFilter || store.config.quickAccessTerm || '*';
     const defaultSort = () => preferences.homeSort || store.config.quickAccessSort || 'lastModified';
+    const cacheView = () => JSON.stringify([defaultTerm(), defaultSort(), preferences.recentNotesLimit]);
+    const cacheKey = () => workspaceState.scopeSelection?.homeCacheKey ?? workspaceState.homeCacheKey;
+    const pending = () => !workspaceState.initialized || workspaceState.switching || !!workspaceState.scopeSelection;
+    let activeCacheKey = cacheKey();
+    const ready = () => !pending() && !!workspaceState.root;
 
     function refresh() {
+      if (activeCacheKey !== cacheKey()) {
+        activeCacheKey = cacheKey();
+        if (workspaceState.switching || workspaceState.scopeSelection) searchTerm.value = '';
+      }
       const term = searchTerm.value.trim();
       if (store.config.quickAccessHide && !term) {
         notes.value = [];
         loadingIndicator.value?.setLoaded();
+        return;
+      }
+      // Startup and scope switches share the same presentation-only snapshots.
+      if (!ready()) {
+        const cached = pending() && !term && readHomeCache(cacheKey(), cacheView());
+        notes.value = cached || [];
+        if (cached || !pending()) loadingIndicator.value?.setLoaded();
+        else loadingIndicator.value?.setLoading();
         return;
       }
       try {
@@ -46,6 +64,7 @@ const Home = {
           !term && defaultSort() === 'title' ? 'asc' : 'desc',
           term ? undefined : preferences.recentNotesLimit + 1,
         );
+        if (!term) writeHomeCache(cacheKey(), cacheView(), notes.value);
         if ((term || preferences.homeFilter) && !notes.value.length) {
           loadingIndicator.value?.setFailed(translate('noResults'));
         } else {
@@ -59,6 +78,10 @@ const Home = {
 
     watch([
       () => workspaceState.revision,
+      () => workspaceState.initialized,
+      () => workspaceState.switching,
+      () => workspaceState.scopeSelection,
+      () => workspaceState.homeCacheKey,
       searchTerm,
       () => preferences.recentNotesLimit,
       () => preferences.homeFilter,
@@ -68,6 +91,7 @@ const Home = {
       () => store.config.quickAccessSort,
     ], refresh);
     onMounted(refresh);
+    refresh();
 
     return () => {
       const searching = !!searchTerm.value.trim();
@@ -80,10 +104,13 @@ const Home = {
           h(Logo, {class: 'mb-5'}),
           h(SearchInput, {
             class: 'mb-5 shadow-[0_0_20px] shadow-theme-shadow',
+            initialSearchTerm: searchTerm.value,
+            navigateOnEnter: ready(),
             'onUpdate:searchTerm': value => {searchTerm.value = value;},
           }),
           h(LoadingIndicator, {
             ref: loadingIndicator,
+            initialLoaded: notes.value.length > 0,
             class: 'home-recent flex min-h-0 flex-col items-center',
             hideLoader: '',
           }, {default: () => [
@@ -92,11 +119,14 @@ const Home = {
             }, heading) : null,
             ...visibleNotes.map(note => h(RouterLink, {
               key: note.title,
-              to: {name: 'note', params: {title: note.title}},
+              to: ready()
+                ? {name: 'note', params: {title: note.title}} : {name: 'home'},
               class: 'mb-1',
             }, {default: () => [h(CustomButton, {label: note.title})]})),
             !searching && notes.value.length > preferences.recentNotesLimit ? h(RouterLink, {
-              to: {name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]}},
+              to: ready()
+                ? {name: 'search', query: {term: defaultTerm(), sortBy: searchSortOptions[defaultSort()]}}
+                : {name: 'home'},
               title: translate('showMore'),
             }, {default: () => [h(CustomButton, {iconPath: moreIcon})]}) : null,
           ]}),
