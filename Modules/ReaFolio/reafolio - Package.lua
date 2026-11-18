@@ -1,8 +1,11 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.5
+-- @version 0.2.6
 -- @changelog
---   Fix unresponsive note links and New Note after switching between Global and Project scopes, without waiting for a full scan.
+--   Add note transfers between Global and Project scopes, including attachments, name conflict handling, and recovery.
+--   Fix Windows path checks and false transfer warnings, and open the moved note directly.
+--   Fix the blank New Note page and prevent reselecting the current scope from refreshing the open note.
+--   Open notes faster after switching scopes and close the app faster.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes

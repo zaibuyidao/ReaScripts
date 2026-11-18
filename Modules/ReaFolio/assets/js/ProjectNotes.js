@@ -1,4 +1,4 @@
-import {writeHomeStartup} from './HomeCache.js';
+import {invalidateHomeCache, writeHomeStartup} from './HomeCache.js';
 
 // Storage scope is independent of the global folder and of REAPER project state.
 const failure = code => Object.assign(new Error(code), {code});
@@ -50,7 +50,7 @@ export class ProjectNotes {
     return this.projectHint = {key: JSON.stringify([project, filename]), filename: filename || ''};
   }
 
-  async directory(path, create = false, strict = false) {
+  async directory(path, create = false, strict = false, checkReadable = true) {
     const {host} = this.repo;
     let info = await host.fs.stat(path);
     if (!info.exists && create) {
@@ -60,22 +60,22 @@ export class ProjectNotes {
     }
     if (!info.exists || info.type !== 'directory') throw failure('WORKSPACE_UNAVAILABLE');
     if (strict && this.repo.pathKey(info.path) !== this.repo.pathKey(path)) throw failure('UNSAFE_PATH');
-    await host.fs.readDirectory(info.path);
-    return info.path;
+    if (checkReadable) await host.fs.readDirectory(info.path);
+    return info.path.replaceAll('\\', '/');
   }
 
-  async target(config, scope, project) {
+  async target(config, scope, project, checkReadable = true) {
     if (scope === 'global') {
       // The default folder may be absent on a fresh install or after reinstalling.
       // Recreate it automatically, while keeping custom-folder errors explicit.
       const isDefault = this.repo.pathKey(config.root) === this.repo.pathKey(this.defaultRoot);
-      return this.directory(config.root, isDefault, isDefault);
+      return this.directory(config.root, isDefault, isDefault, checkReadable);
     }
     const root = projectNotesRoot(project.filename, config.projectFolder);
     if (!root) return '';
     const file = await this.repo.host.fs.stat(project.filename);
     if (!file.exists || file.type !== 'file') return '';
-    return this.directory(root, true, true);
+    return this.directory(root, true, true, checkReadable);
   }
 
   async persist(config) {
@@ -124,7 +124,7 @@ export class ProjectNotes {
     try {
       if (config.notesScope === 'project') project = await this.currentProject();
       this.publish(config, project);
-      await this.activate(await this.target(config, config.notesScope, project));
+      await this.activate(await this.target(config, config.notesScope, project, false));
     } catch (error) {
       this.publish(config, project);
       this.state.homeCacheKey = '';
@@ -147,6 +147,7 @@ export class ProjectNotes {
 
   select(scope) {
     if (!['global', 'project'].includes(scope) || this.stopped ||
+        (this.scopeRequest?.scope ?? this.state.scope) === scope ||
         (this.state.busy && !this.scopeRequest) || this.state.refreshing ||
         (this.repo.busy && !this.repo.images.syncTask) || this.repo.images.pending || this.isBlocked?.(false))
       return Promise.resolve(false);
@@ -192,10 +193,10 @@ export class ProjectNotes {
         this.report(resolved.error);
         return false;
       }
-      await this.repo.images.syncTask?.catch(() => {});
+      await this.repo.pauseImageSync();
       if (request !== this.scopeRequest) continue;
       this.activeSelection = request;
-      result = await this.change(request.scope, {}, false, undefined, true);
+      result = await this.change(request.scope, {}, false, resolved.project, true);
       this.activeSelection = null;
       if (request === this.scopeRequest) {
         this.scopeRequest = null;
@@ -232,16 +233,18 @@ export class ProjectNotes {
       validateProjectFolder(config.projectFolder);
       // Validate all Settings fields before asking the editor to leave.
       if (config.root !== previous.root) config.root = await this.directory(config.root);
-      let project = scope === 'project' ? await this.currentProject() : undefined;
+      let project = scope === 'project' ? observedProject ?? await this.currentProject() : undefined;
       const affectsActive = automatic || scope !== this.state.scope || !this.repo.root ||
         (scope === 'project' && project.key !== this.projectKey) ||
         (scope === 'global' ? config.root !== previous.root : config.projectFolder !== previous.projectFolder);
       if (affectsActive && this.beforeChange && !await this.beforeChange(automatic)) return false;
-      if (selecting) await this.repo.images.syncTask?.catch(() => {});
+      if (selecting) await this.repo.pauseImageSync();
       if (this.repo.busy || this.repo.images.pending) return false;
       this.state.switching = affectsActive;
       // Re-read after a save/discard dialog: the user may have changed tabs.
       if (scope === 'project') project = await this.currentProject();
+      const root = affectsActive ? await this.target(config, scope, project, false) : previousRoot;
+      if (selecting && this.activeSelection !== this.scopeRequest) return false;
       if (affectsActive) {
         // Publish presentation state before directory checks, recovery and scanning.
         // The repository remains unavailable to readers until switching finishes.
@@ -249,7 +252,6 @@ export class ProjectNotes {
         previewed = true;
         this.state.error = '';
       }
-      const root = affectsActive ? await this.target(config, scope, project) : previousRoot;
       if (!automatic) { await this.persist(config); persisted = true; }
       if (affectsActive) { activated = true; await this.activate(root); }
       this.publish(config, project);
@@ -275,6 +277,70 @@ export class ProjectNotes {
     }
   }
 
+  moveNote(...args) {
+    if (this.moveTask) return Promise.reject(failure('BUSY'));
+    const task = this.performMoveNote(...args);
+    this.moveTask = task;
+    return task.finally(() => { if (this.moveTask === task) this.moveTask = null; });
+  }
+
+  async performMoveNote(title, {rename, beforeActivate, destinations} = {}) {
+    if (this.stopped || this.state.busy || this.state.switching || this.scopeRequest || this.state.refreshing ||
+        this.repo.images.pending || !this.repo.root) throw failure('BUSY');
+    this.state.busy = true;
+    let moved, resumeIndex;
+    try {
+      await this.repo.images.syncTask;
+      const sourceRoot = this.repo.root, config = {...this.repo.config};
+      const sourceScope = this.state.scope, scope = sourceScope === 'global' ? 'project' : 'global';
+      const project = await this.currentProject();
+      if (!project.filename) throw failure('TRANSFER_SAVE_PROJECT');
+      if (sourceScope === 'project' && this.repo.pathKey(projectNotesRoot(project.filename, config.projectFolder)) !== this.repo.pathKey(sourceRoot))
+        throw failure('TRANSFER_PROJECT_CHANGED');
+      const targetRoot = await this.target(config, scope, project);
+      if (!targetRoot) throw failure('TRANSFER_SAVE_PROJECT');
+      if (this.repo.pathKey(sourceRoot) === this.repo.pathKey(targetRoot)) throw failure('TRANSFER_SAME_ROOT');
+      const note = this.repo.baselines.get(title.normalize('NFC').toLowerCase());
+      if (!note) throw failure('CONFLICT');
+      let destination = title;
+      while (!await this.repo.transfers.available(targetRoot, destination)) {
+        destination = await rename?.(destination);
+        if (destination === false || destination == null) return null;
+      }
+      const assertCurrent = async () => {
+        if (this.stopped) throw failure('BACKEND_CLOSED');
+        if (this.repo.root !== sourceRoot || (await this.currentProject()).key !== project.key)
+          throw failure('TRANSFER_PROJECT_CHANGED');
+      };
+      await assertCurrent();
+      resumeIndex = this.repo.pauseIndex();
+      moved = await this.repo.transfers.move({sourceRoot, targetRoot, note, title: destination, assertCurrent, destinations});
+      await beforeActivate?.();
+      this.state.switching = true;
+      const draftKey = this.repo.draftKey(title);
+      delete this.repo.drafts[draftKey];
+      globalThis.localStorage?.removeItem('reafolio.draft:' + draftKey);
+      await this.repo.flushDrafts();
+      invalidateHomeCache([JSON.stringify([sourceScope, this.repo.pathKey(sourceRoot)]), JSON.stringify([scope, this.repo.pathKey(targetRoot)])]);
+      const next = {...config, notesScope: scope};
+      await this.persist(next);
+      await this.activate(targetRoot);
+      this.publish(next, scope === 'project' ? project : undefined);
+      this.state.error = '';
+      return {...moved, scope, activated: true};
+    } catch (error) {
+      if (moved) {
+        this.report(failure('TRANSFER_OPEN_FAILED'));
+        return {...moved, activated: false};
+      }
+      throw error;
+    } finally {
+      this.state.switching = false;
+      this.state.busy = false;
+      resumeIndex?.();
+    }
+  }
+
   async refresh() {
     if (this.state.scope !== 'project' || this.blocked(true) || this.checking) return;
     this.checking = true;
@@ -290,5 +356,6 @@ export class ProjectNotes {
     clearInterval(this.timer);
     await this.unsubscribe?.();
     await this.selectionTask;
+    await this.moveTask?.catch(() => {});
   }
 }

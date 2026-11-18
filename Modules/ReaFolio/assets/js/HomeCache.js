@@ -3,6 +3,13 @@ const storageKey = 'reafolio.home.cache.v1';
 const startupKey = 'reafolio.home.startup.v1';
 const maxSnapshots = 16;
 
+export function invalidateHomeCache(workspaces) {
+  try {
+    globalThis.localStorage?.setItem(storageKey,
+      JSON.stringify(readSnapshots().filter(entry => !workspaces.includes(entry?.workspace))));
+  } catch { /* The next successful scan replaces stale presentation data. */ }
+}
+
 export function readHomeStartup() {
   try {
     const startup = JSON.parse(globalThis.localStorage?.getItem(startupKey) || 'null');

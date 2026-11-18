@@ -29,7 +29,8 @@
 .notes-scope-button[aria-pressed=true]{background:rgb(var(--theme-brand) / .1);color:rgb(var(--theme-text))}
 .notes-scope-button:not(:disabled):hover{background:rgb(var(--theme-background-elevated));color:rgb(var(--theme-text))}
 .notes-scope-button:focus-visible{outline:2px solid rgb(var(--theme-brand));outline-offset:2px}
-.notes-scope-button:disabled{opacity:.5;cursor:default}
+.notes-scope-button:disabled{cursor:default}
+.notes-scope-button:disabled:not([aria-pressed=true]){opacity:.5}
 .notes-scope-bar.is-starting .notes-scope-button:disabled{opacity:1}
 .notes-project-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.6875rem;color:rgb(var(--theme-text-muted))}
 @media(max-width:420px){.notes-nav-actions button span{display:none}.notes-nav-actions button svg{margin-right:0}}
