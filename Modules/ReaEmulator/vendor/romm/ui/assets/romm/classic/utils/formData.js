@@ -1,0 +1,1 @@
+function e(e){let t=new FormData;return e.forEach(([e,n,r])=>{if(n==null)return;let i=String(e);n instanceof Blob?r?t.append(i,n,r):t.append(i,n):t.append(i,String(n))}),t}export{e as t};

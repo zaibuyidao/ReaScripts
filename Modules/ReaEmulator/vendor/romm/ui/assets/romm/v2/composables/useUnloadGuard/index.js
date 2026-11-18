@@ -1,0 +1,1 @@
+import{d as e}from"../../../classic/composables/useUserLocalStorage.js";import{Et as t,dt as n}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";n();function r(n){typeof window<`u`&&e(window,`beforeunload`,e=>{t(n)&&(e.preventDefault(),e.returnValue=``)})}export{r as t};

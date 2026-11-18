@@ -1,0 +1,1 @@
+import{j as e,k as t}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";e();var n={noHighlight:!0,noKatex:!0,noMermaid:!0,noEcharts:!0};function r(e){return(r,{attrs:i,slots:a})=>t(e,{...n,...i},a)}export{r as t};

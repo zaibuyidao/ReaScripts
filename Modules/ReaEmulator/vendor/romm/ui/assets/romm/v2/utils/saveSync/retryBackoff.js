@@ -1,0 +1,1 @@
+function e(e=Date.now){let t=0,n=0;return{ready:()=>e()>=n,failed(){t=Math.min(Math.max(t*2,2e3),3e4),n=e()+t},reset(){t=0,n=0}}}export{e as t};

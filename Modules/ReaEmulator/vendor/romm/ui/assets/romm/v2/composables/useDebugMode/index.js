@@ -1,0 +1,1 @@
+import{n as e}from"../../../classic/composables/useUserLocalStorage.js";var t=e(`settings.v2.debugMode`,!1);function n(){return{enabled:t}}export{n as t};

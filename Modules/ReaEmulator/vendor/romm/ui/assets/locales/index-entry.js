@@ -1,0 +1,1 @@
+export{n as loadLocale}from"./index.js";

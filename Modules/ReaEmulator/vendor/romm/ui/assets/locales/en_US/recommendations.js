@@ -1,0 +1,1 @@
+var e=`Why this was recommended`,t={"because-you-played":`Because you played {0}`,"for-you":`Recommended for you`,"reason-decade":`{0}s`,"reason-igdb":`Similar on IGDB`,"reason-top-rated":`Highly rated`,"similar-games":`Similar games`,why:e};export{t as default,e as why};

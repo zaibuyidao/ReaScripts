@@ -1,0 +1,1 @@
+import{dt as e,gt as t}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";import{t as n}from"../../utils/playerFullscreen.js";e();var r=0,i=null;function a(){r++===0&&(i=n()),t(()=>{--r>0||(i?.(),i=null)})}export{a as t};

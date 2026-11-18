@@ -1,0 +1,1 @@
+import{E as e,G as t,Y as n,j as r,y as i}from"../../../dependencies/vue/vue.runtime.esm-bundler.js";r();var a=e({inheritAttrs:!1,__name:`Passthrough`,setup(e){return(e,r)=>{let a=n(`router-view`);return t(),i(a)}}});export{a as default};

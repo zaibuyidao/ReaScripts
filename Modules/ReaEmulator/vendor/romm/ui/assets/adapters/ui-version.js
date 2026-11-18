@@ -1,0 +1,1 @@
+import{n as e}from"../romm/classic/composables/useUserLocalStorage.js";var t=e(`reaemulator.uiVersion`,`v1`),n=()=>t;export{n as t};

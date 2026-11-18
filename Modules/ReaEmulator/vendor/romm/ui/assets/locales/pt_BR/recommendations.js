@@ -1,0 +1,1 @@
+var e=`Por que isto foi recomendado`,t={"because-you-played":`Porque você jogou {0}`,"for-you":`Recomendado para você`,"reason-decade":`anos {0}`,"reason-igdb":`Semelhante no IGDB`,"reason-top-rated":`Muito bem avaliado`,"similar-games":`Jogos semelhantes`,why:e};export{t as default,e as why};

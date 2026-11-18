@@ -1,0 +1,1 @@
+var e=`Miért ajánlottuk ezt`,t={"because-you-played":`Mert játszottál ezzel: {0}`,"for-you":`Neked ajánljuk`,"reason-decade":`{0}-es évek`,"reason-igdb":`Hasonló az IGDB szerint`,"reason-top-rated":`Magasra értékelt`,"similar-games":`Hasonló játékok`,why:e};export{t as default,e as why};

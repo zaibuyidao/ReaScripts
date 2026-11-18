@@ -1,0 +1,1 @@
+import{P as e,s as t}from"../../../classic/composables/useUserLocalStorage.js";import{it as n,j as r}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";r();function i(r,i,{immediate:a=!0}={}){let o=t(),s=e(()=>{o.value===`visible`&&r()},i,{immediate:a});return n(o,e=>{e===`visible`&&s.isActive.value&&r()}),s}export{i as t};

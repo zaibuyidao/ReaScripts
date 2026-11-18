@@ -1,0 +1,1 @@
+export{n as jsonld}from"./javascript.js";

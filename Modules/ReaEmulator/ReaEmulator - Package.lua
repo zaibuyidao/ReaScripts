@@ -1,96 +1,1260 @@
 -- @description ReaEmulator
 -- @author zaibuyidao
--- @version 0.1.0
+-- @version 0.1.1
 -- @changelog
---   Initial release.
+--   Restore the original RomM boot animation and loading messages.
+--   Fix New UI back links and recover when a browser view transition cannot start.
+--   Confirm cache removal after IndexedDB finishes clearing local emulator data.
 -- @metapackage
+-- @links
+--   ReaEmulator https://github.com/zaibuyidao/ReaScripts/Modules/ReaEmulator
 -- @provides
---   [nomain] LICENSE
---   [nomain] README.md
---   [nomain] THIRD_PARTY_NOTICES.md
 --   [nomain] app.json
+--   [nomain] app/app.js
+--   [nomain] app/host/host.js
+--   [nomain] app/host/integration.js
+--   [nomain] app/host/native-files.js
+--   [nomain] app/host/native-files.lua
+--   [nomain] app/library/library-store.js
+--   [nomain] app/player/local-states.js
+--   [nomain] app/player/player-controls.js
+--   [nomain] app/player/player-romm-menu.js
+--   [nomain] app/player/player-runtime.js
+--   [nomain] app/player/player.css
+--   [nomain] app/player/player.html
+--   [nomain] app/player/player.js
+--   [nomain] app/player/recording.js
+--   [nomain] app/shared/navigation.js
+--   [nomain] app/shared/platforms.js
 --   [nomain] assets/Logo-light.png
+--   [nomain] assets/console/default/backgrounds/background.svg
+--   [nomain] assets/console/default/bezels/snes.png
+--   [nomain] assets/console/default/systems/arcade.svg
+--   [nomain] assets/console/default/systems/atari2600.svg
+--   [nomain] assets/console/default/systems/default.svg
+--   [nomain] assets/console/default/systems/gamegear.svg
+--   [nomain] assets/console/default/systems/gb.svg
+--   [nomain] assets/console/default/systems/gba.svg
+--   [nomain] assets/console/default/systems/gbc.svg
+--   [nomain] assets/console/default/systems/genesis.svg
+--   [nomain] assets/console/default/systems/n64.svg
+--   [nomain] assets/console/default/systems/nds.svg
+--   [nomain] assets/console/default/systems/neo-geo-pocket.svg
+--   [nomain] assets/console/default/systems/nes.svg
+--   [nomain] assets/console/default/systems/psp.svg
+--   [nomain] assets/console/default/systems/psx.svg
+--   [nomain] assets/console/default/systems/snes.svg
+--   [nomain] assets/console/default/systems/tg16.svg
+--   [nomain] assets/console/default/theme.css
+--   [nomain] assets/console/neon/backgrounds/background.svg
+--   [nomain] assets/console/neon/bezels/snes.png
+--   [nomain] assets/console/neon/systems/arcade.svg
+--   [nomain] assets/console/neon/systems/atari2600.svg
+--   [nomain] assets/console/neon/systems/atari7800.svg
+--   [nomain] assets/console/neon/systems/c64.svg
+--   [nomain] assets/console/neon/systems/colecovision.svg
+--   [nomain] assets/console/neon/systems/dos.svg
+--   [nomain] assets/console/neon/systems/gamegear.svg
+--   [nomain] assets/console/neon/systems/gb.svg
+--   [nomain] assets/console/neon/systems/gba.svg
+--   [nomain] assets/console/neon/systems/gbc.svg
+--   [nomain] assets/console/neon/systems/genesis.svg
+--   [nomain] assets/console/neon/systems/jaguar.svg
+--   [nomain] assets/console/neon/systems/lynx.svg
+--   [nomain] assets/console/neon/systems/n64.svg
+--   [nomain] assets/console/neon/systems/nds.svg
+--   [nomain] assets/console/neon/systems/neo-geo-pocket.svg
+--   [nomain] assets/console/neon/systems/nes.svg
+--   [nomain] assets/console/neon/systems/psp.svg
+--   [nomain] assets/console/neon/systems/psx.svg
+--   [nomain] assets/console/neon/systems/snes.svg
+--   [nomain] assets/console/neon/systems/tg16.svg
+--   [nomain] assets/console/neon/theme.css
+--   [nomain] assets/default/album_cover.jpg
+--   [nomain] assets/default/user.svg
+--   [nomain] assets/emulatorjs/emulatorjs-logotype.svg
 --   [nomain] assets/favicon.ico
---   [nomain] config.json
---   [nomain] cores.json
---   [nomain] host.js
+--   [nomain] assets/isotipo.svg
+--   [nomain] assets/logos/romm_logo_ps2_square.svg
+--   [nomain] assets/logos/romm_logo_snes_square.svg
+--   [nomain] assets/logos/romm_logo_xbox_one_circle_boot.svg
+--   [nomain] assets/logos/romm_logo_xbox_one_square.svg
+--   [nomain] assets/logotipo.svg
+--   [nomain] assets/platforms/arcade.svg
+--   [nomain] assets/platforms/atari2600.svg
+--   [nomain] assets/platforms/atari7800.svg
+--   [nomain] assets/platforms/c64.ico
+--   [nomain] assets/platforms/colecovision.svg
+--   [nomain] assets/platforms/default.ico
+--   [nomain] assets/platforms/dos.ico
+--   [nomain] assets/platforms/gamegear.svg
+--   [nomain] assets/platforms/gb.svg
+--   [nomain] assets/platforms/gba.svg
+--   [nomain] assets/platforms/gbc.svg
+--   [nomain] assets/platforms/genesis.svg
+--   [nomain] assets/platforms/jaguar.svg
+--   [nomain] assets/platforms/lynx.svg
+--   [nomain] assets/platforms/n64.svg
+--   [nomain] assets/platforms/nds.svg
+--   [nomain] assets/platforms/neo-geo-pocket.svg
+--   [nomain] assets/platforms/nes.svg
+--   [nomain] assets/platforms/pc-fx.ico
+--   [nomain] assets/platforms/psp.svg
+--   [nomain] assets/platforms/psx.svg
+--   [nomain] assets/platforms/saturn.ico
+--   [nomain] assets/platforms/sega32.svg
+--   [nomain] assets/platforms/segacd.ico
+--   [nomain] assets/platforms/sms.ico
+--   [nomain] assets/platforms/snes.svg
+--   [nomain] assets/platforms/tg16.svg
+--   [nomain] assets/platforms/virtualboy.ico
+--   [nomain] assets/platforms/wonderswan.svg
+--   [nomain] assets/scrappers/csdb.png
+--   [nomain] assets/scrappers/demozoo.png
+--   [nomain] assets/scrappers/esde.png
+--   [nomain] assets/scrappers/flashpoint.png
+--   [nomain] assets/scrappers/hasheous.png
+--   [nomain] assets/scrappers/hltb.png
+--   [nomain] assets/scrappers/igdb.png
+--   [nomain] assets/scrappers/launchbox.png
+--   [nomain] assets/scrappers/libretro.png
+--   [nomain] assets/scrappers/moby.png
+--   [nomain] assets/scrappers/playmatch.png
+--   [nomain] assets/scrappers/pouet.png
+--   [nomain] assets/scrappers/ra.png
+--   [nomain] assets/scrappers/sgdb.png
+--   [nomain] assets/scrappers/ss.png
+--   [nomain] assets/scrappers/steam.png
+--   [nomain] assets/scrappers/tgdb.png
+--   [nomain] config/config.json
 --   [nomain] index.html
---   [nomain] integration.js
---   [nomain] licenses/cores/*.txt
---   [nomain] patches/README.md
---   [nomain] patches/ppsspp-memory-arena.json
---   [nomain] patches/ppsspp-memory-arena.patch
---   [nomain] patches/recording.json
---   [nomain] recording.js
---   [nomain] vendor-lock.json
---   [nomain] vendor/ReaWebAPI-COPYING
---   [nomain] vendor/ReaWebAPI-COPYING.LESSER
---   [nomain] vendor/browser-files.mjs
+--   [nomain] licenses/THIRD_PARTY_NOTICES.md
+--   [nomain] licenses/cores/81.txt.asset > licenses/cores/81.txt
+--   [nomain] licenses/cores/a5200.txt.asset > licenses/cores/a5200.txt
+--   [nomain] licenses/cores/beetle_vb.txt.asset > licenses/cores/beetle_vb.txt
+--   [nomain] licenses/cores/cap32.txt.asset > licenses/cores/cap32.txt
+--   [nomain] licenses/cores/crocods.txt.asset > licenses/cores/crocods.txt
+--   [nomain] licenses/cores/desmume.txt.asset > licenses/cores/desmume.txt
+--   [nomain] licenses/cores/desmume2015.txt.asset > licenses/cores/desmume2015.txt
+--   [nomain] licenses/cores/dosbox_pure.txt.asset > licenses/cores/dosbox_pure.txt
+--   [nomain] licenses/cores/fbalpha2012_cps1.txt.asset > licenses/cores/fbalpha2012_cps1.txt
+--   [nomain] licenses/cores/fbalpha2012_cps2.txt.asset > licenses/cores/fbalpha2012_cps2.txt
+--   [nomain] licenses/cores/fbneo.txt.asset > licenses/cores/fbneo.txt
+--   [nomain] licenses/cores/fceumm.txt.asset > licenses/cores/fceumm.txt
+--   [nomain] licenses/cores/fuse.txt.asset > licenses/cores/fuse.txt
+--   [nomain] licenses/cores/gambatte.txt.asset > licenses/cores/gambatte.txt
+--   [nomain] licenses/cores/gearcoleco.txt.asset > licenses/cores/gearcoleco.txt
+--   [nomain] licenses/cores/genesis_plus_gx.txt.asset > licenses/cores/genesis_plus_gx.txt
+--   [nomain] licenses/cores/handy.txt.asset > licenses/cores/handy.txt
+--   [nomain] licenses/cores/mame2003.txt.asset > licenses/cores/mame2003.txt
+--   [nomain] licenses/cores/mame2003_plus.txt.asset > licenses/cores/mame2003_plus.txt
+--   [nomain] licenses/cores/mednafen_ngp.txt.asset > licenses/cores/mednafen_ngp.txt
+--   [nomain] licenses/cores/mednafen_pce.txt.asset > licenses/cores/mednafen_pce.txt
+--   [nomain] licenses/cores/mednafen_pcfx.txt.asset > licenses/cores/mednafen_pcfx.txt
+--   [nomain] licenses/cores/mednafen_psx_hw.txt.asset > licenses/cores/mednafen_psx_hw.txt
+--   [nomain] licenses/cores/mednafen_wswan.txt.asset > licenses/cores/mednafen_wswan.txt
+--   [nomain] licenses/cores/melonds.txt.asset > licenses/cores/melonds.txt
+--   [nomain] licenses/cores/mgba.txt.asset > licenses/cores/mgba.txt
+--   [nomain] licenses/cores/mupen64plus_next.txt.asset > licenses/cores/mupen64plus_next.txt
+--   [nomain] licenses/cores/nestopia.txt.asset > licenses/cores/nestopia.txt
+--   [nomain] licenses/cores/opera.txt.asset > licenses/cores/opera.txt
+--   [nomain] licenses/cores/parallel_n64.txt.asset > licenses/cores/parallel_n64.txt
+--   [nomain] licenses/cores/pcsx_rearmed.txt.asset > licenses/cores/pcsx_rearmed.txt
+--   [nomain] licenses/cores/picodrive.txt.asset > licenses/cores/picodrive.txt
+--   [nomain] licenses/cores/ppsspp.txt.asset > licenses/cores/ppsspp.txt
+--   [nomain] licenses/cores/prboom.txt.asset > licenses/cores/prboom.txt
+--   [nomain] licenses/cores/prosystem.txt.asset > licenses/cores/prosystem.txt
+--   [nomain] licenses/cores/puae.txt.asset > licenses/cores/puae.txt
+--   [nomain] licenses/cores/smsplus.txt.asset > licenses/cores/smsplus.txt
+--   [nomain] licenses/cores/snes9x.txt.asset > licenses/cores/snes9x.txt
+--   [nomain] licenses/cores/stella2014.txt.asset > licenses/cores/stella2014.txt
+--   [nomain] licenses/cores/vice_x128.txt.asset > licenses/cores/vice_x128.txt
+--   [nomain] licenses/cores/vice_x64.txt.asset > licenses/cores/vice_x64.txt
+--   [nomain] licenses/cores/vice_x64sc.txt.asset > licenses/cores/vice_x64sc.txt
+--   [nomain] licenses/cores/vice_xpet.txt.asset > licenses/cores/vice_xpet.txt
+--   [nomain] licenses/cores/vice_xplus4.txt.asset > licenses/cores/vice_xplus4.txt
+--   [nomain] licenses/cores/vice_xvic.txt.asset > licenses/cores/vice_xvic.txt
+--   [nomain] licenses/cores/virtualjaguar.txt.asset > licenses/cores/virtualjaguar.txt
+--   [nomain] licenses/cores/yabause.txt.asset > licenses/cores/yabause.txt
+--   [nomain] licenses/emulatorjs/LICENSE
+--   [nomain] licenses/frontend-dependencies.txt.asset > licenses/frontend-dependencies.txt
+--   [nomain] licenses/platforms/ATTRIBUTIONS
+--   [nomain] licenses/reawebapi/COPYING
+--   [nomain] licenses/reawebapi/COPYING.LESSER
+--   [nomain] licenses/roboto/OFL.txt.asset > licenses/roboto/OFL.txt
+--   [nomain] licenses/romm/LICENSE
 --   [nomain] vendor/emulatorjs/data/compression/extract7z.js
 --   [nomain] vendor/emulatorjs/data/compression/extractzip.js
 --   [nomain] vendor/emulatorjs/data/compression/libunrar.js
 --   [nomain] vendor/emulatorjs/data/compression/libunrar.wasm
---   [nomain] vendor/emulatorjs/data/cores/*.data
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-81/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-a5200/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-beetle_vb/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-cap32/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-crocods/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-desmume/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-desmume2015/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-dosbox_pure/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbalpha2012_cps1/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbalpha2012_cps2/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-fbneo/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-fceumm/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-fuse/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-gambatte/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-gearcoleco/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-genesis_plus_gx/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-handy/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mame2003/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mame2003_plus/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_ngp/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_pce/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_pcfx/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_psx_hw/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mednafen_wswan/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-melonds/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mgba/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-mupen64plus_next/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-nestopia/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-opera/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-parallel_n64/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-pcsx_rearmed/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-picodrive/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-ppsspp/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-prboom/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-prosystem/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-puae/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-smsplus/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-snes9x/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-stella2014/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x128/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x64/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_x64sc/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xpet/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xplus4/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-vice_xvic/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-virtualjaguar/package.json
---   [nomain] vendor/emulatorjs/data/cores/metadata/core-yabause/package.json
+--   [nomain] vendor/emulatorjs/data/cores/81-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/81-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/81-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/81-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/81-thread-wasm.data.asset > vendor/emulatorjs/data/cores/81-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/81-wasm.data.asset > vendor/emulatorjs/data/cores/81-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/a5200-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/a5200-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/a5200-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/a5200-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/a5200-thread-wasm.data.asset > vendor/emulatorjs/data/cores/a5200-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/a5200-wasm.data.asset > vendor/emulatorjs/data/cores/a5200-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/beetle_vb-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/beetle_vb-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/beetle_vb-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/beetle_vb-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/beetle_vb-thread-wasm.data.asset > vendor/emulatorjs/data/cores/beetle_vb-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/beetle_vb-wasm.data.asset > vendor/emulatorjs/data/cores/beetle_vb-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/cap32-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/cap32-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/cap32-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/cap32-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/cap32-thread-wasm.data.asset > vendor/emulatorjs/data/cores/cap32-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/cap32-wasm.data.asset > vendor/emulatorjs/data/cores/cap32-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/crocods-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/crocods-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/crocods-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/crocods-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/crocods-thread-wasm.data.asset > vendor/emulatorjs/data/cores/crocods-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/crocods-wasm.data.asset > vendor/emulatorjs/data/cores/crocods-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/desmume-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/desmume-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume-thread-wasm.data.asset > vendor/emulatorjs/data/cores/desmume-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume-wasm.data.asset > vendor/emulatorjs/data/cores/desmume-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume2015-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/desmume2015-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume2015-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/desmume2015-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume2015-thread-wasm.data.asset > vendor/emulatorjs/data/cores/desmume2015-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/desmume2015-wasm.data.asset > vendor/emulatorjs/data/cores/desmume2015-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/dosbox_pure-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/dosbox_pure-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/dosbox_pure-thread-wasm.data.asset > vendor/emulatorjs/data/cores/dosbox_pure-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps1-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps1-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps1-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps1-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps1-thread-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps1-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps1-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps1-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps2-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps2-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps2-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps2-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps2-thread-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps2-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbalpha2012_cps2-wasm.data.asset > vendor/emulatorjs/data/cores/fbalpha2012_cps2-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbneo-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbneo-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbneo-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fbneo-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbneo-thread-wasm.data.asset > vendor/emulatorjs/data/cores/fbneo-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fbneo-wasm.data.asset > vendor/emulatorjs/data/cores/fbneo-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fceumm-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fceumm-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fceumm-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fceumm-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fceumm-thread-wasm.data.asset > vendor/emulatorjs/data/cores/fceumm-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fceumm-wasm.data.asset > vendor/emulatorjs/data/cores/fceumm-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fuse-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fuse-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fuse-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/fuse-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fuse-thread-wasm.data.asset > vendor/emulatorjs/data/cores/fuse-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/fuse-wasm.data.asset > vendor/emulatorjs/data/cores/fuse-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gambatte-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/gambatte-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gambatte-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/gambatte-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gambatte-thread-wasm.data.asset > vendor/emulatorjs/data/cores/gambatte-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gambatte-wasm.data.asset > vendor/emulatorjs/data/cores/gambatte-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gearcoleco-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/gearcoleco-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gearcoleco-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/gearcoleco-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gearcoleco-thread-wasm.data.asset > vendor/emulatorjs/data/cores/gearcoleco-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/gearcoleco-wasm.data.asset > vendor/emulatorjs/data/cores/gearcoleco-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/genesis_plus_gx-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/genesis_plus_gx-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/genesis_plus_gx-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/genesis_plus_gx-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/genesis_plus_gx-thread-wasm.data.asset > vendor/emulatorjs/data/cores/genesis_plus_gx-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/genesis_plus_gx-wasm.data.asset > vendor/emulatorjs/data/cores/genesis_plus_gx-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/handy-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/handy-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/handy-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/handy-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/handy-thread-wasm.data.asset > vendor/emulatorjs/data/cores/handy-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/handy-wasm.data.asset > vendor/emulatorjs/data/cores/handy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003_plus-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003_plus-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003_plus-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003_plus-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003_plus-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003_plus-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mame2003_plus-wasm.data.asset > vendor/emulatorjs/data/cores/mame2003_plus-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_ngp-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_ngp-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_ngp-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_ngp-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_ngp-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_ngp-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_ngp-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_ngp-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pce-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pce-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pce-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pce-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pce-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pce-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pce-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pce-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pcfx-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pcfx-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pcfx-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pcfx-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pcfx-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pcfx-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_pcfx-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_pcfx-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_psx_hw-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_psx_hw-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_psx_hw-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_psx_hw-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_psx_hw-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_psx_hw-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_psx_hw-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_psx_hw-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_wswan-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_wswan-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_wswan-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_wswan-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_wswan-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_wswan-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mednafen_wswan-wasm.data.asset > vendor/emulatorjs/data/cores/mednafen_wswan-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/melonds-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/melonds-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/melonds-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/melonds-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/melonds-thread-wasm.data.asset > vendor/emulatorjs/data/cores/melonds-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/melonds-wasm.data.asset > vendor/emulatorjs/data/cores/melonds-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mgba-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mgba-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mgba-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mgba-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mgba-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mgba-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mgba-wasm.data.asset > vendor/emulatorjs/data/cores/mgba-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mupen64plus_next-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mupen64plus_next-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mupen64plus_next-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/mupen64plus_next-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mupen64plus_next-thread-wasm.data.asset > vendor/emulatorjs/data/cores/mupen64plus_next-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/mupen64plus_next-wasm.data.asset > vendor/emulatorjs/data/cores/mupen64plus_next-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/nestopia-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/nestopia-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/nestopia-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/nestopia-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/nestopia-thread-wasm.data.asset > vendor/emulatorjs/data/cores/nestopia-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/nestopia-wasm.data.asset > vendor/emulatorjs/data/cores/nestopia-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/opera-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/opera-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/opera-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/opera-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/opera-thread-wasm.data.asset > vendor/emulatorjs/data/cores/opera-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/opera-wasm.data.asset > vendor/emulatorjs/data/cores/opera-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/parallel_n64-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/parallel_n64-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/parallel_n64-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/parallel_n64-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/parallel_n64-thread-wasm.data.asset > vendor/emulatorjs/data/cores/parallel_n64-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/parallel_n64-wasm.data.asset > vendor/emulatorjs/data/cores/parallel_n64-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/pcsx_rearmed-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/pcsx_rearmed-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/pcsx_rearmed-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/pcsx_rearmed-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/pcsx_rearmed-thread-wasm.data.asset > vendor/emulatorjs/data/cores/pcsx_rearmed-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/pcsx_rearmed-wasm.data.asset > vendor/emulatorjs/data/cores/pcsx_rearmed-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/picodrive-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/picodrive-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/picodrive-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/picodrive-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/picodrive-thread-wasm.data.asset > vendor/emulatorjs/data/cores/picodrive-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/picodrive-wasm.data.asset > vendor/emulatorjs/data/cores/picodrive-wasm.data
 --   [nomain] vendor/emulatorjs/data/cores/ppsspp-assets.zip
---   [nomain] vendor/emulatorjs/data/cores/reports/*.json
---   [nomain] vendor/emulatorjs/data/emulator.css
+--   [nomain] vendor/emulatorjs/data/cores/ppsspp-thread-wasm.data.asset > vendor/emulatorjs/data/cores/ppsspp-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prboom-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/prboom-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prboom-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/prboom-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prboom-thread-wasm.data.asset > vendor/emulatorjs/data/cores/prboom-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prboom-wasm.data.asset > vendor/emulatorjs/data/cores/prboom-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prosystem-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/prosystem-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prosystem-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/prosystem-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prosystem-thread-wasm.data.asset > vendor/emulatorjs/data/cores/prosystem-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/prosystem-wasm.data.asset > vendor/emulatorjs/data/cores/prosystem-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/puae-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/puae-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/puae-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/puae-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/puae-thread-wasm.data.asset > vendor/emulatorjs/data/cores/puae-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/puae-wasm.data.asset > vendor/emulatorjs/data/cores/puae-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/reports/81.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/a5200.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/beetle_vb.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/cap32.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/crocods.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/desmume.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/desmume2015.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/dosbox_pure.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/fbalpha2012_cps1.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/fbalpha2012_cps2.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/fbneo.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/fceumm.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/fuse.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/gambatte.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/gearcoleco.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/genesis_plus_gx.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/handy.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mame2003.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mame2003_plus.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mednafen_ngp.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mednafen_pce.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mednafen_pcfx.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mednafen_psx_hw.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mednafen_wswan.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/melonds.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mgba.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/mupen64plus_next.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/nestopia.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/opera.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/parallel_n64.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/pcsx_rearmed.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/picodrive.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/ppsspp.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/prboom.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/prosystem.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/puae.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/smsplus.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/snes9x.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/stella2014.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_x128.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_x64.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_x64sc.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_xpet.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_xplus4.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/vice_xvic.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/virtualjaguar.json
+--   [nomain] vendor/emulatorjs/data/cores/reports/yabause.json
+--   [nomain] vendor/emulatorjs/data/cores/smsplus-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/smsplus-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/smsplus-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/smsplus-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/smsplus-thread-wasm.data.asset > vendor/emulatorjs/data/cores/smsplus-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/smsplus-wasm.data.asset > vendor/emulatorjs/data/cores/smsplus-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/snes9x-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/snes9x-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/snes9x-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/snes9x-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/snes9x-thread-wasm.data.asset > vendor/emulatorjs/data/cores/snes9x-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/snes9x-wasm.data.asset > vendor/emulatorjs/data/cores/snes9x-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/stella2014-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/stella2014-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/stella2014-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/stella2014-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/stella2014-thread-wasm.data.asset > vendor/emulatorjs/data/cores/stella2014-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/stella2014-wasm.data.asset > vendor/emulatorjs/data/cores/stella2014-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x128-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x128-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x128-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x128-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x128-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x128-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x128-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x128-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64sc-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64sc-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64sc-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64sc-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64sc-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64sc-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_x64sc-wasm.data.asset > vendor/emulatorjs/data/cores/vice_x64sc-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xpet-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xpet-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xpet-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xpet-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xpet-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xpet-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xpet-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xpet-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xplus4-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xplus4-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xplus4-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xplus4-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xplus4-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xplus4-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xplus4-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xplus4-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xvic-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xvic-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xvic-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xvic-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xvic-thread-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xvic-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/vice_xvic-wasm.data.asset > vendor/emulatorjs/data/cores/vice_xvic-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/virtualjaguar-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/virtualjaguar-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/virtualjaguar-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/virtualjaguar-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/virtualjaguar-thread-wasm.data.asset > vendor/emulatorjs/data/cores/virtualjaguar-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/virtualjaguar-wasm.data.asset > vendor/emulatorjs/data/cores/virtualjaguar-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/yabause-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/yabause-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/yabause-thread-legacy-wasm.data.asset > vendor/emulatorjs/data/cores/yabause-thread-legacy-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/yabause-thread-wasm.data.asset > vendor/emulatorjs/data/cores/yabause-thread-wasm.data
+--   [nomain] vendor/emulatorjs/data/cores/yabause-wasm.data.asset > vendor/emulatorjs/data/cores/yabause-wasm.data
 --   [nomain] vendor/emulatorjs/data/emulator.min.css
 --   [nomain] vendor/emulatorjs/data/emulator.min.js
 --   [nomain] vendor/emulatorjs/data/loader.js
---   [nomain] vendor/emulatorjs/data/localization/*.json
---   [nomain] vendor/emulatorjs/data/src/*.js
---   [nomain] vendor/emulatorjs/data/version.json
+--   [nomain] vendor/emulatorjs/data/localization/af-FR.json
+--   [nomain] vendor/emulatorjs/data/localization/ar-AR.json
+--   [nomain] vendor/emulatorjs/data/localization/ben-BEN.json
+--   [nomain] vendor/emulatorjs/data/localization/de-GER.json
+--   [nomain] vendor/emulatorjs/data/localization/el-GR.json
+--   [nomain] vendor/emulatorjs/data/localization/en-US.json
+--   [nomain] vendor/emulatorjs/data/localization/es-ES.json
+--   [nomain] vendor/emulatorjs/data/localization/fa-AF.json
+--   [nomain] vendor/emulatorjs/data/localization/hi-HI.json
+--   [nomain] vendor/emulatorjs/data/localization/it-IT.json
+--   [nomain] vendor/emulatorjs/data/localization/ja-JA.json
+--   [nomain] vendor/emulatorjs/data/localization/jv-JV.json
+--   [nomain] vendor/emulatorjs/data/localization/ko-KO.json
+--   [nomain] vendor/emulatorjs/data/localization/pt-BR.json
+--   [nomain] vendor/emulatorjs/data/localization/retroarch.json
+--   [nomain] vendor/emulatorjs/data/localization/ro-RO.json
+--   [nomain] vendor/emulatorjs/data/localization/ru-RU.json
+--   [nomain] vendor/emulatorjs/data/localization/tr-TR.json
+--   [nomain] vendor/emulatorjs/data/localization/vi-VN.json
+--   [nomain] vendor/emulatorjs/data/localization/zh-CN.json
+--   [nomain] vendor/reawebapi/browser-files.mjs
+--   [nomain] vendor/romm/ui/assets/adapters/EditRom.js
+--   [nomain] vendor/romm/ui/assets/adapters/Empty-entry.js
+--   [nomain] vendor/romm/ui/assets/adapters/Empty.js
+--   [nomain] vendor/romm/ui/assets/adapters/LocalLibrary-entry.js
+--   [nomain] vendor/romm/ui/assets/adapters/LocalLibrary.js
+--   [nomain] vendor/romm/ui/assets/adapters/LocalRomImport-entry.js
+--   [nomain] vendor/romm/ui/assets/adapters/LocalRomImport.js
+--   [nomain] vendor/romm/ui/assets/adapters/api.js
+--   [nomain] vendor/romm/ui/assets/adapters/backend-entry.js
+--   [nomain] vendor/romm/ui/assets/adapters/backend.js
+--   [nomain] vendor/romm/ui/assets/adapters/download-path.js
+--   [nomain] vendor/romm/ui/assets/adapters/permissions.js
+--   [nomain] vendor/romm/ui/assets/adapters/rom-api.js
+--   [nomain] vendor/romm/ui/assets/adapters/router.js
+--   [nomain] vendor/romm/ui/assets/adapters/socket.js
+--   [nomain] vendor/romm/ui/assets/adapters/ui-version.js
+--   [nomain] vendor/romm/ui/assets/adapters/use-player-cache.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/autocomplete/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-angular/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-cpp/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-css/index-entry.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-css/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-go/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-html/index-entry.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-html/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-java/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-javascript/index-entry.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-javascript/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-jinja/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-json/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-less/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-liquid/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-markdown/index-entry.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-markdown/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-php/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-python/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-rust/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-sass/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-sql/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-vue/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-wast/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-xml/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/lang-yaml/index.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/apl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/asciiarmor.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/asn1.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/asterisk.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/brainfuck.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/clike.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/clojure.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/cmake.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/cobol.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/coffeescript.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/commonlisp.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/crystal.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/css.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/cypher.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/d.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/diff.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/dockerfile.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/dtd.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/dylan.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ebnf.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ecl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/eiffel.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/elm.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/erlang.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/factor.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/fcl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/forth.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/fortran.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/gas.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/gherkin.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/groovy.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/haskell.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/haxe.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/http.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/idl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/javascript-entry.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/javascript.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/julia.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/livescript.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/lua.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mathematica.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mbox.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mirc.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mllike.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/modelica.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mscgen.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/mumps.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/nginx.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/nsis.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ntriples.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/octave.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/oz.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/pascal.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/perl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/pig.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/powershell.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/properties.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/protobuf.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/pug.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/puppet.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/python.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/q.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/r.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/rpm.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ruby.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/sas.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/scheme.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/shell.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/sieve.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/simple-mode.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/smalltalk.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/solr.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/sparql.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/spreadsheet.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/sql.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/stex.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/stylus.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/swift.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/tcl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/textile.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/tiddlywiki.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/tiki.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/toml.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/troff.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ttcn-cfg.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/ttcn.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/turtle.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/vb.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/vbscript.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/velocity.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/verilog.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/vhdl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/webidl.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/xquery.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/yacas.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/legacy-modes/z80.js
+--   [nomain] vendor/romm/ui/assets/dependencies/codemirror/shared.js
+--   [nomain] vendor/romm/ui/assets/dependencies/lodash/lodash.js
+--   [nomain] vendor/romm/ui/assets/dependencies/md-editor-v3/MdEditor.js
+--   [nomain] vendor/romm/ui/assets/dependencies/md-editor-v3/style.js
+--   [nomain] vendor/romm/ui/assets/dependencies/qrcode/browser.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vue-i18n/vue-i18n.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vue-router/useApi.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vue-router/vue-router.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vue/vue.runtime.esm-bundler.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vue3-pdf-app/vue3-pdf-app.umd.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VAlert.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VAppBar.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VAvatar.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VBadge.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VCard.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VCarouselItem.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VChip.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VContainer.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VDataTable.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VDataTableVirtual.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VDialog.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VFileInput.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VIcon.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VInput.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VMenu.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VNavigationDrawer.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VRow.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VSelect.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VSlider.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VSpacer.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VSwitch.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VTabs.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VToolbar.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/VWindowItem.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/display.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/forwardRefs.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/location.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/openOnFocus.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/ssrBoot.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/theme.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vuetify/transitions.js
+--   [nomain] vendor/romm/ui/assets/dependencies/vueuse/integrations/useQRCode.js
+--   [nomain] vendor/romm/ui/assets/fonts/material-design-icons/materialdesignicons-webfont.eot
+--   [nomain] vendor/romm/ui/assets/fonts/material-design-icons/materialdesignicons-webfont.ttf
+--   [nomain] vendor/romm/ui/assets/fonts/material-design-icons/materialdesignicons-webfont.woff
+--   [nomain] vendor/romm/ui/assets/fonts/material-design-icons/materialdesignicons-webfont.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-cyrillic-ext.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-cyrillic.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-greek.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-latin-ext.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-latin.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-math.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-symbols.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-italic-vietnamese.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-cyrillic-ext.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-cyrillic.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-greek.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-latin-ext.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-latin.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-math.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-symbols.woff2
+--   [nomain] vendor/romm/ui/assets/fonts/roboto/roboto-normal-vietnamese.woff2
+--   [nomain] vendor/romm/ui/assets/images/emulatorjs-logotype.svg
+--   [nomain] vendor/romm/ui/assets/images/miximage.png
+--   [nomain] vendor/romm/ui/assets/images/patcherjs.png
+--   [nomain] vendor/romm/ui/assets/images/romm_logo_xbox_one_circle.svg
+--   [nomain] vendor/romm/ui/assets/images/ruffle.svg
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/common.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/console.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/home.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/login.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/play.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/bg_BG/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/common.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/console.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/home.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/login.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/play.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/cs_CZ/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/common.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/console.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/home.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/login.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/play.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/de_DE/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/common.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/console.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/home.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/login.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/play.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/en_GB/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/common.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/console.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/home.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/login.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/play.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/en_US/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/common.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/console.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/home.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/login.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/play.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/es_ES/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/common.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/console.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/home.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/login.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/play.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/fr_FR/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/common.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/console.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/home.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/login.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/play.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/hu_HU/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/index-entry.js
+--   [nomain] vendor/romm/ui/assets/locales/index.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/common.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/console.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/home.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/login.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/play.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/it_IT/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/common.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/console.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/home.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/login.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/play.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/ja_JP/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/common.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/console.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/home.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/login.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/play.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/ko_KR/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/common.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/console.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/home.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/login.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/play.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/pl_PL/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/common.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/console.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/home.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/login.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/play.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/pt_BR/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/common.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/console.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/home.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/login.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/play.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/ro_RO/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/common.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/console.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/home.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/login.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/play.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/ru_RU/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/common.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/console.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/home.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/login.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/play.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/tr_TR/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/common.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/console.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/home.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/login.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/play.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_CN/setup.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/activity.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/audit.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/collection.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/common.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/console.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/emptyStates.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/gallery.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/home.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/login.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/logs.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/notifications.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/patcher.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/platform.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/play.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/recommendations.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/rom.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/scan.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/settings.js
+--   [nomain] vendor/romm/ui/assets/locales/zh_TW/setup.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/Details/MediaTab.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/Details/MultiNoteManager.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/Details/PDFViewer.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/Details/SoundtrackPlayer.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/Gallery/Skeleton.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Collection/Card.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Collection/RAvatar.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Game/AssetCard.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Game/Card/Base.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Game/VirtualTable.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/Platform/PlatformIcon.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/RIsotipo.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/components/common/RSection.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/composables/useBrowserLocale.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/composables/useFavoriteToggle.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/composables/useGameAnimation.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/composables/useUISettings.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/composables/useUserLocalStorage.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/layouts/Main.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/plugins/routeNames.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/config.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/device.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/firmware.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/identity.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/platform.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/save.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/setup.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/state.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/streaming.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/task.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/api/user.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/services/pending-asset.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/auth.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/collections.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/config.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/console.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/heartbeat.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/language.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/musicFavorites.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/native.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/notifications.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/permissions.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/platforms.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/playing.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/roms.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/scanning.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/soundtrackPlayer.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/streaming.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/stores/users.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/utils/covers.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/utils/formData.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/utils/index.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/utils/toError.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Gallery/Collection/Collection.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Gallery/Platform.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Gallery/Search.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/GameDetails.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Home.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Player/EmulatorJS/Base.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Player/EmulatorJS/Player-entry.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Player/EmulatorJS/Player.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Player/EmulatorJS/utils.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Settings/LibraryManagement.js
+--   [nomain] vendor/romm/ui/assets/romm/classic/views/Settings/UserInterface.js
+--   [nomain] vendor/romm/ui/assets/romm/console/Layout.js
+--   [nomain] vendor/romm/ui/assets/romm/console/components/BackButton.js
+--   [nomain] vendor/romm/ui/assets/romm/console/composables/useConsoleTheme.js
+--   [nomain] vendor/romm/ui/assets/romm/console/composables/useInputScope.js
+--   [nomain] vendor/romm/ui/assets/romm/console/composables/useSpatialNav.js
+--   [nomain] vendor/romm/ui/assets/romm/console/input/bus.js
+--   [nomain] vendor/romm/ui/assets/romm/console/views/Game.js
+--   [nomain] vendor/romm/ui/assets/romm/console/views/GamesList.js
+--   [nomain] vendor/romm/ui/assets/romm/console/views/Home.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/AppShell/DebugOverlay.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Collections/CollectionTile.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Gallery/GalleryShell.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Gallery/GalleryTabShell.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameCard/GameCard.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameCard/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/ArtworkSubtab.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/ManualSubtab.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/MarkdownViewer.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/MediaPinBtn.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/MediaShelf.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/PdfViewer.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/ScreenshotsSubtab.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/ScreenshotsTab.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/TextViewer.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/GameDetails/WalkthroughSubtab.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Home/Widgets/widgets.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Notifications/NotificationHost.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Platforms/PlatformTile.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Player/MemoryCardManager.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Player/StreamStage.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Settings/ConfigFileAlerts.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Settings/SettingsSaveBar.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Settings/SettingsSection.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Settings/SettingsSubsection.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Settings/SettingsToggleRow.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Soundtrack/Panel-entry.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Soundtrack/Panel.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Soundtrack/SeekBar.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Soundtrack/VolumeControl-entry.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/Soundtrack/VolumeControl.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/AssetStrip.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/AssetTimestamp.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/AuthBackLink.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/AuthCard.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/AuthFooter.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/BarcodeScannerDialog.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/CachedPlatformIcon.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/CardRow.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/CoverArtPip.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/GameCover.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/HashChip.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/LanguageSelector.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/PageHeader.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/PasswordField.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/PlatformIcon.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/PlatformSelect.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/PublicBadge.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/RecommendationReason.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/Tile.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/VisibilitySwitch.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/markdownEditor.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/markdownNoCdn.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/markdownPreview-entry.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/components/shared/markdownPreview.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useAnimatedNumber/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useBackgroundArt/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useBreakpoint/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useCanPlay/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useClipboard/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useConfirm/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useCrtMode/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useDebouncedSearch/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useDebugMode/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useDeviceSaveSync/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useEmitterEvent/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useFetchState/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useFullscreenFallback/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useGalleryProvenance/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useGalleryViewModeUrl/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useGamepad/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useGridNav/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useIsAlive/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useIsolatedLaunch/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useListExpansion/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useNavGlass/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePageTitle/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePinnedMedia/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePlatformIconCache/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePlatformPlayable/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePlaySession/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePlayerFullscreen/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/usePlayerHero/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useReadingProgress/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useRomFileUpload/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useRomSync/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useRouteQueryParam/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useRouteRom/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useSaveStateTabs/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useScanProviders/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useScanTrigger/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useScanTypeOptions/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useSnackbar/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useSocketEvent/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useSoundtrackActions/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useStageActive/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useStaggeredEntrance/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useThemeMode/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useTileSearchUrl/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useUnloadGuard/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useVersionDisplay/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useViewTransition/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useVirtualScrollDebug/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useVisiblePoll/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/composables/useWebpSupport/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/layouts/AppLayout.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/layouts/AuthLayout.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/layouts/Passthrough.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/layouts/SettingsLayout.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/lib/a11y/chromeLabels.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/lib/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/stores/galleryRoms.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/stores/notificationInbox.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/tokens/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/types/scan.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/assets.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/collectionCovers.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/covers.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/css.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/errorMessage.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/eventData.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/jukebox.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/lists.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/metadataProviderGroups.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/metadataProviderInfo.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/metadataProviders.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/notifications.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/platformIcons.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/platformSearch.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/playerDisc.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/playerFullscreen.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/romFiles.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/routeQuery.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/saveSlots.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/saveSync/browserDevice.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/saveSync/retryBackoff.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/scriptLoader.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/settleWithLimit.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/smartCollectionCriteria.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/soundtrackTracks.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/spatialNav.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/time.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/userAvatar.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/utils/validation.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Activity.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Auth/Login.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Auth/Register.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Auth/ResetPassword.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Auth/Setup.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/CollectionsIndex.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/ControllerDebug.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Gallery/Collection.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Gallery/Platform.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Gallery/Search.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/GameDetails.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Home.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Jukebox/index.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/NotFound.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Notifications.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/PairShell.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/PlatformsIndex.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/Desktop.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/EasyRpg.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/EmulatorJS.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/JsDos.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/Pico8.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/Ruffle.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Player/Stream.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Scan.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/Administration.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/ClientApiTokens.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/ConversionSettings.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/Devices.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/LibraryManagement.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/Logs.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/MetadataSources.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/ScanSettings.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/ServerStats.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/UserInterface.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Settings/UserProfile.js
+--   [nomain] vendor/romm/ui/assets/romm/v2/views/Upload.js
+--   [nomain] vendor/romm/ui/assets/runtime/miximage.js
+--   [nomain] vendor/romm/ui/assets/runtime/preload-helper.js
+--   [nomain] vendor/romm/ui/assets/runtime/rolldown-runtime.js
+--   [nomain] vendor/romm/ui/assets/runtime/vue-component-export-helper.js
+--   [nomain] vendor/romm/ui/assets/workers/gmeAudioWorklet.js
+--   [nomain] vendor/romm/ui/library.css
+--   [nomain] vendor/romm/ui/library.js
 --   [main=main] zaibuyidao_ReaEmulator.lua
---   [nomain] SHA256SUMS.json
 -- @about
---   EmulatorJS 4.2.3 inside REAPER. Requires ReaWebAPI 0.3.9.44 or later.
---   Run zaibuyidao_ReaEmulator.lua from the Main Action List.
---   Includes all 47 pinned cores. ROMs and BIOS are not included.
---   Recording requires an available MediaRecorder encoder. See README.md.
+--   EmulatorJS inside REAPER. Requires ReaWebAPI 0.3.9.43 or later.
+--   Includes all pinned core packages. ROMs and BIOS are not included.
+--   Thread-only cores require cross-origin isolation.

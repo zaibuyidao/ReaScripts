@@ -1,0 +1,1 @@
+function e(e){return typeof e==`string`&&e.trim()?e:null}function t(e){return typeof e==`number`&&Number.isFinite(e)?e:0}function n(e){return Array.isArray(e)?e.filter(e=>typeof e==`string`):[]}export{n,e as r,t};

@@ -1,0 +1,1 @@
+var e=`Proč bylo toto doporučeno`,t={"because-you-played":`Protože jste hráli {0}`,"for-you":`Doporučeno pro vás`,"reason-decade":`léta {0}`,"reason-igdb":`Podobné na IGDB`,"reason-top-rated":`Vysoce hodnocené`,"similar-games":`Podobné hry`,why:e};export{t as default,e as why};

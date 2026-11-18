@@ -1,0 +1,11 @@
+/* Embedded counterpart of Chromium's fullscreen button. */
+#player-exit-fullscreen[hidden] { display: none; }
+#player-exit-fullscreen { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2147483647; display: grid; place-items: center; width: 48px; height: 48px; margin: 0; padding: 0; border: 0; border-radius: 50%; color: white; background: #282c32cc; cursor: pointer; }
+#player-exit-fullscreen svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+#display { min-height: 0; }
+#player-loading[hidden] { display: none; }
+#player-loading { position: fixed; inset: 0; z-index: 99; background: var(--player-boot-color, #0e1015) url('../../assets/logos/romm_logo_xbox_one_circle_boot.svg') center / 40% no-repeat; color: #bcbcbc; font: 500 12px Avenir, "Segoe UI", "Microsoft YaHei UI", sans-serif; text-align: center; }
+#player-loading-status { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); }
+#player-loading p { width: fit-content; max-width: min(700px, 100%); margin: 0 auto; padding: 1px 5px; overflow-wrap: anywhere; border-radius: 10px; background: #000e; box-shadow: 0 0 30px #000e; }
+#player-loading a { color: #baa7ff; text-decoration: none; font-size: 12px; }
+#game .ejs_game_background { background-size: 40%; }

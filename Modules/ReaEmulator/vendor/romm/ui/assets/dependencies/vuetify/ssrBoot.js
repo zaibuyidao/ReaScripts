@@ -1,0 +1,1 @@
+import{H as e,St as t,dt as n,j as r,vt as i,wt as a}from"../vue/vue.runtime.esm-bundler.js";r(),n();function o(){let n=t(!1);return e(()=>{window.requestAnimationFrame(()=>{n.value=!0})}),{ssrBootStyles:a(()=>n.value?void 0:{transition:`none !important`}),isBooted:i(n)}}export{o as t};

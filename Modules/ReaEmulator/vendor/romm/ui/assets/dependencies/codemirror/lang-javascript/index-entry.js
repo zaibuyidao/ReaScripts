@@ -1,0 +1,1 @@
+export{n as javascript}from"./index.js";

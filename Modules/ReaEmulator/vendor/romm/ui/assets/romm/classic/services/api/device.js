@@ -1,0 +1,1 @@
+import{t as e}from"../../../../adapters/api.js";async function t(){return e.get(`/devices`)}async function n(){return e.get(`/devices/online`)}async function r(t,n){return e.put(`/devices/${encodeURIComponent(t)}`,n)}async function i(t){return e.delete(`/devices/${encodeURIComponent(t)}`)}var a={fetchDevices:t,fetchOnlineDeviceIds:n,updateDevice:r,deleteDevice:i};export{a as t};

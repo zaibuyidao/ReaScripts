@@ -1,0 +1,1 @@
+import{a as e}from"../../classic/utils/index.js";function t({userId:t,avatarPath:n,updatedAt:r}){return!n||t==null?e:`/api/users/${t}/avatar?ts=${r}`}export{t};

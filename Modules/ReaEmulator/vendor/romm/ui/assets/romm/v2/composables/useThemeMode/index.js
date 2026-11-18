@@ -1,0 +1,1 @@
+import{n as e,x as t}from"../../../classic/composables/useUserLocalStorage.js";import{_ as n,j as r}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";r();var i=e(`settings.theme`,`dark`),a=t(),o=n(()=>i.value===`dark`||i.value!==`light`&&a.value),s=n(()=>!o.value);function c(){return{isLight:s,isDark:o}}export{c as t};

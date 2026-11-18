@@ -1,0 +1,1 @@
+import{M as e,j as t}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";t();var n=1;function r(){let t=e(`emitter`);return function(e){return new Promise(r=>{if(!t){r(!1);return}let i=n++,a=e=>{e.id===i&&(t.off(`confirmResolved`,a),r(e.confirmed))};t.on(`confirmResolved`,a),t.emit(`showConfirm`,{id:i,...e})})}}export{r as t};

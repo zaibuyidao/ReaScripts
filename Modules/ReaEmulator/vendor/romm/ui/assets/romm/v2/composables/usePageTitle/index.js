@@ -1,0 +1,1 @@
+import{D as e}from"../../../classic/composables/useUserLocalStorage.js";function t(t){e(()=>t()||`RomM`,{restoreOnUnmount:!1})}export{t};

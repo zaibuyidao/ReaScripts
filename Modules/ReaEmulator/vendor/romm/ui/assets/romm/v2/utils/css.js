@@ -1,0 +1,1 @@
+function e(e){return`url("${e.replace(/\\/g,`\\\\`).replace(/"/g,`\\"`).replace(/[\n\r\f]/g,``)}")`}export{e as t};

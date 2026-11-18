@@ -1,0 +1,1 @@
+function e(e,t){if(e.length<2)return e[0]??``;try{return new Intl.ListFormat(t?.replace(`_`,`-`)??void 0,{style:`long`,type:`conjunction`}).format(e)}catch{return e.join(`, `)}}export{e as t};

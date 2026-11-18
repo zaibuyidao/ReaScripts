@@ -1,0 +1,1 @@
+function e(e){return e instanceof Error?e:Error(String(e))}export{e as t};

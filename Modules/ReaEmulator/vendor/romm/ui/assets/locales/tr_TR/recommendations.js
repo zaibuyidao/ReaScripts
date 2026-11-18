@@ -1,0 +1,1 @@
+var e=`Bu neden önerildi`,t={"because-you-played":`{0} oyununu oynadığınız için`,"for-you":`Size özel öneriler`,"reason-decade":`{0}'lar`,"reason-igdb":`IGDB'de benzer`,"reason-top-rated":`Yüksek puanlı`,"similar-games":`Benzer oyunlar`,why:e};export{t as default,e as why};

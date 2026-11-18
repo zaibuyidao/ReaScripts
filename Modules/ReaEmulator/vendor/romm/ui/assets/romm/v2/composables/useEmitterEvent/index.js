@@ -1,0 +1,1 @@
+import{M as e,dt as t,gt as n,j as r}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";r(),t();function i(t,r){let i=e(`emitter`);i?.on(t,r);let a=!1,o=()=>{a||(a=!0,i?.off(t,r))};return n(o),{stop:o}}export{i as t};

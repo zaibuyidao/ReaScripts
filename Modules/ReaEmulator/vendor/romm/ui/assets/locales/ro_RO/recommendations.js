@@ -1,0 +1,1 @@
+var e=`De ce a fost recomandat`,t={"because-you-played":`Pentru că ai jucat {0}`,"for-you":`Recomandat pentru tine`,"reason-decade":`anii {0}`,"reason-igdb":`Similar pe IGDB`,"reason-top-rated":`Foarte bine cotat`,"similar-games":`Jocuri similare`,why:e};export{t as default,e as why};

@@ -1,0 +1,1 @@
+import{_ as e,j as t}from"../dependencies/vue/vue.runtime.esm-bundler.js";t();var n=new Set([`rom.view`,`rom.play`,`rom.download`,`rom.upload`,`rom.edit`,`rom.delete`,`rom.favorite`,`platform.view`,`platform.edit`,`collection.view`,`collection.create`,`collection.edit`,`collection.delete`,`library.scan`]),r=t=>e(()=>n.has(t));function i(){}export{r as n,i as t};

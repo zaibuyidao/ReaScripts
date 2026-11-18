@@ -1,0 +1,1 @@
+import{dt as e,gt as t}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";import{t as n}from"../../../../adapters/socket.js";e();function r(e,r,i={}){i.connect!==!1&&!n.connected&&n.connect();let a=r;n.on(e,a);let o=!1,s=()=>{o||(o=!0,n.off(e,a))};return t(s),{stop:s}}export{r as t};

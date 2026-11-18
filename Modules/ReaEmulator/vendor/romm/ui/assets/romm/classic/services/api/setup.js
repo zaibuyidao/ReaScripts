@@ -1,0 +1,1 @@
+import{t as e}from"../../../../adapters/api.js";var t={async getLibraryInfo(){return await e.get(`/setup/library`)},async createPlatforms(t){return await e.post(`/setup/platforms`,t)}};export{t};

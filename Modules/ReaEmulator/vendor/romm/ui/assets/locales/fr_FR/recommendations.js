@@ -1,0 +1,1 @@
+var e=`Pourquoi cette recommandation`,t={"because-you-played":`Parce que vous avez joué à {0}`,"for-you":`Recommandé pour vous`,"reason-decade":`années {0}`,"reason-igdb":`Similaire sur IGDB`,"reason-top-rated":`Très bien noté`,"similar-games":`Jeux similaires`,why:e};export{t as default,e as why};

@@ -1,0 +1,1 @@
+var e=`おすすめの理由`,t={"because-you-played":`{0} をプレイしたため`,"for-you":`あなたへのおすすめ`,"reason-decade":`{0}年代`,"reason-igdb":`IGDB で類似`,"reason-top-rated":`高評価`,"similar-games":`類似のゲーム`,why:e};export{t as default,e as why};

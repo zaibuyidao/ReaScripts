@@ -1,0 +1,1 @@
+var e=`推薦理由`,t={"because-you-played":`因為你玩過 {0}`,"for-you":`為你推薦`,"reason-decade":`{0}年代`,"reason-igdb":`IGDB 上的相似作品`,"reason-top-rated":`高評分`,"similar-games":`相似遊戲`,why:e};export{t as default,e as why};

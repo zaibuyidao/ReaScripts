@@ -1,0 +1,1 @@
+import{H as e}from"../utils/index.js";var t=e(`playing`,{state:()=>({playing:!1,fullScreen:!1,stageActive:!1}),actions:{setPlaying(e){this.playing=e},setStageActive(e){this.stageActive=e}}});export{t};

@@ -1,0 +1,1 @@
+function e({rom:e}){return e.full_path||e.files?.[0]?.full_path||e.fs_name}export{e as t};

@@ -1,0 +1,1 @@
+import{a as e}from"../../../adapters/api.js";function t(t,n){if(e.isAxiosError(t)){let e=t.response?.data?.detail;return typeof e==`string`&&e?e:n??t.message}return n??(t instanceof Error?t.message:String(t))}export{t};

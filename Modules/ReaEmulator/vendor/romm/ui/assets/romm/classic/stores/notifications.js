@@ -1,0 +1,1 @@
+import{H as e}from"../utils/index.js";var t=e(`notifications`,{state:()=>({notifications:[]}),actions:{add(e){this.notifications.push(e)},remove(e){this.notifications=this.notifications.filter(t=>t.id!==e)},reset(){this.notifications=[]}}});export{t};

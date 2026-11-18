@@ -1,0 +1,1 @@
+import{t as e}from"../../../../adapters/api.js";async function t(){return e.get(`/tasks`)}async function n(t){return e.get(`/tasks/${t}`)}async function r(t,n){return e.post(`/tasks/run/${t}`,n)}async function i(){return e.get(`/tasks/status`)}var a={getTasks:t,getTaskById:n,runTask:r,getTaskStatus:i};export{a as t};

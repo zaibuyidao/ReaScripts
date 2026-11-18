@@ -1,0 +1,1 @@
+import{t as e}from"../../classic/utils/index.js";function t(e,t){return`/api/roms/${e}/files/content/${encodeURIComponent(t)}`}function n(e){return`${t(e.id,e.file_name)}?v=${encodeURIComponent(e.updated_at)}`}function r(t,n){return`${e}/${t}?v=${encodeURIComponent(n)}`}export{r as n,n as r,t};

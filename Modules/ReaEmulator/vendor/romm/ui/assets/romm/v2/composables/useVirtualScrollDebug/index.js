@@ -1,0 +1,1 @@
+import{dt as e,yt as t}from"../../../../dependencies/vue/vue.runtime.esm-bundler.js";e();var n=t(null);function r(){function e(e){n.value=e}function t(){n.value=null}return{stats:n,publish:e,clear:t}}export{r as t};
