@@ -24,21 +24,20 @@ export function projectNotesRoot(filename, folder = '.reafolio') {
 
 // Rename/delete recovery may operate only in the global folder or a saved,
 // open project's configured folder. Never trust a root supplied by a request.
-export async function isAllowedNotesRoot(host, config, root, pathKey) {
+export async function isAllowedNotesRoot(backend, config, root, pathKey) {
   if (typeof root !== 'string') return false;
   if (typeof config.root === 'string' && pathKey(root) === pathKey(config.root)) return true;
   const folder = validateProjectFolder(config.projectFolder ?? '.reafolio');
-  for (let index = 0; ; index++) {
-    const [project, filename] = await host.EnumProjects(index);
-    if (!project) return false;
+  const files = await backend.request('open-project-files');
+  return files.some(filename => {
     const candidate = projectNotesRoot(filename, folder);
-    if (candidate && pathKey(root) === pathKey(candidate)) return true;
-  }
+    return candidate && pathKey(root) === pathKey(candidate);
+  });
 }
 
 export class ProjectNotes {
-  constructor({repo, state, defaultRoot, beforeChange, isBlocked, formatError}) {
-    Object.assign(this, {repo, state, defaultRoot, beforeChange, isBlocked, formatError});
+  constructor({repo, backend, state, defaultRoot, beforeChange, isBlocked, formatError}) {
+    Object.assign(this, {repo, backend, state, defaultRoot, beforeChange, isBlocked, formatError});
     this.projectKey = null;
     this.scopeRequest = null;
     this.selectionTask = null;
@@ -46,8 +45,8 @@ export class ProjectNotes {
   }
 
   async currentProject() {
-    const [project, filename] = await this.repo.host.EnumProjects(-1);
-    return this.projectHint = {key: JSON.stringify([project, filename]), filename: filename || ''};
+    const {id, filename} = await this.backend.request('current-project');
+    return this.projectHint = {key: JSON.stringify([id, filename]), filename};
   }
 
   async directory(path, create = false, strict = false, checkReadable = true) {

@@ -1,11 +1,10 @@
 -- @description ReaFolio
 -- @author zaibuyidao
--- @version 0.2.6
+-- @version 0.2.7
 -- @changelog
---   Add note transfers between Global and Project scopes, including attachments, name conflict handling, and recovery.
---   Fix Windows path checks and false transfer warnings, and open the moved note directly.
---   Fix the blank New Note page and prevent reselecting the current scope from refreshing the open note.
---   Open notes faster after switching scopes and close the app faster.
+--   Fixed opening and creating notes and switching between Global and Project scopes with the latest ReaWebAPI.
+--   Fixed File Management so it opens the current notes folder directly. Removed a redundant folder hint from Settings.
+--   Fixed inconsistent window dragging from empty header areas when the title bar is hidden, including on the home screen and in reading and editing modes.
 -- @links
 --   ReaWebAPI https://github.com/zaibuyidao/ReaWebAPI
 --   Upstream source https://github.com/dullage/flatnotes

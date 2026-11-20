@@ -264,6 +264,62 @@ function M.run(reaper, id, key, dataPath)
 
   reaper.SetExtState(section, key, tostring(id), false)
 
+  local lastProject, projectId = nil, 0
+  local workspaceActions = {
+    ['open-notes-folder'] = function(request)
+      local path = request.path
+      if type(path) ~= 'string' or path:find('[%z\1-\31]') then fail('UNSAFE_PATH') end
+      local osName = reaper.GetOS()
+      local command
+      if osName:match('Win') then
+        path = path:gsub('\\', '/')
+        if not (path:match('^%a:/') or path:match('^//[^/?%.][^/]*/[^/]+'))
+          or path:find('["<>|*?]') then fail('UNSAFE_PATH') end
+        local windows = os.getenv('SystemRoot') or 'C:\\Windows'
+        command = '"' .. windows .. '\\explorer.exe" "' .. path:gsub('/', '\\'):gsub('\\+$', '') .. '\\."'
+      else
+        if path:sub(1, 1) ~= '/' then fail('UNSAFE_PATH') end
+        local uri = 'file://' .. path:gsub('/+$', ''):gsub('[^%w%-%._~/]', function(byte)
+          return string.format('%%%02X', string.byte(byte))
+        end) .. '/.'
+        command = (osName:match('OSX') or osName:match('macOS')) and '/usr/bin/open ' .. uri or 'xdg-open ' .. uri
+      end
+      local result = reaper.ExecProcess(command, -1)
+      if not result or result:match('^%-1') then fail('OPEN_FAILED') end
+      return true
+    end,
+    ['is-window-initialized'] = function()
+      return reaper.GetExtState('reafolio', 'windowInitialized') == 'true'
+    end,
+    ['set-title-bar-preference'] = function(request)
+      if type(request.hidden) ~= 'boolean' then fail('INVALID_REQUEST') end
+      reaper.SetExtState('reafolio', 'hideTitleBar', tostring(request.hidden), true)
+      return true
+    end,
+    ['finish-window-setup'] = function()
+      reaper.SetExtState('reafolio', 'hideTitleBar', 'true', true)
+      reaper.SetExtState('reafolio', 'windowInitialized', 'true', true)
+      return true
+    end,
+    ['current-project'] = function()
+      local project, filename = reaper.EnumProjects(-1, '')
+      if project ~= lastProject then
+        lastProject, projectId = project, projectId + 1
+      end
+      return {id = projectId, filename = filename or ''}
+    end,
+    ['open-project-files'] = function()
+      local files, index = json.array(), 0
+      while true do
+        local project, filename = reaper.EnumProjects(index, '')
+        if not project then break end
+        if filename and filename ~= '' then files[#files + 1] = filename end
+        index = index + 1
+      end
+      return files
+    end,
+  }
+
   local job, requestId
 
   local function reply(value, code, replyId)
@@ -314,7 +370,11 @@ function M.run(reaper, id, key, dataPath)
         and type(request) == 'table'
         and request.type == 'reafolio'
         and type(request.id) == 'string' then
-        if job then
+        local action = workspaceActions[request.action]
+        if action then
+          local success, result = pcall(action, request)
+          if success then reply(result, nil, request.id) else reply(nil, result, request.id) end
+        elseif job then
           reply(nil, 'BUSY', request.id)
         else
           requestId = request.id
