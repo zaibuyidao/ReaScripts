@@ -1,8 +1,10 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.2.2
+-- @version 0.2.3
 -- @changelog
---   Initial release.
+--   Meters, spectrum, and waveform now share three track sources: post-fader (post-pan, default), pre-fader (post-FX), and pre-fader (pre-FX).
+--   Fixed the meter height jumping when switching tracks. In compact mode, scroll within the meter to view additional channels.
+--   Removed the 'Waiting for native audio data…' message.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage

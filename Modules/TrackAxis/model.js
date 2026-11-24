@@ -12,6 +12,13 @@ export const themePresets = Object.freeze({
 });
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
+export const analysisSources = Object.freeze({
+  'post-fader': {tap: 'post-fader', meter: 'meterPostFader', hint: 'postFaderHint'},
+  'post-fx': {tap: 'post-fx', meter: 'meterPostFX', hint: 'postFXHint'},
+  track: {meter: 'meterPreFX', hint: 'preFXHint'},
+  master: {source: 'master', meter: 'meterOutput', hint: 'masterHint'},
+  input: {source: 'input', meter: 'meterInput', hint: 'inputHint'},
+});
 export const panelOrderDefaults = Object.freeze({
   track: Object.freeze(['fx', 'routing', 'analysis', 'parameters', 'items', 'metadata', 'appearance', 'quick']),
   master: Object.freeze(['fx', 'routing', 'analysis', 'metadata', 'quick']),
@@ -23,7 +30,7 @@ export const defaults = Object.freeze({
   meterShowRms: false, meterShowLufs: true, meterCompact: false, meterHeight: 210,
   meterMetrics: {rmsMomentary:true, rmsIntegrated:true, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
   forceMono: false, integratedMode: 'playback-only', resetOnPlaybackStart: true,
-  source: 'master', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
+  source: 'post-fader', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'midnight', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
   panels: { routing: true, fx: true, parameters: false, items: true, analysis: true, metadata: true, appearance: false, quick: true },
   panelOrder: panelOrderDefaults,
@@ -38,7 +45,7 @@ export function preferences(raw = {}) {
   if (['playback-only', 'continuous'].includes(raw.integratedMode)) p.integratedMode = raw.integratedMode;
   if (Number.isFinite(raw.meterHeight) && raw.meterHeight >= meterHeightRange.min && raw.meterHeight <= meterHeightRange.max) p.meterHeight = Math.round(raw.meterHeight);
   for (const key of Object.keys(p.listHeights)) if (Number.isFinite(raw.listHeights?.[key]) && raw.listHeights[key] >= 0 && raw.listHeights[key] <= 4000) p.listHeights[key] = raw.listHeights[key];
-  for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: ['track', 'master', 'input'], fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
+  for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: Object.keys(analysisSources), fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
     if (choices.includes(raw[key])) p[key] = raw[key];
   }
   if (Number.isInteger(raw.searchHistoryLimit) && raw.searchHistoryLimit >= 0 && raw.searchHistoryLimit <= 100) p.searchHistoryLimit = raw.searchHistoryLimit;

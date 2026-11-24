@@ -1,4 +1,4 @@
-import { toDb } from './model.js';
+import { analysisSources, toDb } from './model.js';
 import { NativeMeterView } from './meter.js';
 
 const colors = ['#8dc7b9', '#8da9d8', '#c5a4d9', '#d4b87a', '#90bccd', '#cf999b'];
@@ -61,14 +61,19 @@ export class AudioAnalysis {
     const before = this.config;
     config = {...config, aggregate: config.aggregate === true && (config.source === 'selected-track' || config.source?.startsWith('track:'))};
     this.config = config;
+    if (config.meterCompact) {
+      const visibleMetrics = Object.entries(config.meterMetrics).filter(([key, enabled]) =>
+        enabled && (key.startsWith('rms') ? config.meterShowRms : config.meterShowLufs));
+      this.root.querySelector('#analysis-meter').style.setProperty('--meter-metric-rows', visibleMetrics.length);
+    }
     for (const kind of ['meter', 'spectrum', 'waveform']) this.root.querySelector(`#analysis-${kind}`).hidden = !config[kind];
-    const changed = !before || ['source', 'aggregate', 'master', 'session', 'trackKey', 'fftSize', 'streamRate', 'language'].some(key => config[key] !== before[key]);
+    const changed = !before || ['source', 'sourceMode', 'aggregate', 'master', 'session', 'trackKey', 'fftSize', 'streamRate', 'language'].some(key => config[key] !== before[key]);
     const meterChanged = !before || ['forceMono', 'integratedMode', 'resetOnPlaybackStart'].some(key => config[key] !== before[key]);
     for (const kind of ['meter', 'spectrum', 'waveform']) {
       const entry = this.entries.get(kind);
       if (entry && (changed || kind === 'meter' && meterChanged || !this.enabled(kind))) this.detach(kind, entry);
       if (this.enabled(kind) && !this.entries.has(kind)) this.open(kind);
-      if (!this.enabled(kind)) this.clear(kind);
+      if (!this.enabled(kind) && (entry || kind !== 'meter')) this.clear(kind);
     }
     this.meterView?.setVisibility(config);
     if (!this.frame && config.active) this.frame = requestAnimationFrame(this.draw);
@@ -76,10 +81,7 @@ export class AudioAnalysis {
   }
   clear(kind) {
     const card = this.root.querySelector(`#analysis-${kind}`);
-    const readout = card.querySelector('.readout');
-    if (readout?.children.length) readout.style.minHeight = `${readout.getBoundingClientRect().height}px`;
-    readout?.replaceChildren();
-    if (kind === 'meter') this.meterView = null;
+    if (kind === 'meter') this.meterView?.reset();
     const canvas = card.querySelector('canvas');
     if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     this.status(kind, this.t('paused'));
@@ -89,6 +91,7 @@ export class AudioAnalysis {
     clearTimeout(entry.retry);
     if (this.entries.get(kind) === entry) this.entries.delete(kind);
     if (entry.stream) {
+      if (!this.closed && kind !== 'meter' && this.enabled(kind)) this.resetPlot(kind, entry.stream.info);
       const closing = entry.stream.close().catch(() => {}).finally(() => this.pending.delete(closing));
       this.pending.add(closing);
     }
@@ -112,14 +115,22 @@ export class AudioAnalysis {
   open(kind, attempt = 0) {
     const entry = {cancelled: false, stream: null, attempt};
     this.entries.set(kind, entry);
-    this.clear(kind); this.status(kind, this.t('connecting'));
     const config = this.config;
+    this.status(kind, '');
+    if (kind === 'meter') {
+      if (!this.meterView || this.meterView.language !== config.language) {
+        this.meterView = new NativeMeterView(this.root.querySelector('#meter-readout'), this.meterView?.channels ?? 2, config, this.t);
+      }
+      this.meterView.reset();
+    }
     const opening = (async () => {
       try {
         if (!this.api?.audio?.openStream) throw Error(this.t('streamUnavailable'));
         if (!config.source) throw Error(this.t('singleTrack'));
         if (kind === 'meter' && !this.api.audio.decodeMeter) throw Error(this.t('meterUnavailable'));
         const options = {source: config.source, fftSize: config.fftSize, updateRate: config.streamRate};
+        const tap = analysisSources[config.sourceMode].tap;
+        if (tap) options.tap = tap;
         if (config.aggregate) options.aggregate = true;
         if (kind === 'meter') Object.assign(options, {
           forceMono: config.forceMono === true, integratedMode: config.integratedMode || 'playback-only',
@@ -127,14 +138,28 @@ export class AudioAnalysis {
         });
         const stream = await this.api.audio.openStream(kind, options);
         if (entry.cancelled || this.closed) { await stream.close(); return; }
+        if (tap && !stream.info.source?.endsWith(':' + tap)) {
+          await stream.close();
+          throw Error(this.t('trackTapUnavailable'));
+        }
         entry.stream = stream;
         const stopped = error => {
           if (entry.cancelled) return;
           this.failed(kind, entry, {code: error?.code, message: `${this.t('analysisUnavailable')} · ${error?.code || ''}`});
         };
-        this.status(kind, this.t('waitingAudio'));
+        if (kind === 'meter') {
+          if (this.meterView.channels !== stream.info.channels) {
+            this.meterView.setChannels(stream.info.channels);
+            this.meterView.setVisibility(this.config);
+            this.meterView.reset();
+          }
+        } else this.resetPlot(kind, stream.info);
         stream.on('error', stopped); stream.on('close', stopped);
-      } catch (error) { this.failed(kind, entry, error); }
+      } catch (error) {
+        if (analysisSources[config.sourceMode].tap && error?.code === 'API_UNAVAILABLE') {
+          this.failed(kind, entry, {message: this.t('trackTapUnavailable')});
+        } else this.failed(kind, entry, error);
+      }
     })().finally(() => this.pending.delete(opening));
     this.pending.add(opening);
   }
@@ -179,7 +204,7 @@ export class AudioAnalysis {
             const values = this.api.audio.decodeMeter(data, info.channels);
             entry.lastPacket = packet; entry.resetPacket = null; entry.attempt = 0;
             if (!entry.resetError) this.status(kind, '');
-            this.meter(info.channels, values);
+            this.meterView.update(values);
           } catch (error) {
             this.failed(kind, entry, {message: this.t('meterUnavailable')});
           }
@@ -197,11 +222,12 @@ export class AudioAnalysis {
     }
     this.frame = requestAnimationFrame(this.draw);
   }
-  meter(channels, values) {
-    if (!this.meterView || this.meterView.channels !== channels) {
-      this.meterView = new NativeMeterView(this.root.querySelector('#analysis-meter .readout'), channels, this.config, this.t);
+  resetPlot(kind, info) {
+    if (kind === 'spectrum') this.spectrum(info, []);
+    if (kind === 'waveform') {
+      const lanes = Array(info.channels).fill({min: [], max: []});
+      waveform(this.root.querySelector('#analysis-waveform canvas'), lanes);
     }
-    this.meterView.update(values);
   }
   spectrum(info, data) {
     const canvas = this.root.querySelector('#analysis-spectrum canvas');

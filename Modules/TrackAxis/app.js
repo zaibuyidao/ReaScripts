@@ -1,4 +1,4 @@
-import { defaults, preferences, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, mixerValueText, parseMixerValue, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
+import { defaults, preferences, analysisSources, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, mixerValueText, parseMixerValue, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
 
 const $ = id => document.getElementById(id);
@@ -1219,11 +1219,12 @@ function configureAudio() {
   }
   if (!audio) return;
   const track = state.tracks?.count === 1 ? state.tracks.refs[0] : null;
-  const master = isMaster(), source = master ? 'master' : prefs.source === 'track' ? track ? `track:${track.guid}` : null : prefs.source;
+  const master = isMaster(), sourceMode = master ? 'master' : prefs.source;
+  const source = analysisSources[sourceMode].source ?? (track ? `track:${track.guid}` : null);
   $('analysis-notice').textContent = !prefs.analysis ? t('analysisDisabled') : '';
-  audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source, master,
+  audio.configure({...prefs, session, trackKey: state.tracks?.key, track, source, sourceMode, master,
     meterOutputs: source === 'master' ? hardwareOutputChannels(state.hardwareRouting?.rows) : null,
-    aggregate: !master && prefs.source === 'track' && !!track && state.tracks.aggregate === true,
+    aggregate: sourceMode === 'track' && !!track && state.tracks.aggregate === true,
     active: !disposed && !closing && connected && !!state.tracks?.count && prefs.analysis && $('panel-analysis').open && !document.hidden});
 }
 function rememberSearch(query = $('search').value) {
@@ -1428,7 +1429,7 @@ document.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => $(b.d
 $('settings-reset').onclick = () => fillSettings(defaults);
 function updateAnalysisHint() {
   const source = $('settings-form').elements.source.value;
-  $('analysis-setting-hint').textContent = t(source === 'master' ? 'masterHint' : source === 'input' ? 'inputHint' : 'preFXHint');
+  $('analysis-setting-hint').textContent = t(analysisSources[source].hint);
 }
 $('settings-form').elements.source.onchange = updateAnalysisHint;
 $('settings-form').elements.theme.onchange = () => { $('custom-colors').hidden = $('settings-form').elements.theme.value !== 'custom'; };

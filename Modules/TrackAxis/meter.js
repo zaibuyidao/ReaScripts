@@ -1,4 +1,4 @@
-import { toDb, dbText } from './model.js';
+import { analysisSources, toDb, dbText } from './model.js';
 
 const floor = -80, ceiling = 6;
 // Limit presentation only; native integration, history and clip counters stay intact.
@@ -15,12 +15,9 @@ const time = seconds => {
 };
 export class NativeMeterView {
   constructor(root, channels, config, t) {
-    this.channels = channels; this.t = t; this.strips = []; this.analysisStrips = []; this.root = root;
-    root.replaceChildren(); root.style.minHeight = '';
-    const sourceKey = config.source === 'master' ? 'meterOutput' : config.source === 'input' ? 'meterInput' : config.aggregate ? 'meterAggregate' : 'meterPreFX';
-    this.sourceLabel = t(sourceKey);
+    this.language = config.language; this.t = t; this.strips = []; this.analysisStrips = []; this.root = root;
+    root.replaceChildren();
     const source = this.source = node('span', 'meter-source');
-    source.title = t(config.source === 'master' ? 'masterHint' : config.source === 'input' ? 'inputHint' : config.aggregate ? 'aggregateMeterHint' : 'preFXHint');
     this.clock = node('output', 'meter-time', '00:00'); this.clock.title = t('meterTime');
     const meta = node('div', 'meter-meta'), caption = node('span', 'meter-caption');
     const legend = node('span', 'meter-legend');
@@ -38,18 +35,6 @@ export class NativeMeterView {
     }
     const viewport = node('div', 'meter-viewport'); viewport.tabIndex = 0; viewport.setAttribute('aria-label', t('meterChannels'));
     const lanes = this.lanes = node('div', 'meter-lanes');
-    for (let channel = 0; channel < channels; channel++) {
-      const strip = node('div', 'meter-strip meter-history'); strip.dataset.channel = channel;
-      const top = this.header('MAX', ''); top.root.title = t('maxSamplePeak');
-      const rail = node('div', 'meter-rail');
-      const peak = node('span', 'meter-fill meter-sample'), rms = node('span', 'meter-fill meter-rms');
-      const truePeak = node('span', 'meter-marker meter-true'), max = node('span', 'meter-marker meter-max');
-      rail.append(peak, rms, max, truePeak);
-      const out = node('output', 'meter-channel-value', '−∞');
-      const label = node('span', 'meter-channel-label', `Peak ${channel + 1}`);
-      strip.append(top.root, rail, label, out); lanes.append(strip);
-      this.strips.push({strip, peak, rms, truePeak, max, out, top});
-    }
     for (const [key, group, suffix, history] of [
       ['rmsMomentary', 'RMS', 'M', 'maxRmsMomentary'], ['rmsIntegrated', 'RMS', 'I'],
       ['lufsMomentary', 'LUFS', 'M', 'maxLufsMomentary'], ['lufsShortTerm', 'LUFS', 'S', 'maxLufsShortTerm'], ['lufsIntegrated', 'LUFS', 'I'],
@@ -69,7 +54,30 @@ export class NativeMeterView {
     }
     viewport.append(lanes); bank.append(scale, viewport); root.append(bank);
 
+    this.setChannels(channels);
     this.setVisibility(config);
+  }
+  get channels() { return this.strips.length; }
+  setChannels(channels) {
+    while (this.strips.length > channels) this.strips.pop().strip.remove();
+    for (let channel = this.strips.length; channel < channels; channel++) {
+      const strip = node('div', 'meter-strip meter-history'); strip.dataset.channel = channel;
+      const top = this.header('MAX', ''); top.root.title = this.t('maxSamplePeak');
+      const rail = node('div', 'meter-rail');
+      const peak = node('span', 'meter-fill meter-sample'), rms = node('span', 'meter-fill meter-rms');
+      const truePeak = node('span', 'meter-marker meter-true'), max = node('span', 'meter-marker meter-max');
+      rail.append(peak, rms, max, truePeak);
+      const out = node('output', 'meter-channel-value', '−∞');
+      const label = node('span', 'meter-channel-label', `Peak ${channel + 1}`);
+      strip.append(top.root, rail, label, out); this.lanes.insertBefore(strip, this.analysisStrips[0].strip);
+      this.strips.push({strip, peak, rms, truePeak, max, out, top});
+    }
+  }
+  reset() {
+    // No history or clip counts carry over while the new stream is opening.
+    const zero = Array(this.strips.length).fill(0);
+    this.update({processedSeconds: 0, samplePeak: zero, channelRms: zero, truePeak: zero,
+      channelMaxSamplePeak: zero, channelMaxTruePeak: zero, sampleClipCount: zero, truePeakClipCount: zero});
   }
   header(label, unit) {
     const root = node('div', 'meter-top');
@@ -88,7 +96,10 @@ export class NativeMeterView {
       item.rms.hidden = !rms;
       if (!item.strip.hidden) visible++;
     });
-    this.source.textContent = `${this.sourceLabel} · ${visible} CH${config.forceMono ? ' · MONO' : ''}`;
+    const mode = analysisSources[config.sourceMode];
+    this.source.title = this.t(config.aggregate ? 'aggregateMeterHint' : mode.hint);
+    const sourceLabel = this.t(config.aggregate ? 'meterAggregate' : mode.meter);
+    this.source.textContent = `${sourceLabel} · ${visible} CH${config.forceMono ? ' · MONO' : ''}`;
     this.root.querySelector('.meter-legend-rms').hidden = !rms;
     this.lanes.style.setProperty('--channels', Math.max(1, visible + this.analysisStrips.filter(item => !item.strip.hidden).length));
   }

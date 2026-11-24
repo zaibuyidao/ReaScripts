@@ -226,7 +226,12 @@ body>footer{margin-top:auto}
 .analysis-refresh{margin-left:auto}#meter-reset{margin-left:0}
 #meter-reset:hover,#meter-reset:focus-visible,.analysis-refresh:hover,.analysis-refresh:focus-visible{color:var(--text);border-color:var(--line);background:var(--hover)}
 #meter-reset svg,.analysis-refresh svg{width:16px;height:16px}
-#analysis-meter .readout{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";min-width:0}
+/* Reserve the display even between streams. Status messages share the same space. */
+#analysis-meter .meter-body{position:relative}
+#analysis-meter .analysis-status{position:absolute;inset:0 0 auto;z-index:1;height:auto;white-space:normal;background:var(--field)}
+#analysis-meter .readout{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";min-width:0;height:calc(var(--meter-height) + var(--meter-top-height) + 72px);overflow:auto;scrollbar-width:thin}
+/* Two peak rows plus the enabled RMS/LUFS rows. Extra channels scroll inside. */
+#analysis-meter.meter-compact .readout{height:calc(80px + 23px * var(--meter-metric-rows,4))}
 .meter-meta{display:flex;align-items:center;gap:8px;font-size:9px;color:var(--muted);padding:2px 0 8px}
 .meter-caption{display:flex;align-items:center;min-width:0;white-space:nowrap}
 .meter-source{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.04em;color:var(--text);font-weight:500}
