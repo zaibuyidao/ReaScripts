@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="401928284102b35f7818797116cf4370ee7d5568">
+<index version="1" name="zaibuyidao Scripts" commit="068a4805018538351145868147cd79fbcf14250d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -10065,6 +10065,27 @@ Removed the 'Waiting for native audio data…' message.]]></changelog>
         <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/8049d282b32f83ded7994279cb381b7163344d3c/Modules/TrackAxis/locales/languages.json</source>
         <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/8049d282b32f83ded7994279cb381b7163344d3c/Modules/TrackAxis/locales/zh-CN.json</source>
         <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/8049d282b32f83ded7994279cb381b7163344d3c/Modules/TrackAxis/locales/zh-TW.json</source>
+      </version>
+      <version name="0.2.4" author="zaibuyidao" time="2026-11-25T14:05:29Z">
+        <changelog><![CDATA[Added Peak display modes and multi-select menus for RMS and LUFS.
+Added click-to-reset metering and a reset-on-playback-start option.
+Enabled REAPER’s Space shortcut from TrackAxis while preserving space entry in editable fields.]]></changelog>
+        <source main="main" file="zaibuyidao_TrackAxis.lua">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/zaibuyidao_TrackAxis.lua</source>
+        <source file="app.js">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/app.js</source>
+        <source file="app.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/app.json</source>
+        <source file="audio.js">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/audio.js</source>
+        <source file="backend.lua">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/backend.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/index.html</source>
+        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/json.lua</source>
+        <source file="meter.js">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/meter.js</source>
+        <source file="model.js">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/model.js</source>
+        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/style.css</source>
+        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/en.json</source>
+        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/ja.json</source>
+        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/ko.json</source>
+        <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/languages.json</source>
+        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/zh-CN.json</source>
+        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
