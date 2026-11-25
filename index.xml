@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="068a4805018538351145868147cd79fbcf14250d">
+<index version="1" name="zaibuyidao Scripts" commit="ef4c80e51bb482263461ca6021f53b178fd8cc9a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -10086,6 +10086,25 @@ Enabled REAPER’s Space shortcut from TrackAxis while preserving space entry in
         <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/languages.json</source>
         <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/zh-CN.json</source>
         <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/068a4805018538351145868147cd79fbcf14250d/Modules/TrackAxis/locales/zh-TW.json</source>
+      </version>
+      <version name="0.2.5" author="zaibuyidao" time="2026-11-25T15:46:23Z">
+        <changelog><![CDATA[Refined the standard meter layout with vertical bars at 50% of their column width, responsive widths.]]></changelog>
+        <source main="main" file="zaibuyidao_TrackAxis.lua">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/zaibuyidao_TrackAxis.lua</source>
+        <source file="app.js">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/app.js</source>
+        <source file="app.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/app.json</source>
+        <source file="audio.js">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/audio.js</source>
+        <source file="backend.lua">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/backend.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/index.html</source>
+        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/json.lua</source>
+        <source file="meter.js">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/meter.js</source>
+        <source file="model.js">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/model.js</source>
+        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/style.css</source>
+        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/en.json</source>
+        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/ja.json</source>
+        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/ko.json</source>
+        <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/languages.json</source>
+        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/zh-CN.json</source>
+        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/ef4c80e51bb482263461ca6021f53b178fd8cc9a/Modules/TrackAxis/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
