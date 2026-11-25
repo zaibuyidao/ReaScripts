@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8049d282b32f83ded7994279cb381b7163344d3c">
+<index version="1" name="zaibuyidao Scripts" commit="401928284102b35f7818797116cf4370ee7d5568">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12204,6 +12204,28 @@ Updated the Realtime Transport Monitor with a light layout and corrected its for
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/9b164ebe3f413d9f653dfdae032b625985f96981/ReaWebAPI/web/index.html</source>
         <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/9b164ebe3f413d9f653dfdae032b625985f96981/ReaWebAPI/web/logo.svg</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/9b164ebe3f413d9f653dfdae032b625985f96981/ReaWebAPI/web/style.css</source>
+      </version>
+      <version name="0.3.9.62" author="zaibuyidao" time="2026-11-25T01:52:09Z">
+        <changelog><![CDATA[Fixed missing audio in post-FX and post-fader track streams when the track has no FX.
+Fixed gaps in audio streams when small device buffers deliver several blocks at once.
+Fixed floating DevTools losing their maximized state after reopening on Windows.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux64" type="extension" file="reawebapi-video-x86_64/reawebapi-video-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reawebapi-video-x86_64/reawebapi-video-x86_64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-video-aarch64/reawebapi-video-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/extension/reawebapi-video-aarch64/reawebapi-video-aarch64.so</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/app.json</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/style.css</source>
+        <source main="main" type="script" file="web/api-reference/ReaWebAPI - API Reference.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/api-reference/ReaWebAPI%20-%20API%20Reference.lua</source>
+        <source type="script" file="web/api-reference/reawebapihelp.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/api-reference/reawebapihelp.html</source>
       </version>
     </reapack>
   </category>
