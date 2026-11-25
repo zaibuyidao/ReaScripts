@@ -1,10 +1,8 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.2.4
+-- @version 0.2.5
 -- @changelog
---   Added Peak display modes and multi-select menus for RMS and LUFS.
---   Added click-to-reset metering and a reset-on-playback-start option.
---   Enabled REAPER’s Space shortcut from TrackAxis while preserving space entry in editable fields.
+--   Refined the standard meter layout with vertical bars at 50% of their column width, responsive widths.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage

@@ -1,14 +1,23 @@
-import { analysisSources, toDb, dbText } from './model.js';
+import { analysisSources, defaults, toDb, dbText } from './model.js';
 
 const floor = -72, scalePower = 1.8;
-const ticks = [0, -6, -12, -24, -36, -48, floor];
+const fullScale = [0, -3, -6, -12, -18, -24, -30, -36, -42, -48, -60, floor];
+const extraTicks = new Set([-3, -18, -30, -42, -60]);
 const peakHalfLife = 150, loudnessHalfLife = 75;
 const histogramFloor = -70, histogramBins = 75;
 const svgNamespace = 'http://www.w3.org/2000/svg';
 // Limit presentation only; native integration, history and clip counters stay intact.
 export const meterDbText = value => Number.isFinite(value) && value > floor ? `${value >= 0 ? '+' : ''}${dbText(value)}` : '';
 const position = db => Number.isFinite(db) && db > floor ? Math.min(1, (db - floor) / -floor) ** scalePower * 100 : 0;
-const gridStops = ticks.slice(1, -1).reverse().flatMap(db => {
+// Additional ticks need room on both sides of their label.
+const scaleTicks = fullScale.map((db, index) => ({
+  db,
+  minHeight: extraTicks.has(db) ? 24 * 100 / Math.min(
+    position(fullScale[index - 1]) - position(db), position(db) - position(fullScale[index + 1])) : 0,
+}));
+const gridStops = ticks => [...ticks].reverse().flatMap(db => {
+  if (db === floor) return ['var(--meter-grid-line) 0 1px', 'transparent 1px'];
+  if (db === 0) return ['transparent calc(100% - 1px)', 'var(--meter-grid-line) calc(100% - 1px) 100%'];
   const start = `calc(${position(db)}% - 0.5px)`, end = `calc(${position(db)}% + 0.5px)`;
   return [`transparent ${start}`, `var(--meter-grid-line) ${start} ${end}`, `transparent ${end}`];
 }).join(', ');
@@ -26,7 +35,6 @@ export class NativeMeterView {
     this.histogramCounts = new Float64Array(histogramBins);
     this.histogramStep = 0;
     root.replaceChildren();
-    root.style.setProperty('--meter-grid-stops', gridStops);
     const source = this.source = node('span', 'meter-source');
     this.clock = node('output', 'meter-time', '00:00'); this.clock.title = t('meterTime');
     const meta = node('div', 'meter-meta'), caption = node('span', 'meter-caption');
@@ -37,12 +45,9 @@ export class NativeMeterView {
       item.append(keyLabel); legend.append(item);
     }
     caption.append(source, legend); meta.append(caption, this.clock); root.append(meta);
-    const bank = this.bank = node('div', 'meter-bank'), scale = node('div', 'meter-scale');
+    const bank = this.bank = node('div', 'meter-bank'), scale = this.scale = node('div', 'meter-scale');
     scale.setAttribute('aria-hidden', 'true');
-    for (const db of ticks) {
-      const tick = node('span', db === 0 ? 'meter-zero' : '', String(db));
-      tick.style.bottom = `${position(db)}%`; scale.append(tick);
-    }
+    this.setScaleHeight(config.meterHeight ?? defaults.meterHeight);
     const viewport = node('div', 'meter-viewport'); viewport.tabIndex = 0; viewport.setAttribute('aria-label', t('meterChannels'));
     const lanes = this.lanes = node('div', 'meter-lanes');
     for (const [key, group, suffix, history] of [
@@ -78,6 +83,16 @@ export class NativeMeterView {
 
     this.setChannels(channels);
     this.setVisibility(config);
+  }
+  setScaleHeight(height) {
+    const ticks = scaleTicks.filter(tick => height >= tick.minHeight).map(tick => tick.db);
+    if (ticks.length === this.scale.childElementCount) return;
+    this.scale.replaceChildren(...ticks.map(db => {
+      const tick = node('span', db === 0 ? 'meter-zero' : '', String(db));
+      tick.style.bottom = `${position(db)}%`;
+      return tick;
+    }));
+    this.root.style.setProperty('--meter-grid-stops', gridStops(ticks));
   }
   get channels() { return this.strips.length; }
   setChannels(channels) {
@@ -134,6 +149,7 @@ export class NativeMeterView {
       const available = outputs === null || outputs.has(channel);
       item.strip.hidden = !showPeaks || !available;
       item.rms.hidden = !rms;
+      item.top.detail.hidden = compact && this.truePeakMode;
       item.label.textContent = `${this.truePeakMode ? 'TP' : 'Peak'} ${channel + 1}`;
       if (available) visible++;
     });
@@ -145,9 +161,12 @@ export class NativeMeterView {
     this.legend.querySelector('.meter-legend-true').hidden = !showPeaks || !this.truePeakMode;
     this.legend.querySelector('.meter-legend-rms').hidden = !showPeaks || !rms;
     this.legend.hidden = !showPeaks;
-    const visibleStrips = (showPeaks ? visible : 0) + this.analysisStrips.filter(item => !item.strip.hidden).length;
+    const peakStrips = showPeaks ? visible : 0;
+    const analysisStrips = this.analysisStrips.filter(item => !item.strip.hidden).length;
+    const visibleStrips = peakStrips + analysisStrips;
     this.bank.hidden = visibleStrips === 0;
     this.lanes.style.setProperty('--channels', Math.max(1, visibleStrips));
+    this.root.style.setProperty('--meter-compact-rows', Math.min(2, peakStrips) + analysisStrips);
     if (histogram) this.paintHistogram();
     if (this.values) {
       this.updatePeakReadouts(this.values);

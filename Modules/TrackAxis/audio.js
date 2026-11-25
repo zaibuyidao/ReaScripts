@@ -61,10 +61,6 @@ export class AudioAnalysis {
     const before = this.config;
     config = {...config, aggregate: config.aggregate === true && (config.source === 'selected-track' || config.source?.startsWith('track:'))};
     this.config = config;
-    if (config.meterCompact) {
-      const visibleMetrics = Object.values(config.meterMetrics).filter(Boolean);
-      this.root.querySelector('#analysis-meter').style.setProperty('--meter-metric-rows', visibleMetrics.length);
-    }
     for (const kind of ['meter', 'spectrum', 'waveform']) this.root.querySelector(`#analysis-${kind}`).hidden = !config[kind];
     const changed = !before || ['source', 'sourceMode', 'aggregate', 'master', 'session', 'trackKey', 'fftSize', 'streamRate', 'language'].some(key => config[key] !== before[key]);
     const meterChanged = !before || ['forceMono', 'integratedMode', 'resetOnPlaybackStart'].some(key => config[key] !== before[key]);
@@ -128,8 +124,6 @@ export class AudioAnalysis {
       if (!this.meterView || this.meterView.language !== config.language) {
         this.meterView = new NativeMeterView(this.root.querySelector('#meter-readout'), this.meterView?.channels ?? 2, config, this.t);
       }
-      const button = this.root.querySelector('#meter-reset');
-      if (button) button.disabled = false;
       this.meterView.reset();
     }
     const opening = (async () => {
@@ -188,8 +182,6 @@ export class AudioAnalysis {
     }
     if (!entry.stream) return;
     entry.resetting = true; entry.resetError = false;
-    const button = this.root.querySelector('#meter-reset');
-    if (button) button.disabled = true;
     // The RPC queues a native reset. Only a subsequent packet may update the display.
     entry.resetRequest = {packet: entry.stream.latest(), startedAt: performance.now()};
     try {
@@ -201,7 +193,6 @@ export class AudioAnalysis {
       if (!entry.cancelled) { entry.resetError = true; this.status('meter', error.message || this.t('analysisUnavailable')); }
     } finally {
       entry.resetting = false;
-      if (!entry.cancelled && button) button.disabled = false;
     }
   }
 

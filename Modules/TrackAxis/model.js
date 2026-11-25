@@ -12,6 +12,7 @@ export const themePresets = Object.freeze({
 });
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
+export const meterCompactRowHeightRange = Object.freeze({min:23, max:90});
 export const meterPeakModes = Object.freeze({
   peak: 'Peak', 'peak-clips': 'Peak Clips', 'true-peak': 'True Peak', 'true-peak-clips': 'True Peak Clips', off: 'Off',
 });
@@ -30,7 +31,7 @@ export const defaults = Object.freeze({
   version: 1, language: 'en', density: 'comfortable', fxCompact: true, routingCompact: true, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true,
-  meterCompact: false, meterHeight: 210,
+  meterCompact: false, meterHeight: 210, meterCompactRowHeight: 26,
   meterPeakMode: 'peak', meterLufsHistogram: true,
   meterYellowAlert: false, meterRedAlert: false, meterYellowLevel: -12, meterRedLevel: -6,
   meterMetrics: {rmsMomentary:false, rmsIntegrated:false, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
@@ -55,6 +56,9 @@ export function preferences(raw = {}) {
   if (raw.livePeak === true) p.meter = true;
   if (['playback-only', 'continuous'].includes(raw.integratedMode)) p.integratedMode = raw.integratedMode;
   if (Number.isFinite(raw.meterHeight) && raw.meterHeight >= meterHeightRange.min && raw.meterHeight <= meterHeightRange.max) p.meterHeight = Math.round(raw.meterHeight);
+  if (Number.isFinite(raw.meterCompactRowHeight) && raw.meterCompactRowHeight >= meterCompactRowHeightRange.min && raw.meterCompactRowHeight <= meterCompactRowHeightRange.max) {
+    p.meterCompactRowHeight = raw.meterCompactRowHeight;
+  }
   for (const key of Object.keys(p.listHeights)) if (Number.isFinite(raw.listHeights?.[key]) && raw.listHeights[key] >= 0 && raw.listHeights[key] <= 4000) p.listHeights[key] = raw.listHeights[key];
   for (const [key, choices] of Object.entries({density: ['comfortable', 'compact'], source: Object.keys(analysisSources), fftSize: [512, 1024, 2048, 4096, 8192], streamRate: [10, 20, 30, 60], drawRate: [15, 30, 60], floor: [-60, -90, -120]})) {
     if (choices.includes(raw[key])) p[key] = raw[key];

@@ -1,6 +1,6 @@
 import { defaults, preferences, analysisSources, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, mixerValueText, parseMixerValue, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
-import { meterPeakModes } from './model.js';
+import { meterCompactRowHeightRange, meterPeakModes } from './model.js';
 
 const $ = id => document.getElementById(id);
 const el = (tag, className = '', text = '') => { const n = document.createElement(tag); n.className = className; n.textContent = text; return n; };
@@ -1461,31 +1461,49 @@ document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListene
   if (panel.dataset.panel === 'analysis') configureAudio();
 }));
 document.querySelectorAll('.analysis-card').forEach(card => card.addEventListener('toggle', configureAudio));
-$('meter-reset').onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.resetMeter(); };
+$('meter-layout').onclick = event => {
+  event.preventDefault(); event.stopPropagation();
+  const next = {...prefs, meterCompact: !prefs.meterCompact};
+  if (!savePreferences(next)) return;
+  closeMeterMenu();
+  prefs = next; applyMeterHeight(); configureAudio();
+};
 $('meter-readout').parentElement.onclick = event => { if (event.button === 0) audio?.resetMeter(); };
+function meterResizeSetting() {
+  if (!prefs.meterCompact) return {key:'meterHeight', ...meterHeightRange, rows:1};
+  const rows = Number($('meter-readout').style.getPropertyValue('--meter-compact-rows'));
+  return {key:'meterCompactRowHeight', ...meterCompactRowHeightRange, rows:Math.max(1, rows)};
+}
 function applyMeterHeight() {
-  $('analysis-meter').style.setProperty('--meter-height', `${prefs.meterHeight}px`);
-  $('analysis-meter').classList.toggle('meter-compact', prefs.meterCompact);
+  const panel = $('analysis-meter');
+  panel.style.setProperty('--meter-height', `${prefs.meterHeight}px`);
+  if (!prefs.meterCompact) audio?.meterView?.setScaleHeight(prefs.meterHeight);
+  panel.style.setProperty('--meter-row-height', `${prefs.meterCompactRowHeight}px`);
+  panel.classList.toggle('meter-compact', prefs.meterCompact);
+  $('meter-layout').setAttribute('aria-pressed', prefs.meterCompact);
+  const {key, min, max} = meterResizeSetting();
   const handle = $('meter-resizer');
-  handle.setAttribute('aria-valuemin', meterHeightRange.min);
-  handle.setAttribute('aria-valuemax', meterHeightRange.max);
-  handle.setAttribute('aria-valuenow', prefs.meterHeight);
+  handle.setAttribute('aria-valuemin', min);
+  handle.setAttribute('aria-valuemax', max);
+  handle.setAttribute('aria-valuenow', prefs[key]);
 }
 {
   const handle = $('meter-resizer');
   let drag;
-  const resize = height => {
-    prefs.meterHeight = Math.max(meterHeightRange.min, Math.min(meterHeightRange.max, Math.round(height)));
+  const resize = (height, {key, min, max}) => {
+    const precision = key === 'meterHeight' ? 1 : 10;
+    prefs[key] = Math.max(min, Math.min(max, Math.round(height * precision) / precision));
     applyMeterHeight();
   };
   handle.onpointerdown = event => {
     if (event.button !== 0 || drag) return;
     event.preventDefault(); handle.setPointerCapture(event.pointerId); handle.focus({preventScroll:true});
-    drag = {pointer:event.pointerId, y:event.clientY, height:prefs.meterHeight};
+    const setting = meterResizeSetting();
+    drag = {pointer:event.pointerId, y:event.clientY, height:prefs[setting.key], setting};
     handle.classList.add('resizing');
   };
   handle.onpointermove = event => {
-    if (drag?.pointer === event.pointerId) resize(drag.height + event.clientY - drag.y);
+    if (drag?.pointer === event.pointerId) resize(drag.height + (event.clientY - drag.y) / drag.setting.rows, drag.setting);
   };
   const finish = event => {
     if (drag?.pointer !== event.pointerId) return;
@@ -1495,10 +1513,15 @@ function applyMeterHeight() {
   handle.onkeydown = event => {
     if (!['ArrowUp','ArrowDown','Home','End'].includes(event.key)) return;
     event.preventDefault();
-    resize(event.key === 'Home' ? meterHeightRange.min : event.key === 'End' ? meterHeightRange.max : prefs.meterHeight + (event.key === 'ArrowDown' ? 16 : -16));
+    const setting = meterResizeSetting();
+    const {key, min, max, rows} = setting;
+    resize(event.key === 'Home' ? min : event.key === 'End' ? max : prefs[key] + (event.key === 'ArrowDown' ? 16 : -16) / rows, setting);
     savePreferences(prefs);
   };
-  handle.ondblclick = () => { resize(defaults.meterHeight); savePreferences(prefs); };
+  handle.ondblclick = () => {
+    const setting = meterResizeSetting();
+    resize(defaults[setting.key], setting); savePreferences(prefs);
+  };
 }
 const meterChoices = {
   peak: Object.entries(meterPeakModes),
