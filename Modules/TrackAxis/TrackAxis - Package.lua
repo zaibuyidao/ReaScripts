@@ -1,8 +1,9 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.2.5
+-- @version 0.2.6
 -- @changelog
---   Refined the standard meter layout with vertical bars at 50% of their column width, responsive widths.
+--   Prevented accidental text selection when dragging across the panel. Text fields remain editable and selectable.
+--   Fixed a focus outline that appeared when pressing Space after clicking the meter.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage

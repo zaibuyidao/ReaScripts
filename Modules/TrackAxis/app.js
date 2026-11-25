@@ -1428,7 +1428,11 @@ function applyPreferences() {
   renderAll(true);
 }
 $('settings-open').onclick = openSettings;
+// A host Space shortcut can set :focus-visible even when REAPER consumes the key.
+const navigationKeys = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown']);
+document.addEventListener('pointerdown', () => document.documentElement.classList.remove('keyboard-navigation'), true);
 document.addEventListener('keydown', event => {
+  if (navigationKeys.has(event.key)) document.documentElement.classList.add('keyboard-navigation');
   if (isSettingsShortcut(event)) { event.preventDefault(); event.stopPropagation(); openSettings(); }
   if (event.key === 'Escape' && !document.querySelector('dialog[open]')) { $('search').value = ''; closeSearch(); }
 }, true);
