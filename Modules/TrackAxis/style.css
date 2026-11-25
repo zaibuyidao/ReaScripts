@@ -229,7 +229,7 @@ body>footer{margin-top:auto}
 /* Reserve the display even between streams. Status messages share the same space. */
 #analysis-meter .meter-body{position:relative}
 #analysis-meter .analysis-status{position:absolute;inset:0 0 auto;z-index:1;height:auto;white-space:normal;background:var(--field)}
-#analysis-meter .readout{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";min-width:0;height:calc(var(--meter-height) + var(--meter-top-height) + 72px);overflow:auto;scrollbar-width:thin}
+#analysis-meter .readout{--meter-grid-line:color-mix(in srgb,var(--field) 45%,transparent);font-variant-numeric:tabular-nums;font-feature-settings:"tnum";min-width:0;height:calc(var(--meter-height) + var(--meter-top-height) + 72px);overflow:auto;scrollbar-width:thin}
 /* Two peak rows plus the enabled RMS/LUFS rows. Extra channels scroll inside. */
 #analysis-meter.meter-compact .readout{height:calc(80px + 23px * var(--meter-metric-rows,4))}
 .meter-meta{display:flex;align-items:center;gap:8px;font-size:9px;color:var(--muted);padding:2px 0 8px}
@@ -239,7 +239,7 @@ body>footer{margin-top:auto}
 .meter-legend{display:inline-flex;flex-shrink:0;align-items:center;gap:8px;margin-left:9px;padding-left:9px;border-left:1px solid var(--line)}
 .meter-legend-item{display:inline-flex}
 .meter-key{display:inline-flex;align-items:center;gap:4px}.meter-key:before{content:"";width:6px;height:6px;background:var(--meter-green)}
-.meter-key-rms:before{background:var(--text);opacity:.65}.meter-key-true:before{height:2px;background:var(--text)}
+.meter-key-rms:before{background:var(--text);opacity:.65}
 .meter-bank{display:grid;grid-template-columns:25px minmax(0,1fr);gap:4px;padding-bottom:4px}
 .meter-scale{position:relative;height:var(--meter-height);margin-top:var(--meter-top-height);color:var(--muted);font:8px/1 Consolas,"SFMono-Regular",monospace}
 .meter-scale span{position:absolute;right:3px;transform:translateY(50%)}.meter-scale .meter-zero{color:var(--text);font-weight:700}
@@ -247,30 +247,40 @@ body>footer{margin-top:auto}
 .meter-viewport:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}
 .meter-lanes{display:grid;grid-template-columns:repeat(var(--channels),minmax(38px,1fr));gap:3px;min-width:100%}
 .meter-strip{min-width:0;display:flex;align-items:center;flex-direction:column}
-.meter-rail{height:var(--meter-height);width:22px;position:relative;background:color-mix(in srgb,var(--control) 50%,var(--field));overflow:hidden;border-radius:1px}
-.meter-rail:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to top,transparent 0,transparent calc(9.3023% - 1px),color-mix(in srgb,var(--field) 45%,transparent) calc(9.3023% - 1px),color-mix(in srgb,var(--field) 45%,transparent) 9.3023%,transparent 9.3023%,transparent 13.9535%);border-top:0}
+.meter-rail{--meter-rail-background:color-mix(in srgb,var(--control) 50%,var(--field));height:var(--meter-height);width:22px;position:relative;background:var(--meter-rail-background);overflow:hidden;border-radius:1px}
+.meter-rail:after{content:"";position:absolute;inset:var(--meter-grid-inset,0);pointer-events:none;background:linear-gradient(to top,var(--meter-grid-stops))}
 .meter-fill{position:absolute;bottom:var(--meter-offset,0%);left:0;right:0;height:var(--meter-level,0%);will-change:height}
-.meter-sample{background:linear-gradient(to top,var(--meter-green) 0%,var(--meter-green) 79.0698%,var(--meter-amber) 79.0698%,var(--meter-amber) 93.0233%,var(--meter-red) 93.0233%);background-size:100% var(--meter-height);background-position:bottom}
+.meter-sample{background:var(--meter-green)}
 .meter-rms{left:8px;right:8px;background:var(--field);opacity:.55;border-top:1px solid var(--text);z-index:1}
 .meter-marker{position:absolute;bottom:var(--meter-offset,0%);left:0;right:0;height:1px;background:var(--text);z-index:2;transform:translateY(50%)}
-.meter-max{background:var(--meter-amber);opacity:.7}.meter-true{height:2px}
+.meter-max{background:var(--meter-amber);opacity:.7}
+.meter-clipped .meter-max{background:var(--meter-red)}
 .meter-channel-value{font:10px/1.4 Consolas,"SFMono-Regular",monospace;white-space:nowrap;margin-top:1px}
 .meter-channel-label{font-size:9px;color:var(--muted);line-height:1.4;white-space:nowrap;text-align:center;margin-top:5px}
 .meter-analysis-fill{background:linear-gradient(to top,#749bcb,#a4c3e9);background-size:100% var(--meter-height);background-position:bottom}
 .meter-family-lufs .meter-analysis-fill{background-image:linear-gradient(to top,#9293c9,#c7b9df)}
 .meter-analysis-strip .meter-channel-value{color:var(--accent-text)}
 #analysis-meter .meter-over{color:var(--danger)}
+.meter-histogram{position:absolute;inset:0;width:100%;height:100%;fill:#005f7f;pointer-events:none}
+.meter-show-histogram [data-metric=lufsMomentary] .meter-rail{--meter-grid-inset:0 29%;width:min(38px,100%);background:transparent}
+.meter-show-histogram [data-metric=lufsMomentary] .meter-rail:before{content:"";position:absolute;inset:var(--meter-grid-inset);background:var(--meter-rail-background)}
+.meter-show-histogram [data-metric=lufsMomentary] :is(.meter-fill,.meter-max){inset-inline:29%}
+.meter-alert-setting .check:first-child{margin-bottom:0;color:inherit}
+.meter-alert-setting input[type=number]{width:62px}
 
 @media(max-width:320px){.meter-bank{grid-template-columns:18px minmax(0,1fr);gap:3px}.meter-lanes{grid-template-columns:repeat(var(--channels),minmax(38px,1fr));gap:2px}.meter-rail{width:18px}.meter-channel-value{font-size:10px}.meter-channel-label{font-size:8px}.meter-rms{left:6px;right:6px}}
 
 .meter-controls{margin-left:auto;display:flex;align-items:center;gap:3px;flex-shrink:0}
 #analysis-meter .meter-toggle{min-height:22px;height:22px;padding:2px 5px;border:1px solid var(--line);background:color-mix(in srgb,var(--text) 5%,var(--field));color:var(--text);font-size:9px;line-height:16px;font-weight:500;letter-spacing:0}
-#analysis-meter .meter-toggle[aria-pressed=false]{color:color-mix(in srgb,var(--muted) 75%,var(--field));background:transparent;border-color:color-mix(in srgb,var(--line) 65%,var(--field))}
+#analysis-meter .meter-toggle{white-space:nowrap}
+#analysis-meter .meter-toggle[data-off=true]{color:var(--muted);background:transparent;border-color:color-mix(in srgb,var(--line) 65%,var(--field))}
+.meter-toggle:after{content:"";display:inline-block;margin-left:4px;vertical-align:2px;border:3px solid transparent;border-top-color:currentColor;border-bottom:0}
 #analysis-meter .meter-toggle:hover{color:var(--text);border-color:var(--muted)}
 #analysis-meter .meter-toggle:focus-visible{outline:1px solid var(--muted);outline-offset:1px}
 .meter-top{height:var(--meter-top-height);width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding-top:1px;overflow:hidden}
 .meter-top-value{font:12px/16px Consolas,"SFMono-Regular",monospace;letter-spacing:-.04em;color:var(--text);white-space:nowrap}
 .meter-top-detail{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:8px/12px Consolas,"SFMono-Regular",monospace;color:var(--muted)}
+.meter-lra .meter-rail:after{content:none}
 .meter-lra .meter-analysis-fill{background:color-mix(in srgb,var(--meter-amber) 50%,transparent);box-shadow:inset 0 1px var(--meter-amber),inset 0 -1px var(--meter-amber)}
 .meter-compact .meter-scale,.meter-compact .meter-legend,.meter-compact .meter-rms,.meter-compact .meter-max,.meter-compact #meter-resizer{display:none}
 .meter-compact .meter-meta{padding-bottom:5px}
@@ -287,11 +297,17 @@ body>footer{margin-top:auto}
 .meter-compact .meter-channel-label{grid-column:1;grid-row:1;margin:0;text-align:left;font-size:10px}
 .meter-compact .meter-channel-value{grid-column:3;grid-row:1;min-width:5ch;margin:0;text-align:right;font-size:11px;color:var(--text)}
 .meter-compact .meter-rail{grid-column:2;grid-row:1;width:100%;height:8px}
-.meter-compact .meter-rail:after{background:repeating-linear-gradient(to right,transparent 0,transparent calc(9.3023% - 1px),color-mix(in srgb,var(--field) 45%,transparent) calc(9.3023% - 1px),color-mix(in srgb,var(--field) 45%,transparent) 9.3023%,transparent 9.3023%,transparent 13.9535%)}
+.meter-compact .meter-rail:after{background:linear-gradient(to right,var(--meter-grid-stops))}
 .meter-compact .meter-fill{height:100%;width:var(--meter-level,0%);left:var(--meter-offset,0%);right:auto;bottom:0;background:var(--meter-green);box-shadow:none;will-change:width}
 .meter-compact .meter-analysis-fill{background:#8baed8}
 .meter-compact .meter-family-lufs .meter-analysis-fill{background:#aaa2d2}
+.meter-compact.meter-show-histogram [data-metric=lufsMomentary] .meter-rail{--meter-grid-inset:6px 0;width:100%;height:20px}
+.meter-compact.meter-show-histogram [data-metric=lufsMomentary] .meter-fill{height:8px;inset:auto auto 6px 0}
 .meter-compact .meter-lra .meter-analysis-fill{background:var(--meter-amber)}
 .meter-compact .meter-marker{left:var(--meter-offset,0%);right:auto;bottom:0;height:100%;width:2px;transform:translateX(-50%)}
 #analysis-meter.meter-compact .meter-clipped .meter-channel-value{color:var(--danger)}
+#analysis-meter [data-alert=yellow]{--meter-alert:var(--meter-amber)}
+#analysis-meter [data-alert=red]{--meter-alert:var(--meter-red)}
+#analysis-meter :is(.meter-fill,.meter-marker)[data-alert]:not([data-alert=""]){background:var(--meter-alert)}
+#analysis-meter :is(.meter-channel-value,.meter-top-value)[data-alert]:not([data-alert=""]){color:var(--meter-alert)}
 @media(max-width:320px){#analysis-meter>summary{gap:5px;font-size:8.5px}.meter-controls{gap:2px}#analysis-meter .meter-toggle{font-size:8px;padding:2px 4px}#meter-reset{width:20px;height:22px;min-height:22px}.meter-meta{font-size:8px;gap:6px}.meter-legend{gap:6px;margin-left:7px;padding-left:7px}}

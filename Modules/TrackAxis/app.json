@@ -1,6 +1,7 @@
 {
   "id": "trackaxis",
   "name": "TrackAxis",
-  "version": "0.2.3",
-  "entry": "index.html"
+  "version": "0.2.4",
+  "entry": "index.html",
+  "dawKeyboard": true
 }

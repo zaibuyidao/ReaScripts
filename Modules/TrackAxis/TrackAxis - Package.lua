@@ -1,10 +1,10 @@
 -- @description TrackAxis
 -- @author zaibuyidao
--- @version 0.2.3
+-- @version 0.2.4
 -- @changelog
---   Meters, spectrum, and waveform now share three track sources: post-fader (post-pan, default), pre-fader (post-FX), and pre-fader (pre-FX).
---   Fixed the meter height jumping when switching tracks. In compact mode, scroll within the meter to view additional channels.
---   Removed the 'Waiting for native audio data…' message.
+--   Added Peak display modes and multi-select menus for RMS and LUFS.
+--   Added click-to-reset metering and a reset-on-playback-start option.
+--   Enabled REAPER’s Space shortcut from TrackAxis while preserving space entry in editable fields.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage

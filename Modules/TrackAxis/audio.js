@@ -62,8 +62,7 @@ export class AudioAnalysis {
     config = {...config, aggregate: config.aggregate === true && (config.source === 'selected-track' || config.source?.startsWith('track:'))};
     this.config = config;
     if (config.meterCompact) {
-      const visibleMetrics = Object.entries(config.meterMetrics).filter(([key, enabled]) =>
-        enabled && (key.startsWith('rms') ? config.meterShowRms : config.meterShowLufs));
+      const visibleMetrics = Object.values(config.meterMetrics).filter(Boolean);
       this.root.querySelector('#analysis-meter').style.setProperty('--meter-metric-rows', visibleMetrics.length);
     }
     for (const kind of ['meter', 'spectrum', 'waveform']) this.root.querySelector(`#analysis-${kind}`).hidden = !config[kind];
@@ -90,15 +89,23 @@ export class AudioAnalysis {
     entry.cancelled = true;
     clearTimeout(entry.retry);
     if (this.entries.get(kind) === entry) this.entries.delete(kind);
+    this.closeMeterTransport(entry);
     if (entry.stream) {
       if (!this.closed && kind !== 'meter' && this.enabled(kind)) this.resetPlot(kind, entry.stream.info);
       const closing = entry.stream.close().catch(() => {}).finally(() => this.pending.delete(closing));
       this.pending.add(closing);
     }
   }
+  closeMeterTransport(entry) {
+    if (!entry.meterTransport) return;
+    const closing = entry.meterTransport.close().catch(() => {}).finally(() => this.pending.delete(closing));
+    entry.meterTransport = null;
+    this.pending.add(closing);
+  }
   failed(kind, entry, error) {
     if (entry.cancelled || entry.failed) return;
     entry.failed = true;
+    this.closeMeterTransport(entry);
     this.clear(kind);
     const delays = [250, 1000, 3000];
     // A hardware producer can disappear between creation and consumer attachment
@@ -121,6 +128,8 @@ export class AudioAnalysis {
       if (!this.meterView || this.meterView.language !== config.language) {
         this.meterView = new NativeMeterView(this.root.querySelector('#meter-readout'), this.meterView?.channels ?? 2, config, this.t);
       }
+      const button = this.root.querySelector('#meter-reset');
+      if (button) button.disabled = false;
       this.meterView.reset();
     }
     const opening = (async () => {
@@ -150,9 +159,17 @@ export class AudioAnalysis {
         if (kind === 'meter') {
           if (this.meterView.channels !== stream.info.channels) {
             this.meterView.setChannels(stream.info.channels);
-            this.meterView.setVisibility(this.config);
             this.meterView.reset();
+            this.meterView.setVisibility(this.config);
           }
+          if (config.integratedMode !== 'continuous' && this.api.realtime?.subscribe) {
+            const watching = this.api.realtime.subscribe('transport', {updateRate: 30}).then(subscription => {
+              if (entry.cancelled || entry.failed) return subscription.close();
+              entry.meterTransport = subscription;
+            }).catch(() => { entry.transportUnavailable = true; }).finally(() => this.pending.delete(watching));
+            this.pending.add(watching);
+          }
+          stream.on('data', packet => this.readMeter(entry, packet, performance.now()));
         } else this.resetPlot(kind, stream.info);
         stream.on('error', stopped); stream.on('close', stopped);
       } catch (error) {
@@ -174,41 +191,61 @@ export class AudioAnalysis {
     const button = this.root.querySelector('#meter-reset');
     if (button) button.disabled = true;
     // The RPC queues a native reset. Only a subsequent packet may update the display.
-    entry.resetPacket = entry.stream.latest();
+    entry.resetRequest = {packet: entry.stream.latest(), startedAt: performance.now()};
     try {
       if (!this.api.audio.resetMeter) throw Error(this.t('meterUnavailable'));
       await this.api.audio.resetMeter(entry.stream.info.name);
+      if (!entry.cancelled) this.meterView.reset();
     } catch (error) {
-      entry.resetPacket = null;
+      entry.resetRequest = null;
       if (!entry.cancelled) { entry.resetError = true; this.status('meter', error.message || this.t('analysisUnavailable')); }
     } finally {
       entry.resetting = false;
-      if (button) button.disabled = false;
+      if (!entry.cancelled && button) button.disabled = false;
     }
   }
+
+  readMeter(entry, packet, now) {
+    if (!packet || entry.cancelled || entry.failed || entry.resetting || entry.stream?.closed) return;
+    if ([entry.resetRequest?.packet, entry.lastPacket].some(previous =>
+      previous && (packet === previous || packet.sequence !== undefined && packet.sequence === previous.sequence))) return;
+    const {channels, sampleRate} = entry.stream.info;
+    if (!(packet.data instanceof Float32Array) || !channels) return;
+    try {
+      const values = this.api.audio.decodeMeter(packet.data, channels);
+      entry.lastPacket = packet;
+      // A different packet can already be queued before the native reset takes effect.
+      // Its old measurement age cannot belong to the newly started run.
+      if (entry.resetRequest && values.processedSeconds > Math.max(0, now - entry.resetRequest.startedAt) / 1000 + 0.25) return;
+      entry.resetRequest = null;
+      entry.attempt = 0;
+      if (!entry.resetError) this.status('meter', '');
+      const transport = entry.meterTransport?.latest();
+      const collect = this.config.integratedMode === 'continuous' ||
+        (transport ? (transport.playState & 1) !== 0 : !this.api.realtime?.subscribe || entry.transportUnavailable);
+      this.meterView.update(values, now, collect, sampleRate);
+    } catch (error) {
+      this.failed('meter', entry, {message: this.t('meterUnavailable')});
+    }
+  }
+
   draw(now) {
     this.frame = 0;
     if (this.closed || !this.config?.active) return;
+    const meter = this.entries.get('meter');
+    if (meter && this.enabled('meter')) {
+      this.readMeter(meter, meter.stream?.latest(), now);
+      this.meterView?.draw(now);
+    }
     if (now - this.lastDraw >= 1000 / this.config.drawRate) {
       this.lastDraw = now;
       for (const [kind, entry] of this.entries) {
-        if (!this.enabled(kind) || entry.failed || !entry.stream || entry.stream.closed) continue;
+        if (kind === 'meter' || !this.enabled(kind) || entry.failed || !entry.stream || entry.stream.closed) continue;
         const packet = entry.stream.latest();
         if (!packet) continue;
         const info = entry.stream.info, data = packet.data;
         if (!(data instanceof Float32Array) || !info.channels) continue;
-        if (kind === 'meter') {
-          if (entry.resetting || entry.resetPacket && (packet === entry.resetPacket || packet.sequence !== undefined && packet.sequence === entry.resetPacket.sequence)) continue;
-          if (packet === entry.lastPacket || packet.sequence !== undefined && packet.sequence === entry.lastPacket?.sequence) continue;
-          try {
-            const values = this.api.audio.decodeMeter(data, info.channels);
-            entry.lastPacket = packet; entry.resetPacket = null; entry.attempt = 0;
-            if (!entry.resetError) this.status(kind, '');
-            this.meterView.update(values);
-          } catch (error) {
-            this.failed(kind, entry, {message: this.t('meterUnavailable')});
-          }
-        } else this.status(kind, '');
+        this.status(kind, '');
         if (kind === 'spectrum') this.spectrum(info, data);
         if (kind === 'waveform') {
           const buckets = Math.floor(data.length / (info.channels * 2));

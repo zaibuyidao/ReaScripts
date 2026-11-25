@@ -272,6 +272,14 @@
   "fxCompactHint": "点击：打开 / 关闭 · Alt+点击：删除 · Shift+点击：旁通 · Ctrl+点击：离线",
   "toggleFX": "打开 / 关闭 FX 窗口",
   "meterCompact": "精简显示 Peak / RMS / LUFS（横向）",
+  "meterPeakMode": "Peak 显示模式",
+  "meterPeakOff": "Peak 关闭",
+  "meterClips": "削波",
+  "meterLufsHistogram": "LUFS-M 响度分布直方图",
+  "meterYellowAlert": "LUFS 黄色警示",
+  "meterRedAlert": "LUFS 红色警示",
+  "meterYellowLevel": "黄色警示阈值",
+  "meterRedLevel": "红色警示阈值",
   "resizeList": "调整列表高度",
   "resizeMeter": "拖动调整表头高度，双击恢复默认",
   "viewMode": "查看模式",
@@ -327,9 +335,9 @@
   "meterIntegration": "表头积分",
   "meterPlaybackOnly": "仅播放期间",
   "meterContinuous": "连续",
-  "meterAutoReset": "播放开始时复位表头",
+  "meterAutoReset": "播放开始时重置表头",
   "meterMono": "Mono 标定（−3 dB）",
   "meterMonoHint": "全局 RMS、LUFS 及 LRA 上下界减去 3 dB，不混合或减少声道。",
-  "meterToggleRms": "显示 / 隐藏 RMS。右键选择 RMS-M / RMS-I。",
-  "meterToggleLufs": "显示 / 隐藏 LUFS 和 LRA。右键选择 LUFS-M / LUFS-S / LUFS-I / LRA。"
+  "meterToggleRms": "选择要显示的 RMS 指标",
+  "meterToggleLufs": "选择要显示的 LUFS 和 LRA 指标"
 }

@@ -12,6 +12,9 @@ export const themePresets = Object.freeze({
 });
 
 export const meterHeightRange = Object.freeze({min:120, max:720});
+export const meterPeakModes = Object.freeze({
+  peak: 'Peak', 'peak-clips': 'Peak Clips', 'true-peak': 'True Peak', 'true-peak-clips': 'True Peak Clips', off: 'Off',
+});
 export const analysisSources = Object.freeze({
   'post-fader': {tap: 'post-fader', meter: 'meterPostFader', hint: 'postFaderHint'},
   'post-fx': {tap: 'post-fx', meter: 'meterPostFX', hint: 'postFXHint'},
@@ -27,8 +30,10 @@ export const defaults = Object.freeze({
   version: 1, language: 'en', density: 'comfortable', fxCompact: true, routingCompact: true, searchHistoryLimit: 20,
   listHeights: {fx:0, fxCompact:0, sends:0, sendsCompact:0, receives:0, receivesCompact:0, hardwareOutputs:0, hardwareOutputsCompact:0},
   analysis: true, meter: true, spectrum: true, waveform: true,
-  meterShowRms: false, meterShowLufs: true, meterCompact: false, meterHeight: 210,
-  meterMetrics: {rmsMomentary:true, rmsIntegrated:true, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
+  meterCompact: false, meterHeight: 210,
+  meterPeakMode: 'peak', meterLufsHistogram: true,
+  meterYellowAlert: false, meterRedAlert: false, meterYellowLevel: -12, meterRedLevel: -6,
+  meterMetrics: {rmsMomentary:false, rmsIntegrated:false, lufsMomentary:true, lufsShortTerm:true, lufsIntegrated:true, loudnessRange:true},
   forceMono: false, integratedMode: 'playback-only', resetOnPlaybackStart: true,
   source: 'post-fader', fftSize: 2048, streamRate: 30, drawRate: 30, floor: -90,
   theme: 'midnight', colorBackground: '#181b20', colorPanel: '#20252c', colorText: '#d6dce5', colorAccent: '#89c7bd', colorBorder: '#303740',
@@ -40,7 +45,13 @@ export function preferences(raw = {}) {
   const p = { ...defaults, panels: { ...defaults.panels }, listHeights: {...defaults.listHeights}, meterMetrics: {...defaults.meterMetrics},
     panelOrder: {track:[...panelOrderDefaults.track], master:[...panelOrderDefaults.master]} };
   if (!raw || raw.version !== 1) return p;
-  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterShowRms', 'meterShowLufs', 'meterCompact', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  for (const key of ['analysis', 'meter', 'spectrum', 'waveform', 'meterCompact', 'meterLufsHistogram', 'meterYellowAlert', 'meterRedAlert', 'forceMono', 'resetOnPlaybackStart', 'fxCompact', 'routingCompact']) if (typeof raw[key] === 'boolean') p[key] = raw[key];
+  if (typeof raw.meterPeakMode === 'string' && Object.hasOwn(meterPeakModes, raw.meterPeakMode)) {
+    p.meterPeakMode = raw.meterPeakMode;
+  }
+  for (const key of ['meterYellowLevel', 'meterRedLevel']) {
+    if (Number.isFinite(raw[key]) && raw[key] >= -60 && raw[key] <= 0) p[key] = raw[key];
+  }
   if (raw.livePeak === true) p.meter = true;
   if (['playback-only', 'continuous'].includes(raw.integratedMode)) p.integratedMode = raw.integratedMode;
   if (Number.isFinite(raw.meterHeight) && raw.meterHeight >= meterHeightRange.min && raw.meterHeight <= meterHeightRange.max) p.meterHeight = Math.round(raw.meterHeight);
@@ -53,7 +64,14 @@ export function preferences(raw = {}) {
   if (['reaper', ...Object.keys(themePresets), 'custom'].includes(raw.theme)) p.theme = raw.theme;
   for (const key of ['colorBackground','colorPanel','colorText','colorAccent','colorBorder']) if (/^#[\da-f]{6}$/i.test(raw[key] || '')) p[key] = raw[key];
   for (const key of Object.keys(p.panels)) if (typeof raw.panels?.[key] === 'boolean') p.panels[key] = raw.panels[key];
-  for (const key of Object.keys(p.meterMetrics)) if (typeof raw.meterMetrics?.[key] === 'boolean') p.meterMetrics[key] = raw.meterMetrics[key];
+  for (const key of Object.keys(p.meterMetrics)) {
+    // Migrate the effective selection from versions with a separate family toggle.
+    const family = key.startsWith('rms') ? raw.meterShowRms : raw.meterShowLufs;
+    const checked = raw.meterMetrics?.[key];
+    if (family === false) p.meterMetrics[key] = false;
+    else if (typeof checked === 'boolean') p.meterMetrics[key] = checked;
+    else if (family === true) p.meterMetrics[key] = true;
+  }
   for (const [mode, ids] of Object.entries(panelOrderDefaults)) {
     const saved = Array.isArray(raw.panelOrder?.[mode]) ? raw.panelOrder[mode] : [];
     p.panelOrder[mode] = [...new Set([...saved.filter(id => ids.includes(id)), ...ids])];

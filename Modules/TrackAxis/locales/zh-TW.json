@@ -272,6 +272,14 @@
   "fxCompactHint": "點擊：開啟 / 關閉 · Alt+點擊：刪除 · Shift+點擊：旁通 · Ctrl+點擊：離線",
   "toggleFX": "開啟 / 關閉 FX 視窗",
   "meterCompact": "精簡顯示 Peak / RMS / LUFS（橫向）",
+  "meterPeakMode": "Peak 顯示模式",
+  "meterPeakOff": "Peak 關閉",
+  "meterClips": "削波",
+  "meterLufsHistogram": "LUFS-M 響度分布直方圖",
+  "meterYellowAlert": "LUFS 黃色警示",
+  "meterRedAlert": "LUFS 紅色警示",
+  "meterYellowLevel": "黃色警示門檻",
+  "meterRedLevel": "紅色警示門檻",
   "resizeList": "調整清單高度",
   "resizeMeter": "拖曳調整錶頭高度，按兩下恢復預設",
   "viewMode": "檢視模式",
@@ -330,6 +338,6 @@
   "meterAutoReset": "播放開始時重設錶頭",
   "meterMono": "Mono 校準（−3 dB）",
   "meterMonoHint": "全域 RMS、LUFS 及 LRA 上下界減去 3 dB，不混合或減少聲道。",
-  "meterToggleRms": "顯示 / 隱藏 RMS。右鍵選擇 RMS-M / RMS-I。",
-  "meterToggleLufs": "顯示 / 隱藏 LUFS 與 LRA。右鍵選擇 LUFS-M / LUFS-S / LUFS-I / LRA。"
+  "meterToggleRms": "選擇要顯示的 RMS 指標",
+  "meterToggleLufs": "選擇要顯示的 LUFS 與 LRA 指標"
 }

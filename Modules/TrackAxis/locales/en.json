@@ -272,6 +272,14 @@
   "fxCompactHint": "Click: open / close · Alt+click: delete · Shift+click: bypass · Ctrl+click: offline",
   "toggleFX": "Open / close FX window",
   "meterCompact": "Compact Peak / RMS / LUFS display (horizontal)",
+  "meterPeakMode": "Peak display mode",
+  "meterPeakOff": "Peak Off",
+  "meterClips": "Clips",
+  "meterLufsHistogram": "LUFS-M loudness histogram",
+  "meterYellowAlert": "Yellow LUFS alert",
+  "meterRedAlert": "Red LUFS alert",
+  "meterYellowLevel": "Yellow alert threshold",
+  "meterRedLevel": "Red alert threshold",
   "resizeList": "Resize list height",
   "resizeMeter": "Drag to resize meter height; double-click to reset",
   "viewMode": "View mode",
@@ -327,9 +335,9 @@
   "meterIntegration": "Meter integration",
   "meterPlaybackOnly": "Playback only",
   "meterContinuous": "Continuous",
-  "meterAutoReset": "Reset meter on playback start",
+  "meterAutoReset": "Reset on playback start",
   "meterMono": "Mono calibration (−3 dB)",
   "meterMonoHint": "Applies −3 dB to global RMS/LUFS and LRA bounds. Does not mix or remove channels.",
-  "meterToggleRms": "Show / hide RMS. Right-click to choose RMS-M / RMS-I.",
-  "meterToggleLufs": "Show / hide LUFS and LRA. Right-click to choose LUFS-M / LUFS-S / LUFS-I / LRA."
+  "meterToggleRms": "Choose RMS metrics",
+  "meterToggleLufs": "Choose LUFS and LRA metrics"
 }

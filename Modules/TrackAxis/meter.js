@@ -1,13 +1,20 @@
 import { analysisSources, toDb, dbText } from './model.js';
 
-const floor = -80, ceiling = 6;
+const floor = -72, scalePower = 1.8;
+const ticks = [0, -6, -12, -24, -36, -48, floor];
+const peakHalfLife = 150, loudnessHalfLife = 75;
+const histogramFloor = -70, histogramBins = 75;
+const svgNamespace = 'http://www.w3.org/2000/svg';
 // Limit presentation only; native integration, history and clip counters stay intact.
-export const meterDbText = value => Number.isFinite(value) && value < floor ? '<−80' : dbText(value);
-const position = db => Number.isFinite(db) ? Math.max(0, Math.min(100, (db - floor) / (ceiling - floor) * 100)) : 0;
+export const meterDbText = value => Number.isFinite(value) && value > floor ? `${value >= 0 ? '+' : ''}${dbText(value)}` : '';
+const position = db => Number.isFinite(db) && db > floor ? Math.min(1, (db - floor) / -floor) ** scalePower * 100 : 0;
+const gridStops = ticks.slice(1, -1).reverse().flatMap(db => {
+  const start = `calc(${position(db)}% - 0.5px)`, end = `calc(${position(db)}% + 0.5px)`;
+  return [`transparent ${start}`, `var(--meter-grid-line) ${start} ${end}`, `transparent ${end}`];
+}).join(', ');
 const node = (tag, className, text = '') => {
   const element = document.createElement(tag); element.className = className; element.textContent = text; return element;
 };
-const level = amplitude => meterDbText(toDb(amplitude));
 const time = seconds => {
   if (!Number.isFinite(seconds)) return '—';
   const total = Math.max(0, Math.floor(seconds)), hours = Math.floor(total / 3600);
@@ -16,29 +23,32 @@ const time = seconds => {
 export class NativeMeterView {
   constructor(root, channels, config, t) {
     this.language = config.language; this.t = t; this.strips = []; this.analysisStrips = []; this.root = root;
+    this.histogramCounts = new Float64Array(histogramBins);
+    this.histogramStep = 0;
     root.replaceChildren();
+    root.style.setProperty('--meter-grid-stops', gridStops);
     const source = this.source = node('span', 'meter-source');
     this.clock = node('output', 'meter-time', '00:00'); this.clock.title = t('meterTime');
     const meta = node('div', 'meter-meta'), caption = node('span', 'meter-caption');
-    const legend = node('span', 'meter-legend');
+    const legend = this.legend = node('span', 'meter-legend');
     for (const [key, label] of [['sample','Peak'],['rms','RMS'],['true','TP']]) {
       const item = node('span', `meter-legend-item meter-legend-${key}`);
       const keyLabel = node('span', `meter-key meter-key-${key}`, label); keyLabel.title = t(`meterLegend${key}`);
       item.append(keyLabel); legend.append(item);
     }
     caption.append(source, legend); meta.append(caption, this.clock); root.append(meta);
-    const bank = node('div', 'meter-bank'), scale = node('div', 'meter-scale');
+    const bank = this.bank = node('div', 'meter-bank'), scale = node('div', 'meter-scale');
     scale.setAttribute('aria-hidden', 'true');
-    for (const db of [6, 0, -6, -12, -24, -36, -48, -60, -80]) {
-      const tick = node('span', db === 0 ? 'meter-zero' : '', db > 0 ? `+${db}` : String(db));
+    for (const db of ticks) {
+      const tick = node('span', db === 0 ? 'meter-zero' : '', String(db));
       tick.style.bottom = `${position(db)}%`; scale.append(tick);
     }
     const viewport = node('div', 'meter-viewport'); viewport.tabIndex = 0; viewport.setAttribute('aria-label', t('meterChannels'));
     const lanes = this.lanes = node('div', 'meter-lanes');
     for (const [key, group, suffix, history] of [
       ['rmsMomentary', 'RMS', 'M', 'maxRmsMomentary'], ['rmsIntegrated', 'RMS', 'I'],
-      ['lufsMomentary', 'LUFS', 'M', 'maxLufsMomentary'], ['lufsShortTerm', 'LUFS', 'S', 'maxLufsShortTerm'], ['lufsIntegrated', 'LUFS', 'I'],
-      ['loudnessRange', 'LRA', 'LU'],
+      ['lufsMomentary', 'LUFS', 'M', 'maxLufsMomentary'], ['lufsShortTerm', 'LUFS', 'S', 'maxLufsShortTerm'],
+      ['loudnessRange', 'LRA', 'LU'], ['lufsIntegrated', 'LUFS', 'I'],
     ]) {
       const range = key === 'loudnessRange', family = group === 'RMS' ? 'rms' : 'lufs';
       const strip = node('div', `meter-strip meter-analysis-strip meter-family-${family}${range ? ' meter-lra' : ''}${history ? ' meter-history' : ''}`);
@@ -47,10 +57,22 @@ export class NativeMeterView {
       const rail = node('div', 'meter-rail');
       const fill = node('span', 'meter-fill meter-analysis-fill'), max = node('span', 'meter-marker meter-max'); max.hidden = true;
       rail.append(fill, max);
-      const out = node('output', 'meter-channel-value', '−∞');
+      if (key === 'lufsMomentary') {
+        const graph = this.histogram = document.createElementNS(svgNamespace, 'svg');
+        this.histogramPath = document.createElementNS(svgNamespace, 'path');
+        this.histogramMirror = document.createElementNS(svgNamespace, 'path');
+        graph.setAttribute('class', 'meter-histogram');
+        graph.setAttribute('viewBox', '0 0 100 100');
+        graph.setAttribute('preserveAspectRatio', 'none');
+        graph.setAttribute('role', 'img');
+        graph.setAttribute('aria-label', t('meterLufsHistogram'));
+        graph.append(this.histogramPath, this.histogramMirror);
+        rail.append(graph);
+      }
+      const out = node('output', 'meter-channel-value');
       const label = node('span', 'meter-channel-label', range ? 'LRA' : `${group}-${suffix}`);
       strip.append(top.root, rail, label, out); lanes.append(strip);
-      this.analysisStrips.push({key, history, family, range, strip, fill, max, out, top});
+      this.analysisStrips.push({key, history, family, range, strip, fill, max, out, top, displayed: 0, target: 0});
     }
     viewport.append(lanes); bank.append(scale, viewport); root.append(bank);
 
@@ -65,68 +87,175 @@ export class NativeMeterView {
       const top = this.header('MAX', ''); top.root.title = this.t('maxSamplePeak');
       const rail = node('div', 'meter-rail');
       const peak = node('span', 'meter-fill meter-sample'), rms = node('span', 'meter-fill meter-rms');
-      const truePeak = node('span', 'meter-marker meter-true'), max = node('span', 'meter-marker meter-max');
-      rail.append(peak, rms, max, truePeak);
-      const out = node('output', 'meter-channel-value', '−∞');
+      const max = node('span', 'meter-marker meter-max');
+      rail.append(peak, rms, max);
+      const out = node('output', 'meter-channel-value');
       const label = node('span', 'meter-channel-label', `Peak ${channel + 1}`);
       strip.append(top.root, rail, label, out); this.lanes.insertBefore(strip, this.analysisStrips[0].strip);
-      this.strips.push({strip, peak, rms, truePeak, max, out, top});
+      this.strips.push({strip, peak, rms, max, out, top, label, sample: 0, truePeak: 0});
     }
   }
-  reset() {
-    // No history or clip counts carry over while the new stream is opening.
+  reset(now = performance.now()) {
+    this.values = null;
+    this.lastFrame = undefined;
+    this.histogramStep = 0;
+    this.histogramCounts.fill(0);
+    this.histogramPath.removeAttribute('d');
+    this.histogramMirror.removeAttribute('d');
+    for (const strip of this.strips) strip.sample = strip.truePeak = 0;
+    for (const strip of this.analysisStrips) strip.displayed = strip.target = 0;
     const zero = Array(this.strips.length).fill(0);
     this.update({processedSeconds: 0, samplePeak: zero, channelRms: zero, truePeak: zero,
-      channelMaxSamplePeak: zero, channelMaxTruePeak: zero, sampleClipCount: zero, truePeakClipCount: zero});
+      channelMaxSamplePeak: zero, channelMaxTruePeak: zero, sampleClipCount: zero, truePeakClipCount: zero}, now, false);
   }
   header(label, unit) {
     const root = node('div', 'meter-top');
-    const value = node('output', 'meter-top-value', '—'), detail = node('span', 'meter-top-detail', unit);
+    const value = node('output', 'meter-top-value'), detail = node('span', 'meter-top-detail', unit);
     root.append(value, detail);
     return {root, value, detail, label};
   }
   setVisibility(config) {
-    this.root.classList.toggle('meter-compact', config.meterCompact === true);
-    const rms = config.meterShowRms === true, lufs = config.meterShowLufs !== false;
+    const compact = config.meterCompact === true, histogram = config.meterLufsHistogram !== false;
+    this.root.classList.toggle('meter-compact', compact);
+    this.root.classList.toggle('meter-show-histogram', histogram);
+    this.histogram.style.display = histogram ? '' : 'none';
+    this.histogramPath.setAttribute('transform', compact ? 'matrix(0 -.25 -1 0 100 25)' : 'matrix(.24 0 0 1 76 0)');
+    this.histogramMirror.setAttribute('transform', compact ? 'matrix(0 .25 -1 0 100 75)' : 'matrix(-.24 0 0 1 24 0)');
+    this.config = config;
+    this.peakMode = config.meterPeakMode ?? 'peak';
+    this.truePeakMode = this.peakMode.startsWith('true-');
+    this.clipMode = this.peakMode.endsWith('-clips');
+    const showPeaks = this.peakMode !== 'off';
+    const rms = config.meterMetrics.rmsMomentary;
     const outputs = config.source === 'master' && Array.isArray(config.meterOutputs) ? new Set(config.meterOutputs) : null;
     let visible = 0;
-    for (const item of this.analysisStrips) item.strip.hidden = !(item.family === 'rms' ? rms : lufs) || config.meterMetrics?.[item.key] === false;
+    for (const item of this.analysisStrips) item.strip.hidden = !config.meterMetrics[item.key];
     this.strips.forEach((item, channel) => {
-      item.strip.hidden = outputs !== null && !outputs.has(channel);
+      const available = outputs === null || outputs.has(channel);
+      item.strip.hidden = !showPeaks || !available;
       item.rms.hidden = !rms;
-      if (!item.strip.hidden) visible++;
+      item.label.textContent = `${this.truePeakMode ? 'TP' : 'Peak'} ${channel + 1}`;
+      if (available) visible++;
     });
     const mode = analysisSources[config.sourceMode];
     this.source.title = this.t(config.aggregate ? 'aggregateMeterHint' : mode.hint);
     const sourceLabel = this.t(config.aggregate ? 'meterAggregate' : mode.meter);
     this.source.textContent = `${sourceLabel} · ${visible} CH${config.forceMono ? ' · MONO' : ''}`;
-    this.root.querySelector('.meter-legend-rms').hidden = !rms;
-    this.lanes.style.setProperty('--channels', Math.max(1, visible + this.analysisStrips.filter(item => !item.strip.hidden).length));
+    this.legend.querySelector('.meter-legend-sample').hidden = !showPeaks || this.truePeakMode;
+    this.legend.querySelector('.meter-legend-true').hidden = !showPeaks || !this.truePeakMode;
+    this.legend.querySelector('.meter-legend-rms').hidden = !showPeaks || !rms;
+    this.legend.hidden = !showPeaks;
+    const visibleStrips = (showPeaks ? visible : 0) + this.analysisStrips.filter(item => !item.strip.hidden).length;
+    this.bank.hidden = visibleStrips === 0;
+    this.lanes.style.setProperty('--channels', Math.max(1, visibleStrips));
+    if (histogram) this.paintHistogram();
+    if (this.values) {
+      this.updatePeakReadouts(this.values);
+      this.updateAnalysisReadouts(this.values);
+      this.paintLevels();
+    }
   }
-  update(values) {
+  update(values, now, collectHistogram, sampleRate) {
+    const previous = this.values;
+    if (previous && (values.processedSeconds < previous.processedSeconds ||
+      values.channelMaxSamplePeak.some((peak, channel) => peak < previous.channelMaxSamplePeak[channel]) ||
+      values.channelMaxTruePeak.some((peak, channel) => peak < previous.channelMaxTruePeak[channel]) ||
+      values.sampleClipCount.some((count, channel) => count < previous.sampleClipCount[channel]) ||
+      values.truePeakClipCount.some((count, channel) => count < previous.truePeakClipCount[channel]))) this.reset(now);
+    this.advance(now);
+    this.values = values;
+    this.lastPeakPacket = this.lastFrame;
     this.clock.textContent = time(values.processedSeconds);
-    this.strips.forEach((strip, c) => {
-      const sample = toDb(values.samplePeak[c]), rms = toDb(values.channelRms[c]), tp = toDb(values.truePeak[c]);
-      strip.peak.style.setProperty('--meter-level', `${position(sample)}%`); strip.rms.style.setProperty('--meter-level', `${position(rms)}%`);
-      strip.truePeak.style.setProperty('--meter-offset', `${position(tp)}%`); strip.truePeak.hidden = !Number.isFinite(tp);
-      const max = toDb(values.channelMaxSamplePeak[c]);
-      strip.max.style.setProperty('--meter-offset', `${position(max)}%`); strip.max.hidden = !Number.isFinite(max);
+    this.strips.forEach((strip, channel) => {
+      strip.sample = Math.max(strip.sample, values.samplePeak[channel]);
+      strip.truePeak = Math.max(strip.truePeak, values.truePeak[channel]);
+    });
+    for (const strip of this.analysisStrips) strip.target = position(values[strip.key]);
+    this.updatePeakReadouts(values);
+    this.updateAnalysisReadouts(values);
+    this.recordHistogram(values.processedSeconds, values.lufsMomentary, collectHistogram, sampleRate);
+    this.paintLevels();
+  }
+
+  advance(now) {
+    const elapsed = this.lastFrame === undefined ? 0 : Math.max(0, now - this.lastFrame);
+    this.lastFrame = Math.max(now, this.lastFrame ?? now);
+    if (!elapsed || !this.values) return;
+    const decay = 0.5 ** (elapsed / peakHalfLife);
+    // A packet's peak is the floor until the next packet arrives. Release that
+    // floor as well if the source stops delivering audio.
+    const hold = Math.max(80, 2000 / (this.config.streamRate || 30));
+    const staleDecay = 0.5 ** (Math.max(0, now - this.lastPeakPacket - hold) / peakHalfLife);
+    this.strips.forEach((strip, channel) => {
+      strip.sample = Math.max(strip.sample * decay, this.values.samplePeak[channel] * staleDecay);
+      strip.truePeak = Math.max(strip.truePeak * decay, this.values.truePeak[channel] * staleDecay);
+      if (strip.sample < 1e-6) strip.sample = 0;
+      if (strip.truePeak < 1e-6) strip.truePeak = 0;
+    });
+    const smoothing = 1 - 0.5 ** (elapsed / loudnessHalfLife);
+    for (const strip of this.analysisStrips) {
+      if (strip.range) continue;
+      strip.displayed += (strip.target - strip.displayed) * smoothing;
+      if (Math.abs(strip.target - strip.displayed) < 0.01) strip.displayed = strip.target;
+    }
+  }
+
+  draw(now) {
+    if (!this.values) return;
+    this.advance(now);
+    this.paintLevels();
+  }
+
+  paintLevels() {
+    if (this.peakMode !== 'off') for (const strip of this.strips) {
+      if (strip.strip.hidden) continue;
+      const db = toDb(this.truePeakMode ? strip.truePeak : strip.sample);
+      strip.peak.style.setProperty('--meter-level', `${position(db)}%`);
+      if (!this.clipMode) {
+        const text = meterDbText(db);
+        if (strip.out.textContent !== text) strip.out.textContent = text;
+        strip.out.classList.toggle('meter-over', db > 0);
+      }
+    }
+    for (const strip of this.analysisStrips) {
+      if (!strip.range && !strip.strip.hidden) strip.fill.style.setProperty('--meter-level', `${strip.displayed}%`);
+    }
+  }
+
+  updatePeakReadouts(values) {
+    if (this.peakMode === 'off') return;
+    const maximum = this.truePeakMode ? values.channelMaxTruePeak : values.channelMaxSamplePeak;
+    const counts = this.truePeakMode ? values.truePeakClipCount : values.sampleClipCount;
+    const unit = this.truePeakMode ? 'dBTP' : 'dBFS';
+    const maxLabel = this.t(this.truePeakMode ? 'maxTruePeak' : 'maxSamplePeak');
+    this.strips.forEach((strip, channel) => {
+      const rms = toDb(values.channelRms[channel]), max = toDb(maximum[channel]);
+      const count = counts[channel], clipped = count > 0n || max > 0;
+      strip.rms.style.setProperty('--meter-level', `${position(rms)}%`);
+      strip.max.style.setProperty('--meter-offset', `${position(max)}%`);
+      strip.max.hidden = !(max > floor);
       strip.top.value.textContent = meterDbText(max);
-      const trueClipped = values.truePeakClipCount[c] > 0n || values.channelMaxTruePeak[c] > 1;
-      const clipped = values.sampleClipCount[c] > 0n || max > 0 || trueClipped;
+      strip.top.detail.textContent = unit;
+      strip.top.root.title = maxLabel;
       strip.strip.classList.toggle('meter-clipped', clipped);
       strip.top.value.classList.toggle('meter-over', clipped);
-      strip.top.detail.textContent = `TP ${level(values.channelMaxTruePeak[c])}`;
-      strip.top.detail.classList.toggle('meter-over', trueClipped);
-      strip.top.detail.title = `${this.t('maxTruePeak')} · ${level(values.channelMaxTruePeak[c])}`;
-      strip.out.textContent = meterDbText(sample);
-      strip.out.classList.toggle('meter-over', sample > 0);
-      const counts = `Clip ${values.sampleClipCount[c]} · TP clip ${values.truePeakClipCount[c]}`;
-      strip.strip.title = `CH ${c + 1} · Peak ${meterDbText(sample)} dBFS · TP ${meterDbText(tp)} dBTP · RMS ${meterDbText(rms)} dBFS\nMax ${meterDbText(max)} dBFS · TP max ${level(values.channelMaxTruePeak[c])} dBTP\n${counts}`;
+      if (this.clipMode) {
+        strip.out.textContent = count > 999n ? '>999' : count > 0n || maximum[channel] > 0 ? String(count) : '';
+        strip.out.classList.toggle('meter-over', count > 0n);
+      }
+      strip.strip.title = `CH ${channel + 1} · ${maxLabel}\n${this.t('meterClips')} ${count} · RMS ${meterDbText(rms)} dBFS`;
     });
+  }
+
+  alert(value) {
+    const config = this.config;
+    if (config.meterRedAlert && value >= config.meterRedLevel) return 'red';
+    if (config.meterYellowAlert && value >= config.meterYellowLevel) return 'yellow';
+    return '';
+  }
+
+  updateAnalysisReadouts(values) {
     for (const strip of this.analysisStrips) {
-      // RMS and loudness arrive in dBFS/LUFS already. Preserve native window and
-      // integration timing; no synthetic animation or second amplitude conversion.
       const value = values[strip.key], max = values[strip.history];
       if (strip.range) {
         // LRA is a span in LU, positioned between its native LUFS bounds.
@@ -136,14 +265,57 @@ export class NativeMeterView {
         strip.fill.hidden = high <= low;
         strip.strip.title = `${this.t(strip.key)} · ${dbText(value)} LU · ${meterDbText(values.loudnessRangeLow)} / ${meterDbText(values.loudnessRangeHigh)} LUFS`;
       } else {
-        strip.fill.style.setProperty('--meter-level', `${position(value)}%`);
         strip.strip.title = `${this.t(strip.key)} · ${meterDbText(value)}`;
+        if (strip.family === 'lufs') {
+          strip.fill.dataset.alert = strip.out.dataset.alert = this.alert(value);
+          const topAlert = this.alert(strip.history ? max : value);
+          strip.top.value.dataset.alert = strip.max.dataset.alert = topAlert;
+        }
       }
-      const format = strip.range ? dbText : meterDbText;
+      const format = strip.range ? amount => amount > 0 ? dbText(amount) : '' : meterDbText;
       strip.top.value.textContent = format(strip.history ? max : value);
       strip.top.root.title = `${strip.top.label} · ${strip.strip.title}${strip.history ? ` · ${meterDbText(max)}` : ''}`;
       strip.out.textContent = format(value);
-      strip.max.hidden = !Number.isFinite(max); strip.max.style.setProperty('--meter-offset', `${position(max)}%`);
+      strip.max.hidden = !(max > floor); strip.max.style.setProperty('--meter-offset', `${position(max)}%`);
     }
+  }
+
+  recordHistogram(seconds, loudness, collect, sampleRate) {
+    // The native analyzer publishes new momentary values on 100 ms boundaries.
+    // Several stream packets can carry the same analysis step.
+    const step = sampleRate > 0
+      ? Math.floor(Math.round(seconds * sampleRate) / Math.max(1, Math.round(sampleRate / 10)))
+      : Math.floor(seconds * 10 + 1e-4);
+    if (step <= this.histogramStep) return;
+    this.histogramStep = step;
+    if (!collect || !Number.isFinite(loudness)) return;
+    const uncorrected = loudness + (this.config.forceMono ? 3 : 0);
+    const bin = Math.trunc((uncorrected - histogramFloor) * 10);
+    if (bin < 0) return;
+    this.histogramCounts[Math.min(histogramBins - 1, Math.floor(bin / 10))]++;
+    if (this.config.meterLufsHistogram !== false) this.paintHistogram();
+  }
+
+  paintHistogram() {
+    const max = Math.max(...this.histogramCounts);
+    if (!max) return;
+    const start = histogramFloor - (this.config.forceMono ? 3 : 0);
+    const axisLength = (this.config.meterCompact ? this.histogram.clientWidth : this.histogram.clientHeight) || 100;
+    const contour = ['M0 100'];
+    let lastPixel = 0, count = 0;
+    // Join consecutive widths and combine bins that map to the same pixel.
+    for (let bin = 0; bin <= this.histogramCounts.length; bin++) {
+      const pixel = Math.floor(position(start + bin - 0.5) * axisLength / 100);
+      if (pixel > lastPixel) {
+        const width = Math.min(1, count / max) * 100;
+        contour.push(`L${width} ${100 - pixel / axisLength * 100}`);
+        lastPixel = pixel;
+        count = 0;
+      }
+      count += this.histogramCounts[bin] ?? 0;
+    }
+    const path = `${contour.join(' ')} H0Z`;
+    this.histogramPath.setAttribute('d', path);
+    this.histogramMirror.setAttribute('d', path);
   }
 }

@@ -272,6 +272,14 @@
   "fxCompactHint": "클릭: 열기 / 닫기 · Alt+클릭: 삭제 · Shift+클릭: 바이패스 · Ctrl+클릭: 오프라인",
   "toggleFX": "FX 창 열기 / 닫기",
   "meterCompact": "Peak / RMS / LUFS 간단히 표시 (가로)",
+  "meterPeakMode": "Peak 표시 모드",
+  "meterPeakOff": "Peak 끔",
+  "meterClips": "클립",
+  "meterLufsHistogram": "LUFS-M 라우드니스 분포 히스토그램",
+  "meterYellowAlert": "LUFS 노란색 경고",
+  "meterRedAlert": "LUFS 빨간색 경고",
+  "meterYellowLevel": "노란색 경고 임계값",
+  "meterRedLevel": "빨간색 경고 임계값",
   "resizeList": "목록 높이 조절",
   "resizeMeter": "드래그하여 미터 높이 조절, 두 번 클릭하여 기본값 복원",
   "viewMode": "보기 모드",
@@ -330,6 +338,6 @@
   "meterAutoReset": "재생 시작 시 미터 초기화",
   "meterMono": "Mono 보정(−3 dB)",
   "meterMonoHint": "전체 RMS, LUFS, LRA 상하한에서 3 dB를 뺍니다. 채널을 믹스하거나 줄이지 않습니다.",
-  "meterToggleRms": "RMS 표시 / 숨기기. 오른쪽 클릭으로 RMS-M / RMS-I 선택.",
-  "meterToggleLufs": "LUFS 및 LRA 표시 / 숨기기. 오른쪽 클릭으로 LUFS-M / LUFS-S / LUFS-I / LRA 선택."
+  "meterToggleRms": "표시할 RMS 항목 선택",
+  "meterToggleLufs": "표시할 LUFS 및 LRA 항목 선택"
 }

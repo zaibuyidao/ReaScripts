@@ -1,5 +1,6 @@
 import { defaults, preferences, analysisSources, meterHeightRange, themePresets, themePalette, toDb, fromDb, dbText, mixerValueText, parseMixerValue, routeKnobPosition, routeKnobVolume, filterTracks, recentSearches, filterFX, fxFormat, sortFX, hardwareOutputChannels, isSettingsShortcut, CommandQueue } from './model.js';
 import { AudioAnalysis, drawOverview } from './audio.js';
+import { meterPeakModes } from './model.js';
 
 const $ = id => document.getElementById(id);
 const el = (tag, className = '', text = '') => { const n = document.createElement(tag); n.className = className; n.textContent = text; return n; };
@@ -1214,8 +1215,14 @@ function renderQuick(force = false) {
 const renderers = {'track-header': renderHeader, mixer: renderMixer, routing: renderRouting, fx: renderFX, 'fx-parameters': renderFXParameters, parameters: renderParameters, items: renderItems, metadata: renderMetadata, appearance: renderAppearance, quick: renderQuick};
 function renderAll(force = false) { renderMode(); for (const render of Object.values(renderers)) render(force); renderSearch(); configureAudio(); }
 function configureAudio() {
-  for (const [id, key] of [['meter-toggle-rms', 'meterShowRms'], ['meter-toggle-lufs', 'meterShowLufs']]) {
-    $(id).setAttribute('aria-pressed', prefs[key]);
+  const peak = $('meter-toggle-peak'), mode = prefs.meterPeakMode;
+  const selected = mode === 'off' ? t('meterPeakOff') : meterPeakModes[mode];
+  peak.textContent = mode === 'true-peak-clips' ? 'TP Clips' : selected;
+  peak.title = `${t('meterPeakMode')} · ${selected}`;
+  peak.setAttribute('aria-label', peak.title);
+  peak.dataset.off = mode === 'off';
+  for (const family of ['rms', 'lufs']) {
+    $(`meter-toggle-${family}`).dataset.off = !meterChoices[family].some(([key]) => prefs.meterMetrics[key]);
   }
   if (!audio) return;
   const track = state.tracks?.count === 1 ? state.tracks.refs[0] : null;
@@ -1438,7 +1445,9 @@ $('settings-form').onsubmit = async event => {
   const next = {...prefs};
   for (const control of event.currentTarget.elements) {
     if (!control.name || control.disabled) continue;
-    next[control.name] = control.type === 'checkbox' ? control.checked : ['fftSize','streamRate','drawRate','floor','searchHistoryLimit'].includes(control.name) ? Number(control.value) : control.value;
+    next[control.name] = control.type === 'checkbox' ? control.checked :
+      control.type === 'number' ? control.valueAsNumber :
+        ['fftSize','streamRate','drawRate','floor'].includes(control.name) ? Number(control.value) : control.value;
   }
   const old = prefs;
   try {
@@ -1453,6 +1462,7 @@ document.querySelectorAll('[data-panel]').forEach(panel => panel.addEventListene
 }));
 document.querySelectorAll('.analysis-card').forEach(card => card.addEventListener('toggle', configureAudio));
 $('meter-reset').onclick = event => { event.preventDefault(); event.stopPropagation(); audio?.resetMeter(); };
+$('meter-readout').parentElement.onclick = event => { if (event.button === 0) audio?.resetMeter(); };
 function applyMeterHeight() {
   $('analysis-meter').style.setProperty('--meter-height', `${prefs.meterHeight}px`);
   $('analysis-meter').classList.toggle('meter-compact', prefs.meterCompact);
@@ -1490,17 +1500,10 @@ function applyMeterHeight() {
   };
   handle.ondblclick = () => { resize(defaults.meterHeight); savePreferences(prefs); };
 }
-for (const [id, key] of [['meter-toggle-rms', 'meterShowRms'], ['meter-toggle-lufs', 'meterShowLufs']]) {
-  $(id).onclick = event => {
-    event.preventDefault(); event.stopPropagation();
-    closeMeterMenu();
-    const next = {...prefs, [key]: !prefs[key]};
-    if (savePreferences(next)) { prefs = next; configureAudio(); }
-  };
-}
 const meterChoices = {
+  peak: Object.entries(meterPeakModes),
   rms: [['rmsMomentary','RMS-M'], ['rmsIntegrated','RMS-I']],
-  lufs: [['lufsMomentary','LUFS-M'], ['lufsShortTerm','LUFS-S'], ['lufsIntegrated','LUFS-I'], ['loudnessRange','LRA']],
+  lufs: [['lufsMomentary','LUFS-M'], ['lufsShortTerm','LUFS-S'], ['loudnessRange','LRA'], ['lufsIntegrated','LUFS-I']],
 };
 let meterMenuAnchor;
 function closeMeterMenu(restoreFocus = false) {
@@ -1512,18 +1515,30 @@ function closeMeterMenu(restoreFocus = false) {
 function openMeterMenu(family, event) {
   closeEnvelopeMenu();
   event.preventDefault(); event.stopPropagation();
+  const anchor = $(`meter-toggle-${family}`);
+  if (anchor === meterMenuAnchor && event.type === 'click') {
+    closeMeterMenu(true);
+    return;
+  }
   closePanMenu(); closeRecordMenu(); closeMeterMenu();
-  const menu = $('meter-menu'), anchor = $(`meter-toggle-${family}`);
+  const menu = $('meter-menu'), peakMode = family === 'peak';
   meterMenuAnchor = anchor; menu.replaceChildren();
-  menu.setAttribute('aria-label', family.toUpperCase());
+  menu.setAttribute('aria-label', peakMode ? t('meterPeakMode') : family.toUpperCase());
   for (const [key, label] of meterChoices[family]) {
-    const option = el('button', '', label); option.type = 'button'; option.title = t(key);
-    option.dataset.metric = key; option.setAttribute('role', 'menuitemcheckbox');
-    option.setAttribute('aria-checked', prefs.meterMetrics[key]);
+    const option = el('button', '', peakMode && key === 'off' ? t('off') : label);
+    option.type = 'button';
+    option.dataset.metric = key;
+    if (!peakMode) option.title = t(key);
+    option.setAttribute('role', peakMode ? 'menuitemradio' : 'menuitemcheckbox');
+    option.setAttribute('aria-checked', peakMode ? prefs.meterPeakMode === key : prefs.meterMetrics[key]);
     option.onclick = () => {
-      const next = {...prefs, meterMetrics: {...prefs.meterMetrics, [key]: !prefs.meterMetrics[key]}};
+      const next = peakMode ? {...prefs, meterPeakMode: key}
+        : {...prefs, meterMetrics: {...prefs.meterMetrics, [key]: !prefs.meterMetrics[key]}};
       if (savePreferences(next)) {
-        prefs = next; option.setAttribute('aria-checked', prefs.meterMetrics[key]); configureAudio();
+        prefs = next;
+        if (peakMode) closeMeterMenu(true);
+        else option.setAttribute('aria-checked', prefs.meterMetrics[key]);
+        configureAudio();
       }
     };
     menu.append(option);
@@ -1533,10 +1548,11 @@ function openMeterMenu(family, event) {
   const pointer = event.type === 'contextmenu' && (event.clientX || event.clientY);
   menu.style.left = `${Math.max(4, Math.min(pointer ? event.clientX : rect.left, innerWidth - menu.offsetWidth - 4))}px`;
   menu.style.top = `${Math.max(4, Math.min(pointer ? event.clientY : rect.bottom, innerHeight - menu.offsetHeight - 4))}px`;
-  menu.firstElementChild.focus({preventScroll:true});
+  (peakMode ? menu.querySelector('[aria-checked=true]') : menu.firstElementChild).focus({preventScroll:true});
 }
 for (const family of Object.keys(meterChoices)) {
   const anchor = $(`meter-toggle-${family}`);
+  anchor.onclick = event => openMeterMenu(family, event);
   anchor.oncontextmenu = event => openMeterMenu(family, event);
   anchor.onkeydown = event => {
     if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey || event.key === 'ArrowDown') openMeterMenu(family, event);
@@ -1550,7 +1566,9 @@ $('meter-menu').onkeydown = event => {
     options[event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
   } else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); event.stopPropagation(); closeMeterMenu(true); }
 };
-document.addEventListener('pointerdown', event => { if (!$('meter-menu').contains(event.target)) closeMeterMenu(); }, true);
+document.addEventListener('pointerdown', event => {
+  if (!$('meter-menu').contains(event.target) && !meterMenuAnchor?.contains(event.target)) closeMeterMenu();
+}, true);
 document.addEventListener('scroll', event => { if (!$('meter-menu').contains(event.target)) closeMeterMenu(); }, true);
 window.addEventListener('blur', () => closeMeterMenu());
 window.addEventListener('resize', () => closeMeterMenu());

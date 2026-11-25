@@ -272,6 +272,14 @@
   "fxCompactHint": "クリック：開く / 閉じる · Alt+クリック：削除 · Shift+クリック：バイパス · Ctrl+クリック：オフライン",
   "toggleFX": "FX ウィンドウを開く / 閉じる",
   "meterCompact": "Peak / RMS / LUFS を簡易表示（横向き）",
+  "meterPeakMode": "Peak 表示モード",
+  "meterPeakOff": "Peak オフ",
+  "meterClips": "クリップ",
+  "meterLufsHistogram": "LUFS-M ラウドネス分布ヒストグラム",
+  "meterYellowAlert": "LUFS 黄色警告",
+  "meterRedAlert": "LUFS 赤色警告",
+  "meterYellowLevel": "黄色警告のしきい値",
+  "meterRedLevel": "赤色警告のしきい値",
   "resizeList": "リストの高さを調整",
   "resizeMeter": "ドラッグでメーターの高さを調整、ダブルクリックで既定値に戻す",
   "viewMode": "表示モード",
@@ -327,9 +335,9 @@
   "meterIntegration": "メーター積算",
   "meterPlaybackOnly": "再生中のみ",
   "meterContinuous": "連続",
-  "meterAutoReset": "再生開始時にリセット",
+  "meterAutoReset": "再生開始時にメーターをリセット",
   "meterMono": "Mono 校正（−3 dB）",
   "meterMonoHint": "全体の RMS、LUFS、LRA 上下限を 3 dB 下げます。チャンネルのミックスや削減は行いません。",
-  "meterToggleRms": "RMS を表示 / 非表示。右クリックで RMS-M / RMS-I を選択。",
-  "meterToggleLufs": "LUFS と LRA を表示 / 非表示。右クリックで LUFS-M / LUFS-S / LUFS-I / LRA を選択。"
+  "meterToggleRms": "RMS の表示項目を選択",
+  "meterToggleLufs": "LUFS と LRA の表示項目を選択"
 }
