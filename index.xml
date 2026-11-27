@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="67eb4989d87e0311b5c1c064b1dc8b980c3e324d">
+<index version="1" name="zaibuyidao Scripts" commit="de99872d89efc586f9baf1881c5452ae6f838cb4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12286,6 +12286,27 @@ Fixed floating DevTools losing their maximized state after reopening on Windows.
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/style.css</source>
         <source main="main" type="script" file="web/api-reference/ReaWebAPI - API Reference.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/api-reference/ReaWebAPI%20-%20API%20Reference.lua</source>
         <source type="script" file="web/api-reference/reawebapihelp.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/401928284102b35f7818797116cf4370ee7d5568/ReaWebAPI/web/api-reference/reawebapihelp.html</source>
+      </version>
+      <version name="0.3.9.69" author="zaibuyidao" time="2026-11-27T09:20:35Z">
+        <changelog><![CDATA[New automatic Web and JSFX IDs include the application name and a 16-digit hexadecimal suffix. Existing IDs and storage are preserved.
+Registration records include the display name from the manifest, entry HTML title or first JSFX `desc:`.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux64" type="extension" file="reawebapi-video-x86_64/reawebapi-video-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reawebapi-video-x86_64/reawebapi-video-x86_64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-video-aarch64/reawebapi-video-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/extension/reawebapi-video-aarch64/reawebapi-video-aarch64.so</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/app.json">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/app.json</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/style.css</source>
+        <source main="main" type="script" file="web/api-reference/ReaWebAPI - API Reference.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/api-reference/ReaWebAPI%20-%20API%20Reference.lua</source>
+        <source type="script" file="web/api-reference/reawebapihelp.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/de99872d89efc586f9baf1881c5452ae6f838cb4/ReaWebAPI/web/api-reference/reawebapihelp.html</source>
       </version>
     </reapack>
   </category>
